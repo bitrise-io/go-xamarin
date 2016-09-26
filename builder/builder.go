@@ -19,7 +19,7 @@ type Model struct {
 }
 
 // OutputMap ...
-type OutputMap map[constants.OutputType]string
+type OutputMap map[constants.ProjectType]map[constants.OutputType]string
 
 // ProjectIterator ...
 type ProjectIterator func(project project.Model) error
@@ -63,11 +63,12 @@ func (builder Model) BuildSolution(configuration, platform string, forceMDTool b
 }
 
 // IterateOnAllProjects ...
-func (builder Model) IterateOnAllProjects(projectTypeFilter []constants.ProjectType, iterator ProjectIterator) error {
+func (builder Model) IterateOnAllProjects(projectTypeWhiteList []constants.ProjectType, iterator ProjectIterator) error {
 	for _, project := range builder.solution.ProjectMap {
-		if isFilterForProjectType(project.ProjectType, projectTypeFilter...) {
+		if isProjectTypeAllowed(project.ProjectType, projectTypeWhiteList...) {
 			continue
 		}
+
 		if err := iterator(project); err != nil {
 			return err
 		}
@@ -76,7 +77,7 @@ func (builder Model) IterateOnAllProjects(projectTypeFilter []constants.ProjectT
 }
 
 // IterateOnBuildableProjects ...
-func (builder Model) IterateOnBuildableProjects(configuration, platform string, projectTypeFilter []constants.ProjectType, iterator ProjectWithConfigIterator) error {
+func (builder Model) IterateOnBuildableProjects(configuration, platform string, projectTypeWhiteList []constants.ProjectType, iterator ProjectWithConfigIterator) error {
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
 		return err
 	}
@@ -84,7 +85,7 @@ func (builder Model) IterateOnBuildableProjects(configuration, platform string, 
 	solutionConfig := utility.ToConfig(configuration, platform)
 
 	for _, project := range builder.solution.ProjectMap {
-		if isFilterForProjectType(project.ProjectType, projectTypeFilter...) {
+		if isProjectTypeAllowed(project.ProjectType, projectTypeWhiteList...) {
 			continue
 		}
 
@@ -101,32 +102,20 @@ func (builder Model) IterateOnBuildableProjects(configuration, platform string, 
 			return fmt.Errorf("project contains mapping for solution config (%s -> %s), but does not have project config for it", solutionConfig, projectConfig)
 		}
 
-		switch project.ProjectType {
+		if (project.ProjectType == constants.ProjectTypeIos ||
+			project.ProjectType == constants.ProjectTypeMac ||
+			project.ProjectType == constants.ProjectTypeTVOs) &&
+			project.OutputType != "exe" {
+			log.Warn("project (%s) does not archivable based on output type (%s), skipping...", project.Name, project.OutputType)
+			continue
+		}
+		if project.ProjectType == constants.ProjectTypeAndroid &&
+			!project.AndroidApplication {
+			log.Warn("(%s) is not an android application project, skipping...", project.Name)
+			continue
+		}
 
-		case constants.XamarinIos, constants.XamarinTVOS:
-			if project.OutputType != "exe" {
-				log.Warn("project (%s) does not archivable based on output type (%s), skipping...", project.Name, project.OutputType)
-				continue
-			}
-
-			if err := iterator(project, config); err != nil {
-				return err
-			}
-		case constants.XamarinMac, constants.MonoMac:
-			if project.OutputType != "exe" {
-				log.Warn("project (%s) does not archivable based on output type (%s), skipping...", project.Name, project.OutputType)
-				continue
-			}
-
-			if err := iterator(project, config); err != nil {
-				return err
-			}
-		case constants.XamarinAndroid:
-			if !project.AndroidApplication {
-				log.Warn("(%s) is not an android application project, skipping...", project.Name)
-				continue
-			}
-
+		if project.ProjectType != constants.ProjectTypeUnknown {
 			if err := iterator(project, config); err != nil {
 				return err
 			}
@@ -173,7 +162,7 @@ func (builder Model) CleanAll(projectTypeFilter ...constants.ProjectType) error 
 func (builder Model) Build(configuration, platform string, forceMDTool bool, projectTypeFilter ...constants.ProjectType) error {
 	iterator := func(project project.Model, projectConfig project.ConfigurationPlatformModel) error {
 		switch project.ProjectType {
-		case constants.XamarinIos, constants.XamarinTVOS:
+		case constants.ProjectTypeIos, constants.ProjectTypeTVOs:
 			if forceMDTool {
 				if err := NewMDToolCommand(builder.solution.Pth).SetTarget("build").SetConfiguration(projectConfig.Configuration).SetPlatform(projectConfig.Platform).SetProjectName(project.Name).Run(); err != nil {
 					return err
@@ -197,7 +186,7 @@ func (builder Model) Build(configuration, platform string, forceMDTool bool, pro
 					return err
 				}
 			}
-		case constants.XamarinMac, constants.MonoMac:
+		case constants.ProjectTypeMac:
 			if forceMDTool {
 				if err := NewMDToolCommand(builder.solution.Pth).SetTarget("build").SetConfiguration(projectConfig.Configuration).SetPlatform(projectConfig.Platform).SetProjectName(project.Name).Run(); err != nil {
 					return err
@@ -211,7 +200,7 @@ func (builder Model) Build(configuration, platform string, forceMDTool bool, pro
 					return err
 				}
 			}
-		case constants.XamarinAndroid:
+		case constants.ProjectTypeAndroid:
 			command := NewXbuildCommand(project.Pth).SetConfiguration(projectConfig.Configuration)
 
 			if projectConfig.SignAndroid {
@@ -241,20 +230,22 @@ func (builder Model) CollectOutput(configuration, platform string, forceMDTool b
 
 	iterator := func(project project.Model, projectConfig project.ConfigurationPlatformModel) error {
 		switch project.ProjectType {
-		case constants.XamarinIos, constants.XamarinTVOS:
+		case constants.ProjectTypeIos, constants.ProjectTypeTVOs:
+			projectTypeOutputMap := outputMap[project.ProjectType]
+
 			if forceMDTool {
 				if isArchitectureArchiveable(projectConfig.MtouchArchs) {
 					if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(project.AssemblyName); err != nil {
 						return err
 					} else if xcarchivePth != "" {
-						outputMap[constants.OutputTypeXCArchive] = xcarchivePth
+						projectTypeOutputMap[constants.OutputTypeXCArchive] = xcarchivePth
 					}
 
 					if projectConfig.BuildIpa {
 						if ipaPth, err := exportIpa(projectConfig.OutputDir, project.AssemblyName); err != nil {
 							return err
 						} else if ipaPth != "" {
-							outputMap[constants.OutputTypeIPA] = ipaPth
+							projectTypeOutputMap[constants.OutputTypeIPA] = ipaPth
 						}
 					}
 				}
@@ -263,33 +254,37 @@ func (builder Model) CollectOutput(configuration, platform string, forceMDTool b
 					if ipaPth, err := exportIpa(projectConfig.OutputDir, project.AssemblyName); err != nil {
 						return err
 					} else if ipaPth != "" {
-						outputMap[constants.OutputTypeIPA] = ipaPth
+						projectTypeOutputMap[constants.OutputTypeIPA] = ipaPth
 					}
 				} else if isArchitectureArchiveable(projectConfig.MtouchArchs) {
 					if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(project.AssemblyName); err != nil {
 						return err
 					} else if xcarchivePth != "" {
-						outputMap[constants.OutputTypeXCArchive] = xcarchivePth
+						projectTypeOutputMap[constants.OutputTypeXCArchive] = xcarchivePth
 					}
 				}
 			}
-		case constants.XamarinMac, constants.MonoMac:
+		case constants.ProjectTypeMac:
+			projectTypeOutputMap := outputMap[project.ProjectType]
+
 			if appPth, err := exportApp(projectConfig.OutputDir, project.AssemblyName); err != nil {
 				return err
 			} else if appPth != "" {
-				outputMap[constants.OutputTypeAPP] = appPth
+				projectTypeOutputMap[constants.OutputTypeAPP] = appPth
 			}
 
 			if pkgPth, err := exportPkg(projectConfig.OutputDir, project.AssemblyName); err != nil {
 				return err
 			} else if pkgPth != "" {
-				outputMap[constants.OutputTypePKG] = pkgPth
+				projectTypeOutputMap[constants.OutputTypePKG] = pkgPth
 			}
-		case constants.XamarinAndroid:
+		case constants.ProjectTypeAndroid:
+			projectTypeOutputMap := outputMap[project.ProjectType]
+
 			if apkPth, err := exportApk(projectConfig.OutputDir, project.ManifestPth, projectConfig.SignAndroid); err != nil {
 				return err
 			} else if apkPth != "" {
-				outputMap[constants.OutputTypeAPK] = apkPth
+				projectTypeOutputMap[constants.OutputTypeAPK] = apkPth
 			}
 		}
 
