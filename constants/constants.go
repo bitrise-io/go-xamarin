@@ -79,6 +79,42 @@ var (
 	}
 )
 
+// OutputType ...
+type OutputType string
+
+const (
+	// OutputTypeUnknown ...
+	OutputTypeUnknown OutputType = "unknown"
+	// OutputTypeXCArchive ...
+	OutputTypeXCArchive OutputType = "xcarchive"
+	// OutputTypeIPA ...
+	OutputTypeIPA OutputType = "ipa"
+	// OutputTypeAPK ...
+	OutputTypeAPK OutputType = "apk"
+	// OutputTypePKG ...
+	OutputTypePKG OutputType = "pkg"
+	// OutputTypeAPP ...
+	OutputTypeAPP OutputType = "app"
+)
+
+// ParseOutputType ...
+func ParseOutputType(outputType string) (OutputType, error) {
+	switch outputType {
+	case "xcarchive":
+		return OutputTypeXCArchive, nil
+	case "ipa":
+		return OutputTypeIPA, nil
+	case "apk":
+		return OutputTypeAPK, nil
+	case "pkg":
+		return OutputTypePKG, nil
+	case "app":
+		return OutputTypeAPP, nil
+	default:
+		return OutputTypeUnknown, fmt.Errorf("invalid output type: %s", outputType)
+	}
+}
+
 // ProjectType ...
 type ProjectType string
 
