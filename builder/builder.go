@@ -68,7 +68,9 @@ func (builder Model) IterateOnAllProjects(projectTypeFilter []constants.ProjectT
 		if isFilterForProjectType(project.ProjectType, projectTypeFilter...) {
 			continue
 		}
-		iterator(project)
+		if err := iterator(project); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -107,21 +109,27 @@ func (builder Model) IterateOnBuildableProjects(configuration, platform string, 
 				continue
 			}
 
-			iterator(project, config)
+			if err := iterator(project, config); err != nil {
+				return err
+			}
 		case constants.XamarinMac, constants.MonoMac:
 			if project.OutputType != "exe" {
 				log.Warn("project (%s) does not archivable based on output type (%s), skipping...", project.Name, project.OutputType)
 				continue
 			}
 
-			iterator(project, config)
+			if err := iterator(project, config); err != nil {
+				return err
+			}
 		case constants.XamarinAndroid:
 			if !project.AndroidApplication {
 				log.Warn("(%s) is not an android application project, skipping...", project.Name)
 				continue
 			}
 
-			iterator(project, config)
+			if err := iterator(project, config); err != nil {
+				return err
+			}
 		}
 	}
 
