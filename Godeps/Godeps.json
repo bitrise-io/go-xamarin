@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/bitrise-tools/xamarin-builder",
+	"ImportPath": "github.com/bitrise-tools/go-xamarin",
 	"GoVersion": "go1.7",
 	"GodepVersion": "v74",
 	"Packages": [

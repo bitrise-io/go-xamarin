@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bitrise-tools/xamarin-builder/constants"
+	"github.com/bitrise-tools/go-xamarin/constants"
 	"github.com/stretchr/testify/require"
 )
 
