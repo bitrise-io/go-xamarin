@@ -6,7 +6,7 @@ import (
 
 	"github.com/bitrise-io/go-utils/cmdex"
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-tools/xamarin-builder/constants"
+	"github.com/bitrise-tools/go-xamarin/constants"
 )
 
 // XbuildCommandModel ...
@@ -18,7 +18,8 @@ type XbuildCommandModel struct {
 	platform      string
 	target        string
 
-	buildIpa bool
+	buildIpa       bool
+	archiveOnBuild bool
 
 	exportOutput func() (OutputMap, error)
 }
@@ -55,6 +56,12 @@ func (xbuild *XbuildCommandModel) SetBuildIpa() *XbuildCommandModel {
 	return xbuild
 }
 
+// SetArchiveOnBuild ...
+func (xbuild *XbuildCommandModel) SetArchiveOnBuild() *XbuildCommandModel {
+	xbuild.archiveOnBuild = true
+	return xbuild
+}
+
 // Run ...
 func (xbuild XbuildCommandModel) Run() error {
 	if xbuild.projectPth != "" {
@@ -71,6 +78,10 @@ func (xbuild XbuildCommandModel) Run() error {
 
 	if xbuild.platform != "" {
 		xbuild.cmdSlice = append(xbuild.cmdSlice, fmt.Sprintf("/p:Platform=%s", xbuild.platform))
+	}
+
+	if xbuild.archiveOnBuild {
+		xbuild.cmdSlice = append(xbuild.cmdSlice, "/p:ArchiveOnBuild=true")
 	}
 
 	if xbuild.buildIpa {

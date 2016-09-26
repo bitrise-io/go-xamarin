@@ -14,9 +14,9 @@ import (
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
-	"github.com/bitrise-tools/xamarin-builder/constants"
-	"github.com/bitrise-tools/xamarin-builder/solution"
-	"github.com/bitrise-tools/xamarin-builder/utility"
+	"github.com/bitrise-tools/go-xamarin/constants"
+	"github.com/bitrise-tools/go-xamarin/solution"
+	"github.com/bitrise-tools/go-xamarin/utility"
 )
 
 const (
@@ -47,19 +47,19 @@ func validateSolutionConfig(solution solution.Model, configuration, platform str
 func isFilterForProjectType(projectType constants.XamarinProjectType, projectTypeFilter ...constants.ProjectType) bool {
 	for _, filter := range projectTypeFilter {
 		switch filter {
-		case constants.Android:
+		case constants.ProjectTypeAndroid:
 			if projectType == constants.XamarinAndroid {
 				return true
 			}
-		case constants.Ios:
+		case constants.ProjectTypeIos:
 			if projectType == constants.XamarinIos {
 				return true
 			}
-		case constants.Mac:
+		case constants.ProjectTypeMac:
 			if projectType == constants.XamarinMac || projectType == constants.MonoMac {
 				return true
 			}
-		case constants.TVos:
+		case constants.ProjectTypeTVOs:
 			if projectType == constants.XamarinTVOS {
 				return true
 			}
@@ -68,7 +68,7 @@ func isFilterForProjectType(projectType constants.XamarinProjectType, projectTyp
 	return false
 }
 
-func archiveableArchitecture(architectures []string) bool {
+func isArchitectureArchiveable(architectures []string) bool {
 	// default is armv7
 	if len(architectures) == 0 {
 		return true
@@ -252,6 +252,10 @@ func exportApp(outputDir, assemblyName string) (string, error) {
 	return apps[0], nil
 }
 
+func isPlatformAnyCPU(platform string) bool {
+	return (platform == "Any CPU" || platform == "AnyCPU")
+}
+
 // TimeoutHandlerModel ....
 type TimeoutHandlerModel struct {
 	timer   *time.Timer
@@ -307,7 +311,7 @@ func runCommandInDiagnosticMode(command cmdex.CommandModel, checkPattern string,
 
 	// Create a timer that will FORCE kill the process if normal kill does not work
 	var forceKillError error
-	forceKillTimeoutHandler := NewTimeoutHandler(1*time.Second, func() {
+	forceKillTimeoutHandler := NewTimeoutHandler(60*time.Second, func() {
 		log.Warn("Timeout")
 		timeout = true
 		forceKillError = cmd.Process.Signal(syscall.SIGKILL)
@@ -316,7 +320,7 @@ func runCommandInDiagnosticMode(command cmdex.CommandModel, checkPattern string,
 
 	// Create a timer that will kill the process
 	var killError error
-	killTimeoutHandler := NewTimeoutHandler(1*time.Second, func() {
+	killTimeoutHandler := NewTimeoutHandler(300*time.Second, func() {
 		log.Warn("Timeout")
 		timeout = true
 		forceKillTimeoutHandler.Start()

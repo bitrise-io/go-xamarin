@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bitrise-tools/xamarin-builder/constants"
+	"github.com/bitrise-tools/go-xamarin/constants"
 )
 
 // ToConfig ...

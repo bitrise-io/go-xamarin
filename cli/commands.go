@@ -13,7 +13,7 @@ const (
 var commands = []cli.Command{
 	{
 		Name:   "build",
-		Usage:  "Build xamarin project",
+		Usage:  "Build xamarin projects",
 		Action: build,
 		Flags: []cli.Flag{
 			cli.StringFlag{
@@ -31,6 +31,17 @@ var commands = []cli.Command{
 			cli.BoolFlag{
 				Name:  forceMDToolKey,
 				Usage: "Force use mdtool",
+			},
+		},
+	},
+	{
+		Name:   "clean",
+		Usage:  "Clean xamarin projects",
+		Action: clean,
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  solutionFilePathKey,
+				Usage: "Solution file path",
 			},
 		},
 	},

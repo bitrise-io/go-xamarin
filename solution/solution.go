@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-utils/fileutil"
-	"github.com/bitrise-tools/xamarin-builder/project"
-	"github.com/bitrise-tools/xamarin-builder/utility"
+	"github.com/bitrise-tools/go-xamarin/project"
+	"github.com/bitrise-tools/go-xamarin/utility"
 )
 
 const (

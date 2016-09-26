@@ -5,7 +5,7 @@ import (
 
 	"github.com/bitrise-io/go-utils/cmdex"
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-tools/xamarin-builder/constants"
+	"github.com/bitrise-tools/go-xamarin/constants"
 )
 
 // MDToolCommandModel ...

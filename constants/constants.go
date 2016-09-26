@@ -1,5 +1,7 @@
 package constants
 
+import "fmt"
+
 const (
 	// MDToolPath ...
 	MDToolPath = "/Applications/Xamarin Studio.app/Contents/MacOS/mdtool"
@@ -81,12 +83,30 @@ var (
 type ProjectType string
 
 const (
-	// Ios ...
-	Ios ProjectType = "ios"
-	// Android ...
-	Android ProjectType = "android"
-	// Mac ...
-	Mac ProjectType = "mac"
-	// TVos ...
-	TVos ProjectType = "tvos"
+	// ProjectTypeUnknown ...
+	ProjectTypeUnknown ProjectType = "unknown"
+	// ProjectTypeIos ...
+	ProjectTypeIos ProjectType = "ios"
+	// ProjectTypeAndroid ...
+	ProjectTypeAndroid ProjectType = "android"
+	// ProjectTypeMac ...
+	ProjectTypeMac ProjectType = "mac"
+	// ProjectTypeTVOs ...
+	ProjectTypeTVOs ProjectType = "tvos"
 )
+
+// ParseProjectType ...
+func ParseProjectType(projectType string) (ProjectType, error) {
+	switch projectType {
+	case "ios":
+		return ProjectTypeIos, nil
+	case "android":
+		return ProjectTypeAndroid, nil
+	case "mac":
+		return ProjectTypeMac, nil
+	case "tvos":
+		return ProjectTypeTVOs, nil
+	default:
+		return ProjectTypeUnknown, fmt.Errorf("invalid project type: %s", projectType)
+	}
+}
