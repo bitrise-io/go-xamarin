@@ -19,7 +19,7 @@ type Model struct {
 }
 
 // OutputMap ...
-type OutputMap map[string]string
+type OutputMap map[constants.OutputType]string
 
 // ProjectIterator ...
 type ProjectIterator func(project project.Model) error
@@ -247,14 +247,14 @@ func (builder Model) CollectOutput(configuration, platform string, forceMDTool b
 					if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(project.AssemblyName); err != nil {
 						return err
 					} else if xcarchivePth != "" {
-						outputMap["xcarchive"] = xcarchivePth
+						outputMap[constants.OutputTypeXCArchive] = xcarchivePth
 					}
 
 					if projectConfig.BuildIpa {
 						if ipaPth, err := exportIpa(projectConfig.OutputDir, project.AssemblyName); err != nil {
 							return err
 						} else if ipaPth != "" {
-							outputMap["ipa"] = ipaPth
+							outputMap[constants.OutputTypeIPA] = ipaPth
 						}
 					}
 				}
@@ -263,13 +263,13 @@ func (builder Model) CollectOutput(configuration, platform string, forceMDTool b
 					if ipaPth, err := exportIpa(projectConfig.OutputDir, project.AssemblyName); err != nil {
 						return err
 					} else if ipaPth != "" {
-						outputMap["ipa"] = ipaPth
+						outputMap[constants.OutputTypeIPA] = ipaPth
 					}
 				} else if isArchitectureArchiveable(projectConfig.MtouchArchs) {
 					if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(project.AssemblyName); err != nil {
 						return err
 					} else if xcarchivePth != "" {
-						outputMap["xcarchive"] = xcarchivePth
+						outputMap[constants.OutputTypeXCArchive] = xcarchivePth
 					}
 				}
 			}
@@ -277,19 +277,19 @@ func (builder Model) CollectOutput(configuration, platform string, forceMDTool b
 			if appPth, err := exportApp(projectConfig.OutputDir, project.AssemblyName); err != nil {
 				return err
 			} else if appPth != "" {
-				outputMap["app"] = appPth
+				outputMap[constants.OutputTypeAPP] = appPth
 			}
 
 			if pkgPth, err := exportPkg(projectConfig.OutputDir, project.AssemblyName); err != nil {
 				return err
 			} else if pkgPth != "" {
-				outputMap["pkg"] = pkgPth
+				outputMap[constants.OutputTypePKG] = pkgPth
 			}
 		case constants.XamarinAndroid:
 			if apkPth, err := exportApk(projectConfig.OutputDir, project.ManifestPth, projectConfig.SignAndroid); err != nil {
 				return err
 			} else if apkPth != "" {
-				outputMap["apk"] = apkPth
+				outputMap[constants.OutputTypeAPK] = apkPth
 			}
 		}
 
