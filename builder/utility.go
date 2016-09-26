@@ -44,27 +44,32 @@ func validateSolutionConfig(solution solution.Model, configuration, platform str
 	return nil
 }
 
-func isFilterForProjectType(projectType constants.XamarinProjectType, projectTypeFilter ...constants.ProjectType) bool {
-	for _, filter := range projectTypeFilter {
+func isProjectTypeAllowed(projectType constants.ProjectType, projectTypeWhiteList ...constants.ProjectType) bool {
+	if len(projectTypeWhiteList) == 0 {
+		return true
+	}
+
+	for _, filter := range projectTypeWhiteList {
 		switch filter {
-		case constants.ProjectTypeAndroid:
-			if projectType == constants.XamarinAndroid {
-				return true
-			}
 		case constants.ProjectTypeIos:
-			if projectType == constants.XamarinIos {
-				return true
-			}
-		case constants.ProjectTypeMac:
-			if projectType == constants.XamarinMac || projectType == constants.MonoMac {
+			if projectType == constants.ProjectTypeIos {
 				return true
 			}
 		case constants.ProjectTypeTVOs:
-			if projectType == constants.XamarinTVOS {
+			if projectType == constants.ProjectTypeTVOs {
+				return true
+			}
+		case constants.ProjectTypeMac:
+			if projectType == constants.ProjectTypeMac {
+				return true
+			}
+		case constants.ProjectTypeAndroid:
+			if projectType == constants.ProjectTypeAndroid {
 				return true
 			}
 		}
 	}
+
 	return false
 }
 

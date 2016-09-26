@@ -72,7 +72,7 @@ type Model struct {
 	// ---
 
 	ID           string
-	ProjectType  constants.XamarinProjectType
+	ProjectType  constants.ProjectType
 	OutputType   string
 	AssemblyName string
 
@@ -309,7 +309,19 @@ func analyzeTargetDefinition(project Model, pth string) (Model, error) {
 
 		// ProjectTypeGuids
 		if matches := regexp.MustCompile(typeGUIDsPattern).FindStringSubmatch(line); len(matches) == 2 {
-			project.ProjectType = utility.IdetifyProjectType(matches[1])
+			projectType := constants.ProjectTypeUnknown
+			projectTypeList := strings.Split(matches[1], ";")
+			for _, guid := range projectTypeList {
+				guid = strings.TrimPrefix(guid, "{")
+				guid = strings.TrimSuffix(guid, "}")
+
+				projectType, err = constants.ParseProjectTypeGUID(guid)
+				if err == nil {
+					break
+				}
+			}
+
+			project.ProjectType = projectType
 			continue
 		}
 
