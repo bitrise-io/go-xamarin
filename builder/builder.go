@@ -65,7 +65,8 @@ func (builder Model) BuildSolution(configuration, platform string, forceMDTool b
 // IterateOnAllProjects ...
 func (builder Model) IterateOnAllProjects(projectTypeWhiteList []constants.ProjectType, iterator ProjectIterator) error {
 	for _, project := range builder.solution.ProjectMap {
-		if isProjectTypeAllowed(project.ProjectType, projectTypeWhiteList...) {
+		if !isProjectTypeAllowed(project.ProjectType, projectTypeWhiteList...) {
+			log.Detail("project whitelist omitts project: %s", project.Name)
 			continue
 		}
 
@@ -85,7 +86,8 @@ func (builder Model) IterateOnBuildableProjects(configuration, platform string, 
 	solutionConfig := utility.ToConfig(configuration, platform)
 
 	for _, project := range builder.solution.ProjectMap {
-		if isProjectTypeAllowed(project.ProjectType, projectTypeWhiteList...) {
+		if !isProjectTypeAllowed(project.ProjectType, projectTypeWhiteList...) {
+			log.Detail("project whitelist omitts project: %s", project.Name)
 			continue
 		}
 
