@@ -13,10 +13,9 @@ import (
 
 // VersionOutputModel ...
 type VersionOutputModel struct {
-	Version       string `json:"version"`
-	FormatVersion string `json:"format_version"`
-	BuildNumber   string `json:"build_number"`
-	Commit        string `json:"commit"`
+	Version     string `json:"version"`
+	BuildNumber string `json:"build_number"`
+	Commit      string `json:"commit"`
 }
 
 const (
@@ -46,7 +45,7 @@ func print(versionOutput VersionOutputModel, format string) {
 		}
 		fmt.Printf("%s\n", serBytes)
 	default:
-		fmt.Printf("version: %v\nformat version: %v\nbuild number: %v\ncommit: %v\n", versionOutput.Version, versionOutput.FormatVersion, versionOutput.BuildNumber, versionOutput.Commit)
+		fmt.Printf("version: %s\nbuild number: %s\ncommit: %s\n", versionOutput.Version, versionOutput.BuildNumber, versionOutput.Commit)
 	}
 }
 
