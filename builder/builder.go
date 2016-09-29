@@ -32,12 +32,6 @@ type BuildCommandCallback func(project project.Model, command BuildCommand)
 // ClearCommandCallback ...
 type ClearCommandCallback func(project project.Model, dir string)
 
-// ProjectIterator ...
-type ProjectIterator func(project project.Model) error
-
-// ProjectWithConfigIterator ...
-type ProjectWithConfigIterator func(project project.Model, projectConfig project.ConfigurationPlatformModel) error
-
 // New ...
 func New(solutionPth string, projectTypeWhitelist []constants.ProjectType, forceMDTool bool) (Model, error) {
 	if err := validateSolutionPth(solutionPth); err != nil {
@@ -81,8 +75,8 @@ func (builder Model) buildableProjects(configuration, platform string) ([]projec
 	projects := []project.Model{}
 
 	solutionConfig := utility.ToConfig(configuration, platform)
-
 	filteredProjects := builder.filteredProjects()
+
 	for _, proj := range filteredProjects {
 		//
 		// Solution config - project config mapping
