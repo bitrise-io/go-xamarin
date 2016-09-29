@@ -16,7 +16,7 @@ changelog:
     To install this version, run the following commands (in a bash shell):
 
     ```
-    curl -fL https://github.com/bitrise-tools/go-xamarin/releases/download/{{.EndTaggedCommit.Tag}}/bitrise-$(uname -s)-$(uname -m) > /usr/local/bin/go-xamarin
+    curl -fL https://github.com/bitrise-tools/go-xamarin/releases/download/{{.EndTaggedCommit.Tag}}/go-xamarin-$(uname -s)-$(uname -m) > /usr/local/bin/go-xamarin
     ```
 
     Then:
