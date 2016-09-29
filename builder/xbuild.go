@@ -5,13 +5,17 @@ import (
 	"os"
 
 	"github.com/bitrise-io/go-utils/cmdex"
-	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-tools/go-xamarin/constants"
 )
 
+// BuildCommand ...
+type BuildCommand interface {
+	PrintableCommand() string
+}
+
 // XbuildCommandModel ...
 type XbuildCommandModel struct {
-	cmdSlice []string
+	buildTool string
 
 	projectPth    string // can be solution or project path
 	configuration string
@@ -28,7 +32,7 @@ type XbuildCommandModel struct {
 func NewXbuildCommand(projectPth string) *XbuildCommandModel {
 	return &XbuildCommandModel{
 		projectPth: projectPth,
-		cmdSlice:   []string{constants.XbuildPath},
+		buildTool:  constants.XbuildPath,
 	}
 }
 
@@ -62,37 +66,48 @@ func (xbuild *XbuildCommandModel) SetArchiveOnBuild() *XbuildCommandModel {
 	return xbuild
 }
 
-// Run ...
-func (xbuild XbuildCommandModel) Run() error {
+func (xbuild XbuildCommandModel) buildCommandSlice() []string {
+	cmdSlice := []string{xbuild.buildTool}
+
 	if xbuild.projectPth != "" {
-		xbuild.cmdSlice = append(xbuild.cmdSlice, xbuild.projectPth)
+		cmdSlice = append(cmdSlice, xbuild.projectPth)
 	}
 
 	if xbuild.target != "" {
-		xbuild.cmdSlice = append(xbuild.cmdSlice, fmt.Sprintf("/target:%s", xbuild.target))
+		cmdSlice = append(cmdSlice, fmt.Sprintf("/target:%s", xbuild.target))
 	}
 
 	if xbuild.configuration != "" {
-		xbuild.cmdSlice = append(xbuild.cmdSlice, fmt.Sprintf("/p:Configuration=%s", xbuild.configuration))
+		cmdSlice = append(cmdSlice, fmt.Sprintf("/p:Configuration=%s", xbuild.configuration))
 	}
 
 	if xbuild.platform != "" {
-		xbuild.cmdSlice = append(xbuild.cmdSlice, fmt.Sprintf("/p:Platform=%s", xbuild.platform))
+		cmdSlice = append(cmdSlice, fmt.Sprintf("/p:Platform=%s", xbuild.platform))
 	}
 
 	if xbuild.archiveOnBuild {
-		xbuild.cmdSlice = append(xbuild.cmdSlice, "/p:ArchiveOnBuild=true")
+		cmdSlice = append(cmdSlice, "/p:ArchiveOnBuild=true")
 	}
 
 	if xbuild.buildIpa {
-		xbuild.cmdSlice = append(xbuild.cmdSlice, "/p:BuildIpa=true")
+		cmdSlice = append(cmdSlice, "/p:BuildIpa=true")
 	}
 
-	xbuild.cmdSlice = append(xbuild.cmdSlice, "/verbosity:minimal", "/nologo")
+	return append(cmdSlice, "/verbosity:minimal", "/nologo")
+}
 
-	log.Info("=> %s", cmdex.PrintableCommandArgs(false, xbuild.cmdSlice))
+// PrintableCommand ...
+func (xbuild XbuildCommandModel) PrintableCommand() string {
+	cmdSlice := xbuild.buildCommandSlice()
 
-	command, err := cmdex.NewCommandFromSlice(xbuild.cmdSlice)
+	return cmdex.PrintableCommandArgs(false, cmdSlice)
+}
+
+// Run ...
+func (xbuild XbuildCommandModel) Run() error {
+	cmdSlice := xbuild.buildCommandSlice()
+
+	command, err := cmdex.NewCommandFromSlice(cmdSlice)
 	if err != nil {
 		return err
 	}

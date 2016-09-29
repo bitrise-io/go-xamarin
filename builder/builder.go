@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-xamarin/constants"
 	"github.com/bitrise-tools/go-xamarin/project"
@@ -16,10 +15,22 @@ import (
 // Model ...
 type Model struct {
 	solution solution.Model
+
+	projectTypeWhitelist []constants.ProjectType
+	forceMDTool          bool
 }
 
 // OutputMap ...
 type OutputMap map[constants.ProjectType]map[constants.OutputType]string
+
+// BuildSolutionCommandCallback ...
+type BuildSolutionCommandCallback func(command BuildCommand)
+
+// BuildCommandCallback ...
+type BuildCommandCallback func(project project.Model, command BuildCommand)
+
+// ClearCommandCallback ...
+type ClearCommandCallback func(project project.Model, dir string)
 
 // ProjectIterator ...
 type ProjectIterator func(project project.Model) error
@@ -28,7 +39,7 @@ type ProjectIterator func(project project.Model) error
 type ProjectWithConfigIterator func(project project.Model, projectConfig project.ConfigurationPlatformModel) error
 
 // New ...
-func New(solutionPth string) (Model, error) {
+func New(solutionPth string, projectTypeWhitelist []constants.ProjectType, forceMDTool bool) (Model, error) {
 	if err := validateSolutionPth(solutionPth); err != nil {
 		return Model{}, err
 	}
@@ -38,87 +49,255 @@ func New(solutionPth string) (Model, error) {
 		return Model{}, err
 	}
 
+	if projectTypeWhitelist == nil {
+		projectTypeWhitelist = []constants.ProjectType{}
+	}
+
 	return Model{
 		solution: solution,
+
+		projectTypeWhitelist: projectTypeWhitelist,
+		forceMDTool:          forceMDTool,
 	}, nil
 }
 
-// BuildSolution ...
-func (builder Model) BuildSolution(configuration, platform string, forceMDTool bool) (OutputMap, error) {
-	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
-		return OutputMap{}, err
-	}
+func (builder Model) filteredProjects() []project.Model {
+	projects := []project.Model{}
 
-	if forceMDTool {
-		if err := NewMDToolCommand(builder.solution.Pth).SetTarget("build").SetConfiguration(configuration).SetPlatform(platform).Run(); err != nil {
-			return OutputMap{}, err
-		}
-	} else {
-		if err := NewXbuildCommand(builder.solution.Pth).SetTarget("Build").SetConfiguration(configuration).SetPlatform(platform).Run(); err != nil {
-			return OutputMap{}, err
-		}
-	}
-
-	return OutputMap{}, nil
-}
-
-// IterateOnAllProjects ...
-func (builder Model) IterateOnAllProjects(projectTypeWhiteList []constants.ProjectType, iterator ProjectIterator) error {
-	for _, project := range builder.solution.ProjectMap {
-		if !isProjectTypeAllowed(project.ProjectType, projectTypeWhiteList...) {
-			log.Detail("project whitelist omitts project: %s", project.Name)
+	for _, proj := range builder.solution.ProjectMap {
+		if !isProjectTypeAllowed(proj.ProjectType, builder.projectTypeWhitelist...) {
 			continue
 		}
 
-		if err := iterator(project); err != nil {
-			return err
+		if proj.ProjectType != constants.ProjectTypeUnknown {
+			projects = append(projects, proj)
 		}
 	}
+
+	return projects
+}
+
+func (builder Model) buildableProjects(configuration, platform string) ([]project.Model, error) {
+	projects := []project.Model{}
+
+	solutionConfig := utility.ToConfig(configuration, platform)
+
+	filteredProjects := builder.filteredProjects()
+	for _, proj := range filteredProjects {
+		//
+		// Solution config - project config mapping
+		_, ok := proj.ConfigMap[solutionConfig]
+		if !ok {
+			// fmt.Sprintf("project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig)
+			continue
+		}
+
+		if (proj.ProjectType == constants.ProjectTypeIos ||
+			proj.ProjectType == constants.ProjectTypeMac ||
+			proj.ProjectType == constants.ProjectTypeTVOs) &&
+			proj.OutputType != "exe" {
+			// fmt.Sprintf("project (%s) does not archivable based on output type (%s), skipping...", project.Name, project.OutputType)
+			continue
+		}
+		if proj.ProjectType == constants.ProjectTypeAndroid &&
+			!proj.AndroidApplication {
+			// fmt.Sprintf("(%s) is not an android application project, skipping...", proj.Name)
+			continue
+		}
+
+		if proj.ProjectType != constants.ProjectTypeUnknown {
+			projects = append(projects, proj)
+		}
+	}
+
+	return projects, nil
+}
+
+// CleanAll ...
+func (builder Model) CleanAll(callback ClearCommandCallback) error {
+	filteredProjects := builder.filteredProjects()
+	for _, proj := range filteredProjects {
+
+		projectDir := filepath.Dir(proj.Pth)
+
+		{
+			binPth := filepath.Join(projectDir, "bin")
+			if exist, err := pathutil.IsDirExists(binPth); err != nil {
+				return err
+			} else if exist {
+				if callback != nil {
+					callback(proj, binPth)
+				}
+
+				if err := os.RemoveAll(binPth); err != nil {
+					return err
+				}
+			}
+		}
+
+		{
+			objPth := filepath.Join(projectDir, "obj")
+			if exist, err := pathutil.IsDirExists(objPth); err != nil {
+				return err
+			} else if exist {
+				if callback != nil {
+					callback(proj, objPth)
+				}
+
+				if err := os.RemoveAll(objPth); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
-// IterateOnBuildableProjects ...
-func (builder Model) IterateOnBuildableProjects(configuration, platform string, projectTypeWhiteList []constants.ProjectType, iterator ProjectWithConfigIterator) error {
+// BuildSolution ...
+func (builder Model) BuildSolution(configuration, platform string, callback BuildSolutionCommandCallback) error {
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
 		return err
 	}
 
+	if builder.forceMDTool {
+		cmd := NewMDToolCommand(builder.solution.Pth).SetTarget("build").SetConfiguration(configuration).SetPlatform(platform)
+
+		if callback != nil {
+			callback(cmd)
+		}
+
+		if err := cmd.Run(); err != nil {
+			return err
+		}
+	} else {
+		cmd := NewXbuildCommand(builder.solution.Pth).SetTarget("Build").SetConfiguration(configuration).SetPlatform(platform)
+
+		if callback != nil {
+			callback(cmd)
+		}
+
+		if err := cmd.Run(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// BuildAllProjects ...
+func (builder Model) BuildAllProjects(configuration, platform string, callback BuildCommandCallback) error {
+	buildableProjects, err := builder.buildableProjects(configuration, platform)
+	if err != nil {
+		return fmt.Errorf("Failed to list buildable project, error: %s", err)
+	}
+
 	solutionConfig := utility.ToConfig(configuration, platform)
 
-	for _, project := range builder.solution.ProjectMap {
-		if !isProjectTypeAllowed(project.ProjectType, projectTypeWhiteList...) {
-			log.Detail("project whitelist omitts project: %s", project.Name)
-			continue
-		}
-
-		//
-		// Solution config - project config mapping
-		projectConfig, ok := project.ConfigMap[solutionConfig]
+	for _, proj := range buildableProjects {
+		projectConfigKey, ok := proj.ConfigMap[solutionConfig]
 		if !ok {
-			log.Warn("project (%s) do not have config for solution config (%s), skipping...", project.Name, solutionConfig)
+			// fmt.Sprintf("project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig)
 			continue
 		}
 
-		config, ok := project.Configs[projectConfig]
+		projectConfig, ok := proj.Configs[projectConfigKey]
 		if !ok {
-			return fmt.Errorf("project contains mapping for solution config (%s -> %s), but does not have project config for it", solutionConfig, projectConfig)
-		}
-
-		if (project.ProjectType == constants.ProjectTypeIos ||
-			project.ProjectType == constants.ProjectTypeMac ||
-			project.ProjectType == constants.ProjectTypeTVOs) &&
-			project.OutputType != "exe" {
-			log.Warn("project (%s) does not archivable based on output type (%s), skipping...", project.Name, project.OutputType)
-			continue
-		}
-		if project.ProjectType == constants.ProjectTypeAndroid &&
-			!project.AndroidApplication {
-			log.Warn("(%s) is not an android application project, skipping...", project.Name)
+			// fmt.Sprintf("project (%s) contains mapping for solution config (%s), but does not have project configuration", proj.Name, solutionConfig)
 			continue
 		}
 
-		if project.ProjectType != constants.ProjectTypeUnknown {
-			if err := iterator(project, config); err != nil {
+		switch proj.ProjectType {
+		case constants.ProjectTypeIos, constants.ProjectTypeTVOs:
+			if builder.forceMDTool {
+				cmd := NewMDToolCommand(builder.solution.Pth).SetTarget("build").SetConfiguration(projectConfig.Configuration).SetPlatform(projectConfig.Platform).SetProjectName(proj.Name)
+
+				if callback != nil {
+					callback(proj, cmd)
+				}
+
+				if err := cmd.Run(); err != nil {
+					return err
+				}
+
+				if isArchitectureArchiveable(projectConfig.MtouchArchs) {
+					cmd := NewMDToolCommand(builder.solution.Pth).SetTarget("archive").SetConfiguration(projectConfig.Configuration).SetPlatform(projectConfig.Platform).SetProjectName(proj.Name)
+
+					if callback != nil {
+						callback(proj, cmd)
+					}
+
+					if err := cmd.Run(); err != nil {
+						return err
+					}
+				}
+			} else {
+				cmd := NewXbuildCommand(builder.solution.Pth).SetTarget("Build").SetConfiguration(configuration).SetPlatform(platform)
+
+				if isArchitectureArchiveable(projectConfig.MtouchArchs) {
+					cmd.SetBuildIpa()
+					cmd.SetArchiveOnBuild()
+				}
+
+				if callback != nil {
+					callback(proj, cmd)
+				}
+
+				if err := cmd.Run(); err != nil {
+					return err
+				}
+			}
+		case constants.ProjectTypeMac:
+			if builder.forceMDTool {
+				cmd := NewMDToolCommand(builder.solution.Pth).SetTarget("build").SetConfiguration(projectConfig.Configuration).SetPlatform(projectConfig.Platform).SetProjectName(proj.Name)
+
+				if callback != nil {
+					callback(proj, cmd)
+				}
+
+				if err := cmd.Run(); err != nil {
+					return err
+				}
+
+				cmd = NewMDToolCommand(builder.solution.Pth).SetTarget("archive").SetConfiguration(projectConfig.Configuration).SetPlatform(projectConfig.Platform).SetProjectName(proj.Name)
+
+				if callback != nil {
+					callback(proj, cmd)
+				}
+
+				if err := cmd.Run(); err != nil {
+					return err
+				}
+			} else {
+				cmd := NewXbuildCommand(builder.solution.Pth).SetTarget("Build").SetConfiguration(configuration).SetPlatform(platform)
+				cmd.SetArchiveOnBuild()
+
+				if callback != nil {
+					callback(proj, cmd)
+				}
+
+				if err := cmd.Run(); err != nil {
+					return err
+				}
+			}
+		case constants.ProjectTypeAndroid:
+			cmd := NewXbuildCommand(proj.Pth).SetConfiguration(projectConfig.Configuration)
+
+			if projectConfig.SignAndroid {
+				cmd.SetTarget("SignAndroidPackage")
+			} else {
+				cmd.SetTarget("PackageForAndroid")
+			}
+
+			if !isPlatformAnyCPU(projectConfig.Platform) {
+				cmd.SetPlatform(projectConfig.Platform)
+			}
+
+			if callback != nil {
+				callback(proj, cmd)
+			}
+
+			if err := cmd.Run(); err != nil {
 				return err
 			}
 		}
@@ -127,174 +306,73 @@ func (builder Model) IterateOnBuildableProjects(configuration, platform string, 
 	return nil
 }
 
-// CleanAll ...
-func (builder Model) CleanAll(projectTypeFilter ...constants.ProjectType) error {
-	log.Info("Cleaning project output dirs (bin, obj) ...")
-
-	iterator := func(project project.Model) error {
-		projectDir := filepath.Dir(project.Pth)
-		binPth := filepath.Join(projectDir, "bin")
-		objPth := filepath.Join(projectDir, "obj")
-
-		if exist, err := pathutil.IsDirExists(binPth); err != nil {
-			return err
-		} else if exist {
-			log.Detail("remove: %s", binPth)
-			if err := os.RemoveAll(binPth); err != nil {
-				return err
-			}
-		}
-
-		if exist, err := pathutil.IsDirExists(objPth); err != nil {
-			return err
-		} else if exist {
-			log.Detail("remove: %s", binPth)
-			if err := os.RemoveAll(objPth); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}
-
-	return builder.IterateOnAllProjects(projectTypeFilter, iterator)
-}
-
-// Build ...
-func (builder Model) Build(configuration, platform string, forceMDTool bool, projectTypeFilter ...constants.ProjectType) error {
-	iterator := func(project project.Model, projectConfig project.ConfigurationPlatformModel) error {
-		switch project.ProjectType {
-		case constants.ProjectTypeIos, constants.ProjectTypeTVOs:
-			if forceMDTool {
-				if err := NewMDToolCommand(builder.solution.Pth).SetTarget("build").SetConfiguration(projectConfig.Configuration).SetPlatform(projectConfig.Platform).SetProjectName(project.Name).Run(); err != nil {
-					return err
-				}
-
-				if isArchitectureArchiveable(projectConfig.MtouchArchs) {
-					if err := NewMDToolCommand(builder.solution.Pth).SetTarget("archive").SetConfiguration(projectConfig.Configuration).SetPlatform(projectConfig.Platform).SetProjectName(project.Name).Run(); err != nil {
-						return err
-					}
-				}
-			} else {
-				command := NewXbuildCommand(builder.solution.Pth).SetTarget("Build").SetConfiguration(configuration).SetPlatform(platform)
-
-				if projectConfig.BuildIpa {
-					command.SetBuildIpa()
-				} else if isArchitectureArchiveable(projectConfig.MtouchArchs) {
-					command.SetArchiveOnBuild()
-				}
-
-				if err := command.Run(); err != nil {
-					return err
-				}
-			}
-		case constants.ProjectTypeMac:
-			if forceMDTool {
-				if err := NewMDToolCommand(builder.solution.Pth).SetTarget("build").SetConfiguration(projectConfig.Configuration).SetPlatform(projectConfig.Platform).SetProjectName(project.Name).Run(); err != nil {
-					return err
-				}
-
-				if err := NewMDToolCommand(builder.solution.Pth).SetTarget("archive").SetConfiguration(projectConfig.Configuration).SetPlatform(projectConfig.Platform).SetProjectName(project.Name).Run(); err != nil {
-					return err
-				}
-			} else {
-				if err := NewXbuildCommand(builder.solution.Pth).SetTarget("Build").SetConfiguration(configuration).SetPlatform(platform).Run(); err != nil {
-					return err
-				}
-			}
-		case constants.ProjectTypeAndroid:
-			command := NewXbuildCommand(project.Pth).SetConfiguration(projectConfig.Configuration)
-
-			if projectConfig.SignAndroid {
-				command.SetTarget("SignAndroidPackage")
-			} else {
-				command.SetTarget("PackageForAndroid")
-			}
-
-			if !isPlatformAnyCPU(projectConfig.Platform) {
-				command.SetPlatform(projectConfig.Platform)
-			}
-
-			if err := command.Run(); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}
-
-	return builder.IterateOnBuildableProjects(configuration, platform, projectTypeFilter, iterator)
-}
-
 // CollectOutput ...
-func (builder Model) CollectOutput(configuration, platform string, forceMDTool bool, projectTypeFilter ...constants.ProjectType) (OutputMap, error) {
+func (builder Model) CollectOutput(configuration, platform string) (OutputMap, error) {
 	outputMap := OutputMap{}
 
-	iterator := func(project project.Model, projectConfig project.ConfigurationPlatformModel) error {
-		switch project.ProjectType {
+	buildableProjects, err := builder.buildableProjects(configuration, platform)
+	if err != nil {
+		return OutputMap{}, fmt.Errorf("Failed to list buildable project, error: %s", err)
+	}
+
+	solutionConfig := utility.ToConfig(configuration, platform)
+
+	for _, proj := range buildableProjects {
+		projectConfigKey, ok := proj.ConfigMap[solutionConfig]
+		if !ok {
+			// fmt.Sprintf("project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig)
+			continue
+		}
+
+		projectConfig, ok := proj.Configs[projectConfigKey]
+		if !ok {
+			// fmt.Sprintf("project (%s) contains mapping for solution config (%s), but does not have project configuration", proj.Name, solutionConfig)
+			continue
+		}
+
+		projectTypeOutputMap, ok := outputMap[proj.ProjectType]
+		if !ok {
+			projectTypeOutputMap = map[constants.OutputType]string{}
+		}
+
+		switch proj.ProjectType {
 		case constants.ProjectTypeIos, constants.ProjectTypeTVOs:
-			projectTypeOutputMap := outputMap[project.ProjectType]
-
-			if forceMDTool {
-				if isArchitectureArchiveable(projectConfig.MtouchArchs) {
-					if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(project.AssemblyName); err != nil {
-						return err
-					} else if xcarchivePth != "" {
-						projectTypeOutputMap[constants.OutputTypeXCArchive] = xcarchivePth
-					}
-
-					if projectConfig.BuildIpa {
-						if ipaPth, err := exportIpa(projectConfig.OutputDir, project.AssemblyName); err != nil {
-							return err
-						} else if ipaPth != "" {
-							projectTypeOutputMap[constants.OutputTypeIPA] = ipaPth
-						}
-					}
-				}
-			} else {
-				if projectConfig.BuildIpa {
-					if ipaPth, err := exportIpa(projectConfig.OutputDir, project.AssemblyName); err != nil {
-						return err
-					} else if ipaPth != "" {
-						projectTypeOutputMap[constants.OutputTypeIPA] = ipaPth
-					}
-				} else if isArchitectureArchiveable(projectConfig.MtouchArchs) {
-					if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(project.AssemblyName); err != nil {
-						return err
-					} else if xcarchivePth != "" {
-						projectTypeOutputMap[constants.OutputTypeXCArchive] = xcarchivePth
-					}
-				}
+			if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
+				return OutputMap{}, err
+			} else if xcarchivePth != "" {
+				projectTypeOutputMap[constants.OutputTypeXCArchive] = xcarchivePth
+			}
+			if ipaPth, err := exportIpa(projectConfig.OutputDir, proj.AssemblyName); err != nil {
+				return OutputMap{}, err
+			} else if ipaPth != "" {
+				projectTypeOutputMap[constants.OutputTypeIPA] = ipaPth
 			}
 		case constants.ProjectTypeMac:
-			projectTypeOutputMap := outputMap[project.ProjectType]
-
-			if appPth, err := exportApp(projectConfig.OutputDir, project.AssemblyName); err != nil {
-				return err
+			if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
+				return OutputMap{}, err
+			} else if xcarchivePth != "" {
+				projectTypeOutputMap[constants.OutputTypeXCArchive] = xcarchivePth
+			}
+			if appPth, err := exportApp(projectConfig.OutputDir, proj.AssemblyName); err != nil {
+				return OutputMap{}, err
 			} else if appPth != "" {
 				projectTypeOutputMap[constants.OutputTypeAPP] = appPth
 			}
 
-			if pkgPth, err := exportPkg(projectConfig.OutputDir, project.AssemblyName); err != nil {
-				return err
+			if pkgPth, err := exportPkg(projectConfig.OutputDir, proj.AssemblyName); err != nil {
+				return OutputMap{}, err
 			} else if pkgPth != "" {
 				projectTypeOutputMap[constants.OutputTypePKG] = pkgPth
 			}
 		case constants.ProjectTypeAndroid:
-			projectTypeOutputMap := outputMap[project.ProjectType]
-
-			if apkPth, err := exportApk(projectConfig.OutputDir, project.ManifestPth, projectConfig.SignAndroid); err != nil {
-				return err
+			if apkPth, err := exportApk(projectConfig.OutputDir, proj.ManifestPth, projectConfig.SignAndroid); err != nil {
+				return OutputMap{}, err
 			} else if apkPth != "" {
 				projectTypeOutputMap[constants.OutputTypeAPK] = apkPth
 			}
 		}
 
-		return nil
-	}
-
-	if err := builder.IterateOnBuildableProjects(configuration, platform, projectTypeFilter, iterator); err != nil {
-		return OutputMap{}, err
+		outputMap[proj.ProjectType] = projectTypeOutputMap
 	}
 
 	return outputMap, nil

@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-tools/go-xamarin/version"
 	"github.com/urfave/cli"
 )
 
@@ -12,7 +13,7 @@ func Run() {
 	app := cli.NewApp()
 	app.Name = "xamarin-builder"
 	app.Usage = "Build xamarin projects"
-	app.Version = "0.9.0"
+	app.Version = version.VERSION
 
 	app.Commands = commands
 

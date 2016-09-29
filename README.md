@@ -93,3 +93,60 @@ __steps-xamarin-builder:__
 ["\"/Applications/Xamarin Studio.app/Contents/MacOS/mdtool\"", "archive", "\"-c:Debug|x86\"", "\"/Users/godrei/Develop/xamarin/xamarin-mac/XamarinMac/XamarinMac.sln\"", "\"-p:XamarinMac\""]
 ```
 
+
+# xbuild
+
+__build mac:__
+
+- .app
+- .pkg
+
+`/Library/Frameworks/Mono.framework/Commands/xbuild /p:Configuration=Release /target:Build /Users/godrei/Develop/xamarin/Multiplatform/Mac/Multiplatform.Mac.csproj`
+
+__build mac (with archive on build):__ 
+
+- .xcarchive
+- .app
+- .pkg
+
+`/Library/Frameworks/Mono.framework/Commands/xbuild /p:Configuration=Release /p:ArchiveOnBuild=true /target:Build /Users/godrei/Develop/xamarin/Multiplatform/Mac/Multiplatform.Mac.csproj`
+
+__build ios:__
+
+- .app
+- .dSYM
+
+`/Library/Frameworks/Mono.framework/Commands/xbuild /p:Configuration=Release /p:Platform=iPhone /target:Build /Users/godrei/Develop/xamarin/Multiplatform/iOS/Multiplatform.iOS.csproj`
+
+__build ios (with archive on build):__
+
+- .xcarchive
+- .app
+- .dSYM
+
+`/Library/Frameworks/Mono.framework/Commands/xbuild /p:Configuration=Release /p:Platform=iPhone /p:ArchiveOnBuild=true /target:Build /Users/godrei/Develop/xamarin/Multiplatform/iOS/Multiplatform.iOS.csproj`
+
+__build ios (with create ipa):__
+
+- .app
+- .dSYM
+- .ipa
+
+`/Library/Frameworks/Mono.framework/Commands/xbuild /p:Configuration=Release /p:Platform=iPhone /p:BuildIpa=true /target:Build /Users/godrei/Develop/xamarin/Multiplatform/iOS/Multiplatform.iOS.csproj`
+
+__build android:__
+
+- .apk
+
+`/Library/Frameworks/Mono.framework/Commands/xbuild /p:Configuration=Release /target:PackageForAndroid /Users/godrei/Develop/xamarin/Multiplatform/Droid/Multiplatform.Droid.csproj`
+
+__build android (with sign package):__
+
+- .Signed.apk
+- .apk
+
+`/Library/Frameworks/Mono.framework/Commands/xbuild /p:Configuration=Release /target:SignAndroidPackage /Users/godrei/Develop/xamarin/Multiplatform/Droid/Multiplatform.Droid.csproj`
+
+__build solution:__
+
+`/Library/Frameworks/Mono.framework/Commands/xbuild /p:Configuration=Release /target:Build /Users/godrei/Develop/xamarin/Multiplatform/Multiplatform.sln`

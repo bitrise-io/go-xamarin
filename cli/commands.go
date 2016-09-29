@@ -14,7 +14,7 @@ var commands = []cli.Command{
 	{
 		Name:   "build",
 		Usage:  "Build xamarin projects",
-		Action: build,
+		Action: buildCmd,
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  solutionFilePathKey,
@@ -37,12 +37,17 @@ var commands = []cli.Command{
 	{
 		Name:   "clean",
 		Usage:  "Clean xamarin projects",
-		Action: clean,
+		Action: cleanCmd,
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  solutionFilePathKey,
 				Usage: "Solution file path",
 			},
 		},
+	},
+	{
+		Name:   "version",
+		Usage:  "Prints version",
+		Action: versionCmd,
 	},
 }

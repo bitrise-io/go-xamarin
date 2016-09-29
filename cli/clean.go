@@ -5,10 +5,11 @@ import (
 
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-tools/go-xamarin/builder"
+	"github.com/bitrise-tools/go-xamarin/project"
 	"github.com/urfave/cli"
 )
 
-func clean(c *cli.Context) error {
+func cleanCmd(c *cli.Context) error {
 	solutionPth := c.String(solutionFilePathKey)
 
 	fmt.Println("")
@@ -20,12 +21,17 @@ func clean(c *cli.Context) error {
 		return fmt.Errorf("missing required input: %s", solutionFilePathKey)
 	}
 
-	builder, err := builder.New(solutionPth)
+	builder, err := builder.New(solutionPth, nil, false)
 	if err != nil {
 		return err
 	}
 
-	if err := builder.CleanAll(); err != nil {
+	callback := func(project project.Model, dir string) {
+		log.Detail("  cleaning project: %s (removing: %s)", project.Name, dir)
+	}
+
+	log.Info("Cleaning solution: %s", solutionPth)
+	if err := builder.CleanAll(callback); err != nil {
 		return err
 	}
 

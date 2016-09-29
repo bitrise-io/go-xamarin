@@ -4,13 +4,12 @@ import (
 	"fmt"
 
 	"github.com/bitrise-io/go-utils/cmdex"
-	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-tools/go-xamarin/constants"
 )
 
 // MDToolCommandModel ...
 type MDToolCommandModel struct {
-	cmdSlice []string
+	buildTool string
 
 	solutionPth   string
 	projectName   string
@@ -23,7 +22,7 @@ type MDToolCommandModel struct {
 func NewMDToolCommand(solutionPth string) *MDToolCommandModel {
 	return &MDToolCommandModel{
 		solutionPth: solutionPth,
-		cmdSlice:    []string{constants.MDToolPath},
+		buildTool:   constants.MDToolPath,
 	}
 }
 
@@ -51,14 +50,15 @@ func (mdtool *MDToolCommandModel) SetProjectName(projectName string) *MDToolComm
 	return mdtool
 }
 
-// Run ...
-func (mdtool MDToolCommandModel) Run() error {
+func (mdtool MDToolCommandModel) buildCommandSlice() []string {
+	cmdSlice := []string{mdtool.buildTool}
+
 	if mdtool.target != "" {
-		mdtool.cmdSlice = append(mdtool.cmdSlice, mdtool.target)
+		cmdSlice = append(cmdSlice, mdtool.target)
 	}
 
 	if mdtool.solutionPth != "" {
-		mdtool.cmdSlice = append(mdtool.cmdSlice, mdtool.solutionPth)
+		cmdSlice = append(cmdSlice, mdtool.solutionPth)
 	}
 
 	config := ""
@@ -71,16 +71,28 @@ func (mdtool MDToolCommandModel) Run() error {
 	}
 
 	if config != "" {
-		mdtool.cmdSlice = append(mdtool.cmdSlice, fmt.Sprintf("-c:%s", config))
+		cmdSlice = append(cmdSlice, fmt.Sprintf("-c:%s", config))
 	}
 
 	if mdtool.projectName != "" {
-		mdtool.cmdSlice = append(mdtool.cmdSlice, fmt.Sprintf("-p:%s", mdtool.projectName))
+		cmdSlice = append(cmdSlice, fmt.Sprintf("-p:%s", mdtool.projectName))
 	}
 
-	log.Info("=> %s", cmdex.PrintableCommandArgs(false, mdtool.cmdSlice))
+	return cmdSlice
+}
 
-	command, err := cmdex.NewCommandFromSlice(mdtool.cmdSlice)
+// PrintableCommand ...
+func (mdtool MDToolCommandModel) PrintableCommand() string {
+	cmdSlice := mdtool.buildCommandSlice()
+
+	return cmdex.PrintableCommandArgs(false, cmdSlice)
+}
+
+// Run ...
+func (mdtool MDToolCommandModel) Run() error {
+	cmdSlice := mdtool.buildCommandSlice()
+
+	command, err := cmdex.NewCommandFromSlice(cmdSlice)
 	if err != nil {
 		return err
 	}
