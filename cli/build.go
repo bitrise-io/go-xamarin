@@ -5,10 +5,11 @@ import (
 
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-tools/go-xamarin/builder"
+	"github.com/bitrise-tools/go-xamarin/project"
 	"github.com/urfave/cli"
 )
 
-func build(c *cli.Context) error {
+func buildCmd(c *cli.Context) error {
 	solutionPth := c.String(solutionFilePathKey)
 	solutionConfiguration := c.String(solutionConfigurationKey)
 	solutionPlatform := c.String(solutionPlatformKey)
@@ -32,16 +33,24 @@ func build(c *cli.Context) error {
 		return fmt.Errorf("missing required input: %s", solutionPlatformKey)
 	}
 
-	builder, err := builder.New(solutionPth)
+	buildHandler, err := builder.New(solutionPth, nil, forceMdtool)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
-	if err := builder.Build(solutionConfiguration, solutionPlatform, forceMdtool); err != nil {
+	callback := func(project project.Model, command builder.BuildCommand) {
+		fmt.Println()
+		log.Info("Building project: %s", project.Name)
+		log.Detail("-> %s", command.PrintableCommand())
+		fmt.Println()
+	}
+
+	err = buildHandler.BuildAllProjects(solutionConfiguration, solutionPlatform, callback)
+	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
-	output, err := builder.CollectOutput(solutionConfiguration, solutionPlatform, forceMdtool)
+	output, err := buildHandler.CollectOutput(solutionConfiguration, solutionPlatform)
 	if err != nil {
 		return err
 	}
