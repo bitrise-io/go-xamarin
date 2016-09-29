@@ -7,6 +7,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-tools/go-xamarin/version"
 	"github.com/urfave/cli"
 )
 
@@ -53,9 +54,9 @@ func versionCmd(c *cli.Context) error {
 	format := c.String("format")
 
 	versionOutput := VersionOutputModel{
-		Version:     VERSION,
-		BuildNumber: BuildNumber,
-		Commit:      Commit,
+		Version:     version.VERSION,
+		BuildNumber: version.BuildNumber,
+		Commit:      version.Commit,
 	}
 
 	print(versionOutput, format)
