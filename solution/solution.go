@@ -186,7 +186,13 @@ func analyzeSolution(pth string, analyzeProjects bool) (Model, error) {
 		for projectID, proj := range solution.ProjectMap {
 			projectDefinition, err := project.New(proj.Pth)
 			if err != nil {
-				return Model{}, fmt.Errorf("failed to analyze project (%s), error: %s", proj.Pth, err)
+				fmt.Printf("failed to analyze project (%s), error: %s\n", proj.Pth, err)
+				fmt.Println()
+				fmt.Println(content)
+				fmt.Println()
+
+				continue
+				//return Model{}, fmt.Errorf("failed to analyze project (%s), error: %s", proj.Pth, err)
 			}
 
 			projectDefinition.Name = proj.Name
