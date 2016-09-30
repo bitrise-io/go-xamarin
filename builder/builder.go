@@ -29,6 +29,9 @@ type OutputMap map[constants.ProjectType]map[constants.OutputType]string
 // BuildSolutionCommandCallback ...
 type BuildSolutionCommandCallback func(command buildtool.PrintableCommand)
 
+// BuildCommandPrepareCallback ...
+type BuildCommandPrepareCallback func(project project.Model, command *buildtool.ModifyAbleCommand)
+
 // BuildCommandCallback ...
 type BuildCommandCallback func(project project.Model, command buildtool.PrintableCommand)
 
@@ -183,7 +186,7 @@ func (builder Model) BuildSolution(configuration, platform string, callback Buil
 }
 
 // BuildAllProjects ...
-func (builder Model) BuildAllProjects(configuration, platform string, callback BuildCommandCallback) error {
+func (builder Model) BuildAllProjects(configuration, platform string, prepareCallback BuildCommandPrepareCallback, callback BuildCommandCallback) error {
 	buildableProjects, err := builder.buildableProjects(configuration, platform)
 	if err != nil {
 		return fmt.Errorf("Failed to list buildable project, error: %s", err)
@@ -279,6 +282,11 @@ func (builder Model) BuildAllProjects(configuration, platform string, callback B
 
 		// Run build command
 		for _, buildCommand := range buildCommands {
+			if prepareCallback != nil {
+				modifyAbleCommand := buildtool.ModifyAbleCommand(buildCommand)
+				prepareCallback(proj, &modifyAbleCommand)
+			}
+
 			if callback != nil {
 				callback(proj, buildCommand)
 			}
