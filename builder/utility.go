@@ -232,20 +232,23 @@ func exportIpa(outputDir, assemblyName string) (string, error) {
 	latestIpaPth := ""
 	latestIpaDate := time.Time{}
 
+	datePattern := ".* ([0-9]+-[0-9]+-[0-9]+ [0-9]+-[0-9]+-[0-9]+).*"
+	regexp := regexp.MustCompile(datePattern)
+
 	for _, ipa := range ipas {
-		ipaDir := filepath.Dir(ipa)
-		ipaDirBase := filepath.Base(ipaDir)
-		dateStr := strings.TrimPrefix(ipaDirBase, assemblyName)
-		dateStr = strings.TrimSpace(dateStr)
+		matches := regexp.FindStringSubmatch(ipa)
+		if len(matches) > 1 {
+			dateStr := matches[1]
 
-		ipaDate, err := time.Parse("2006-01-02 15-04-05", dateStr)
-		if err != nil {
-			return "", err
-		}
+			ipaDate, err := time.Parse("2006-01-02 15-04-05", dateStr)
+			if err != nil {
+				return "", err
+			}
 
-		if latestIpaPth == "" || ipaDate.After(latestIpaDate) {
-			latestIpaPth = ipa
-			latestIpaDate = ipaDate
+			if latestIpaPth == "" || ipaDate.After(latestIpaDate) {
+				latestIpaPth = ipa
+				latestIpaDate = ipaDate
+			}
 		}
 	}
 
