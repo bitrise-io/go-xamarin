@@ -218,6 +218,7 @@ func exportIpa(outputDir, assemblyName string) (string, error) {
 		return "", err
 	}
 	if len(ipas) == 0 {
+		fmt.Printf("\nNo ipa found with pattern: %s\n\n", pattern)
 		return "", nil
 	}
 
