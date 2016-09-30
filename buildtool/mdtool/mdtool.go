@@ -1,4 +1,4 @@
-package builder
+package mdtool
 
 import (
 	"fmt"
@@ -7,8 +7,8 @@ import (
 	"github.com/bitrise-tools/go-xamarin/constants"
 )
 
-// MDToolCommandModel ...
-type MDToolCommandModel struct {
+// Model ...
+type Model struct {
 	buildTool string
 
 	solutionPth   string
@@ -18,39 +18,39 @@ type MDToolCommandModel struct {
 	target        string
 }
 
-// NewMDToolCommand ...
-func NewMDToolCommand(solutionPth string) *MDToolCommandModel {
-	return &MDToolCommandModel{
+// New ...
+func New(solutionPth string) *Model {
+	return &Model{
 		solutionPth: solutionPth,
 		buildTool:   constants.MDToolPath,
 	}
 }
 
 // SetTarget ...
-func (mdtool *MDToolCommandModel) SetTarget(target string) *MDToolCommandModel {
+func (mdtool *Model) SetTarget(target string) *Model {
 	mdtool.target = target
 	return mdtool
 }
 
 // SetConfiguration ...
-func (mdtool *MDToolCommandModel) SetConfiguration(configuration string) *MDToolCommandModel {
+func (mdtool *Model) SetConfiguration(configuration string) *Model {
 	mdtool.configuration = configuration
 	return mdtool
 }
 
 // SetPlatform ...
-func (mdtool *MDToolCommandModel) SetPlatform(platform string) *MDToolCommandModel {
+func (mdtool *Model) SetPlatform(platform string) *Model {
 	mdtool.platform = platform
 	return mdtool
 }
 
 // SetProjectName ...
-func (mdtool *MDToolCommandModel) SetProjectName(projectName string) *MDToolCommandModel {
+func (mdtool *Model) SetProjectName(projectName string) *Model {
 	mdtool.projectName = projectName
 	return mdtool
 }
 
-func (mdtool MDToolCommandModel) buildCommandSlice() []string {
+func (mdtool Model) buildCommandSlice() []string {
 	cmdSlice := []string{mdtool.buildTool}
 
 	if mdtool.target != "" {
@@ -82,14 +82,14 @@ func (mdtool MDToolCommandModel) buildCommandSlice() []string {
 }
 
 // PrintableCommand ...
-func (mdtool MDToolCommandModel) PrintableCommand() string {
+func (mdtool Model) PrintableCommand() string {
 	cmdSlice := mdtool.buildCommandSlice()
 
 	return cmdex.PrintableCommandArgs(false, cmdSlice)
 }
 
 // Run ...
-func (mdtool MDToolCommandModel) Run() error {
+func (mdtool Model) Run() error {
 	cmdSlice := mdtool.buildCommandSlice()
 
 	command, err := cmdex.NewCommandFromSlice(cmdSlice)

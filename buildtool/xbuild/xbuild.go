@@ -1,4 +1,4 @@
-package builder
+package xbuild
 
 import (
 	"fmt"
@@ -8,13 +8,8 @@ import (
 	"github.com/bitrise-tools/go-xamarin/constants"
 )
 
-// BuildCommand ...
-type BuildCommand interface {
-	PrintableCommand() string
-}
-
-// XbuildCommandModel ...
-type XbuildCommandModel struct {
+// Model ...
+type Model struct {
 	buildTool string
 
 	projectPth    string // can be solution or project path
@@ -24,49 +19,47 @@ type XbuildCommandModel struct {
 
 	buildIpa       bool
 	archiveOnBuild bool
-
-	exportOutput func() (OutputMap, error)
 }
 
-// NewXbuildCommand ...
-func NewXbuildCommand(projectPth string) *XbuildCommandModel {
-	return &XbuildCommandModel{
+// New ...
+func New(projectPth string) *Model {
+	return &Model{
 		projectPth: projectPth,
 		buildTool:  constants.XbuildPath,
 	}
 }
 
 // SetTarget ...
-func (xbuild *XbuildCommandModel) SetTarget(target string) *XbuildCommandModel {
+func (xbuild *Model) SetTarget(target string) *Model {
 	xbuild.target = target
 	return xbuild
 }
 
 // SetConfiguration ...
-func (xbuild *XbuildCommandModel) SetConfiguration(configuration string) *XbuildCommandModel {
+func (xbuild *Model) SetConfiguration(configuration string) *Model {
 	xbuild.configuration = configuration
 	return xbuild
 }
 
 // SetPlatform ...
-func (xbuild *XbuildCommandModel) SetPlatform(platform string) *XbuildCommandModel {
+func (xbuild *Model) SetPlatform(platform string) *Model {
 	xbuild.platform = platform
 	return xbuild
 }
 
 // SetBuildIpa ...
-func (xbuild *XbuildCommandModel) SetBuildIpa() *XbuildCommandModel {
+func (xbuild *Model) SetBuildIpa() *Model {
 	xbuild.buildIpa = true
 	return xbuild
 }
 
 // SetArchiveOnBuild ...
-func (xbuild *XbuildCommandModel) SetArchiveOnBuild() *XbuildCommandModel {
+func (xbuild *Model) SetArchiveOnBuild() *Model {
 	xbuild.archiveOnBuild = true
 	return xbuild
 }
 
-func (xbuild XbuildCommandModel) buildCommandSlice() []string {
+func (xbuild Model) buildCommandSlice() []string {
 	cmdSlice := []string{xbuild.buildTool}
 
 	if xbuild.projectPth != "" {
@@ -99,14 +92,14 @@ func (xbuild XbuildCommandModel) buildCommandSlice() []string {
 }
 
 // PrintableCommand ...
-func (xbuild XbuildCommandModel) PrintableCommand() string {
+func (xbuild Model) PrintableCommand() string {
 	cmdSlice := xbuild.buildCommandSlice()
 
 	return cmdex.PrintableCommandArgs(false, cmdSlice)
 }
 
 // Run ...
-func (xbuild XbuildCommandModel) Run() error {
+func (xbuild Model) Run() error {
 	cmdSlice := xbuild.buildCommandSlice()
 
 	command, err := cmdex.NewCommandFromSlice(cmdSlice)

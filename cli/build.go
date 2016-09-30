@@ -5,6 +5,7 @@ import (
 
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-tools/go-xamarin/builder"
+	"github.com/bitrise-tools/go-xamarin/buildtool"
 	"github.com/bitrise-tools/go-xamarin/project"
 	"github.com/urfave/cli"
 )
@@ -15,13 +16,12 @@ func buildCmd(c *cli.Context) error {
 	solutionPlatform := c.String(solutionPlatformKey)
 	forceMdtool := c.Bool(forceMDToolKey)
 
-	fmt.Println("")
+	fmt.Println()
 	log.Info("Config:")
 	log.Detail("- solution: %s", solutionPth)
 	log.Detail("- configuration: %s", solutionConfiguration)
 	log.Detail("- platform: %s", solutionPlatform)
 	log.Detail("- force-mdtool: %v", forceMdtool)
-	fmt.Println("")
 
 	if solutionPth == "" {
 		return fmt.Errorf("missing required input: %s", solutionFilePathKey)
@@ -38,10 +38,13 @@ func buildCmd(c *cli.Context) error {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
-	callback := func(project project.Model, command builder.BuildCommand) {
+	fmt.Println()
+	log.Info("Building all projects in solution: %s", solutionPth)
+
+	callback := func(project project.Model, command buildtool.PrintableCommand) {
 		fmt.Println()
 		log.Info("Building project: %s", project.Name)
-		log.Detail("-> %s", command.PrintableCommand())
+		log.Done("$ %s", command.PrintableCommand())
 		fmt.Println()
 	}
 
@@ -50,13 +53,21 @@ func buildCmd(c *cli.Context) error {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
-	output, err := buildHandler.CollectOutput(solutionConfiguration, solutionPlatform)
+	fmt.Println()
+	log.Info("Collecting generated outputs")
+
+	outputMap, err := buildHandler.CollectOutput(solutionConfiguration, solutionPlatform)
 	if err != nil {
 		return err
 	}
 
-	for outputType, pth := range output {
-		log.Done("%s: %s", outputType, pth)
+	for projectType, output := range outputMap {
+		fmt.Println()
+		log.Info("%s outputs:", projectType)
+
+		for outputType, pth := range output {
+			log.Done("%s: %s", outputType, pth)
+		}
 	}
 
 	return nil

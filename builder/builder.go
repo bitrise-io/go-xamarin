@@ -6,6 +6,9 @@ import (
 	"path/filepath"
 
 	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-tools/go-xamarin/buildtool"
+	"github.com/bitrise-tools/go-xamarin/buildtool/mdtool"
+	"github.com/bitrise-tools/go-xamarin/buildtool/xbuild"
 	"github.com/bitrise-tools/go-xamarin/constants"
 	"github.com/bitrise-tools/go-xamarin/project"
 	"github.com/bitrise-tools/go-xamarin/solution"
@@ -24,10 +27,10 @@ type Model struct {
 type OutputMap map[constants.ProjectType]map[constants.OutputType]string
 
 // BuildSolutionCommandCallback ...
-type BuildSolutionCommandCallback func(command BuildCommand)
+type BuildSolutionCommandCallback func(command buildtool.PrintableCommand)
 
 // BuildCommandCallback ...
-type BuildCommandCallback func(project project.Model, command BuildCommand)
+type BuildCommandCallback func(project project.Model, command buildtool.PrintableCommand)
 
 // ClearCommandCallback ...
 type ClearCommandCallback func(project project.Model, dir string)
@@ -155,7 +158,7 @@ func (builder Model) BuildSolution(configuration, platform string, callback Buil
 	}
 
 	if builder.forceMDTool {
-		cmd := NewMDToolCommand(builder.solution.Pth).SetTarget("build").SetConfiguration(configuration).SetPlatform(platform)
+		cmd := mdtool.New(builder.solution.Pth).SetTarget("build").SetConfiguration(configuration).SetPlatform(platform)
 
 		if callback != nil {
 			callback(cmd)
@@ -165,7 +168,7 @@ func (builder Model) BuildSolution(configuration, platform string, callback Buil
 			return err
 		}
 	} else {
-		cmd := NewXbuildCommand(builder.solution.Pth).SetTarget("Build").SetConfiguration(configuration).SetPlatform(platform)
+		cmd := xbuild.New(builder.solution.Pth).SetTarget("Build").SetConfiguration(configuration).SetPlatform(platform)
 
 		if callback != nil {
 			callback(cmd)
@@ -201,97 +204,86 @@ func (builder Model) BuildAllProjects(configuration, platform string, callback B
 			continue
 		}
 
+		// Prepare build commands
+		buildCommands := []buildtool.RunnableCommand{}
+
 		switch proj.ProjectType {
 		case constants.ProjectTypeIos, constants.ProjectTypeTVOs:
 			if builder.forceMDTool {
-				cmd := NewMDToolCommand(builder.solution.Pth).SetTarget("build").SetConfiguration(projectConfig.Configuration).SetPlatform(projectConfig.Platform).SetProjectName(proj.Name)
+				command := mdtool.New(builder.solution.Pth).SetTarget("build")
+				command.SetConfiguration(projectConfig.Configuration)
+				command.SetPlatform(projectConfig.Platform)
+				command.SetProjectName(proj.Name)
 
-				if callback != nil {
-					callback(proj, cmd)
-				}
-
-				if err := cmd.Run(); err != nil {
-					return err
-				}
+				buildCommands = append(buildCommands, command)
 
 				if isArchitectureArchiveable(projectConfig.MtouchArchs) {
-					cmd := NewMDToolCommand(builder.solution.Pth).SetTarget("archive").SetConfiguration(projectConfig.Configuration).SetPlatform(projectConfig.Platform).SetProjectName(proj.Name)
+					command := mdtool.New(builder.solution.Pth).SetTarget("archive")
+					command.SetConfiguration(projectConfig.Configuration)
+					command.SetPlatform(projectConfig.Platform)
+					command.SetProjectName(proj.Name)
 
-					if callback != nil {
-						callback(proj, cmd)
-					}
-
-					if err := cmd.Run(); err != nil {
-						return err
-					}
+					buildCommands = append(buildCommands, command)
 				}
 			} else {
-				cmd := NewXbuildCommand(builder.solution.Pth).SetTarget("Build").SetConfiguration(configuration).SetPlatform(platform)
+				command := xbuild.New(builder.solution.Pth).SetTarget("Build")
+				command.SetConfiguration(configuration)
+				command.SetPlatform(platform)
 
 				if isArchitectureArchiveable(projectConfig.MtouchArchs) {
-					cmd.SetBuildIpa()
-					cmd.SetArchiveOnBuild()
+					command.SetBuildIpa()
+					command.SetArchiveOnBuild()
 				}
 
-				if callback != nil {
-					callback(proj, cmd)
-				}
-
-				if err := cmd.Run(); err != nil {
-					return err
-				}
+				buildCommands = append(buildCommands, command)
 			}
 		case constants.ProjectTypeMac:
 			if builder.forceMDTool {
-				cmd := NewMDToolCommand(builder.solution.Pth).SetTarget("build").SetConfiguration(projectConfig.Configuration).SetPlatform(projectConfig.Platform).SetProjectName(proj.Name)
+				command := mdtool.New(builder.solution.Pth).SetTarget("build")
+				command.SetConfiguration(projectConfig.Configuration)
+				command.SetPlatform(projectConfig.Platform)
+				command.SetProjectName(proj.Name)
 
-				if callback != nil {
-					callback(proj, cmd)
-				}
+				buildCommands = append(buildCommands, command)
 
-				if err := cmd.Run(); err != nil {
-					return err
-				}
+				command = mdtool.New(builder.solution.Pth).SetTarget("archive")
+				command.SetConfiguration(projectConfig.Configuration)
+				command.SetPlatform(projectConfig.Platform)
+				command.SetProjectName(proj.Name)
 
-				cmd = NewMDToolCommand(builder.solution.Pth).SetTarget("archive").SetConfiguration(projectConfig.Configuration).SetPlatform(projectConfig.Platform).SetProjectName(proj.Name)
-
-				if callback != nil {
-					callback(proj, cmd)
-				}
-
-				if err := cmd.Run(); err != nil {
-					return err
-				}
+				buildCommands = append(buildCommands, command)
 			} else {
-				cmd := NewXbuildCommand(builder.solution.Pth).SetTarget("Build").SetConfiguration(configuration).SetPlatform(platform)
-				cmd.SetArchiveOnBuild()
+				command := xbuild.New(builder.solution.Pth).SetTarget("Build")
+				command.SetConfiguration(configuration)
+				command.SetPlatform(platform)
+				command.SetArchiveOnBuild()
 
-				if callback != nil {
-					callback(proj, cmd)
-				}
-
-				if err := cmd.Run(); err != nil {
-					return err
-				}
+				buildCommands = append(buildCommands, command)
 			}
 		case constants.ProjectTypeAndroid:
-			cmd := NewXbuildCommand(proj.Pth).SetConfiguration(projectConfig.Configuration)
-
+			command := xbuild.New(proj.Pth)
 			if projectConfig.SignAndroid {
-				cmd.SetTarget("SignAndroidPackage")
+				command.SetTarget("SignAndroidPackage")
 			} else {
-				cmd.SetTarget("PackageForAndroid")
+				command.SetTarget("PackageForAndroid")
 			}
+
+			command.SetConfiguration(projectConfig.Configuration)
 
 			if !isPlatformAnyCPU(projectConfig.Platform) {
-				cmd.SetPlatform(projectConfig.Platform)
+				command.SetPlatform(projectConfig.Platform)
 			}
 
+			buildCommands = append(buildCommands, command)
+		}
+
+		// Run build command
+		for _, buildCommand := range buildCommands {
 			if callback != nil {
-				callback(proj, cmd)
+				callback(proj, buildCommand)
 			}
 
-			if err := cmd.Run(); err != nil {
+			if err := buildCommand.Run(); err != nil {
 				return err
 			}
 		}
