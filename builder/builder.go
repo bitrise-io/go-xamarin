@@ -341,6 +341,11 @@ func (builder Model) CollectOutput(configuration, platform string) (OutputMap, e
 			} else if ipaPth != "" {
 				projectTypeOutputMap[constants.OutputTypeIPA] = ipaPth
 			}
+			if dsymPth, err := exportDSYM(projectConfig.OutputDir, proj.AssemblyName); err != nil {
+				return OutputMap{}, err
+			} else if dsymPth != "" {
+				projectTypeOutputMap[constants.OutputTypeDSYM] = dsymPth
+			}
 		case constants.ProjectTypeMac:
 			if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
 				return OutputMap{}, err
@@ -352,7 +357,6 @@ func (builder Model) CollectOutput(configuration, platform string) (OutputMap, e
 			} else if appPth != "" {
 				projectTypeOutputMap[constants.OutputTypeAPP] = appPth
 			}
-
 			if pkgPth, err := exportPkg(projectConfig.OutputDir, proj.AssemblyName); err != nil {
 				return OutputMap{}, err
 			} else if pkgPth != "" {
