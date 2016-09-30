@@ -366,7 +366,9 @@ func (builder Model) CollectOutput(configuration, platform string) (OutputMap, e
 			}
 		}
 
-		outputMap[proj.ProjectType] = projectTypeOutputMap
+		if len(projectTypeOutputMap) > 0 {
+			outputMap[proj.ProjectType] = projectTypeOutputMap
+		}
 	}
 
 	return outputMap, nil
