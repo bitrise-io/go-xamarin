@@ -218,9 +218,15 @@ func exportIpa(outputDir, assemblyName string) (string, error) {
 		return "", err
 	}
 	if len(ipas) == 0 {
-		fmt.Printf("\nNo ipa found for assembly: %s\n\n", assemblyName)
-		fmt.Printf("\nNo ipa found with pattern: %s\n\n", pattern)
-		return "", nil
+		pattern := filepath.Join(outputDir, "*", "*.ipa")
+		ipas, err = filepath.Glob(pattern)
+		if err != nil {
+			return "", err
+		}
+
+		if len(ipas) == 0 {
+			return "", nil
+		}
 	}
 
 	latestIpaPth := ""
