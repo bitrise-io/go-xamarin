@@ -93,7 +93,9 @@ func (xbuild XbuildCommandModel) buildCommandSlice() []string {
 		cmdSlice = append(cmdSlice, "/p:BuildIpa=true")
 	}
 
-	return append(cmdSlice, "/verbosity:minimal", "/nologo")
+	//cmdSlice = append(cmdSlice, "/verbosity:minimal", "/nologo")
+
+	return cmdSlice
 }
 
 // PrintableCommand ...
