@@ -183,6 +183,20 @@ func exportLatestXCArchiveFromXcodeArchives(projectName string) (string, error) 
 		dateStr = strings.TrimSuffix(dateStr, ext)
 		dateStr = strings.TrimSpace(dateStr)
 
+		if strings.Contains(dateStr, "AM") {
+			split := strings.SplitAfter(dateStr, "AM")
+			if len(split) > 0 {
+				dateStr = split[0]
+			}
+		}
+
+		if strings.Contains(dateStr, "PM") {
+			split := strings.SplitAfter(dateStr, "PM")
+			if len(split) > 0 {
+				dateStr = split[0]
+			}
+		}
+
 		archiveDate, err := time.Parse("1-2-06 3.04 PM", dateStr)
 		if err != nil {
 			return "", err
