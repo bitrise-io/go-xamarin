@@ -25,9 +25,6 @@ type Model struct {
 // OutputMap ...
 type OutputMap map[constants.ProjectType]map[constants.OutputType]string
 
-// BuildSolutionCommandCallback ...
-type BuildSolutionCommandCallback func(command buildtool.PrintableCommand)
-
 // BuildCommandCallback ...
 type BuildCommandCallback func(project project.Model, command buildtool.PrintableCommand)
 
