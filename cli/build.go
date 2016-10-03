@@ -48,7 +48,10 @@ func buildCmd(c *cli.Context) error {
 		fmt.Println()
 	}
 
-	err = buildHandler.BuildAllProjects(solutionConfiguration, solutionPlatform, callback)
+	warnings, err := buildHandler.BuildAllProjects(solutionConfiguration, solutionPlatform, callback)
+	for _, warning := range warnings {
+		log.Warn(warning)
+	}
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
@@ -56,7 +59,10 @@ func buildCmd(c *cli.Context) error {
 	fmt.Println()
 	log.Info("Collecting generated outputs")
 
-	outputMap, err := buildHandler.CollectOutput(solutionConfiguration, solutionPlatform)
+	outputMap, warnings := buildHandler.CollectOutput(solutionConfiguration, solutionPlatform)
+	for _, warning := range warnings {
+		log.Warn(warning)
+	}
 	if err != nil {
 		return err
 	}
