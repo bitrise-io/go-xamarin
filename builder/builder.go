@@ -1,7 +1,6 @@
 package builder
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -28,9 +27,6 @@ type OutputMap map[constants.ProjectType]map[constants.OutputType]string
 
 // BuildSolutionCommandCallback ...
 type BuildSolutionCommandCallback func(command buildtool.PrintableCommand)
-
-// BuildCommandPrepareCallback ...
-type BuildCommandPrepareCallback func(project project.Model, command *buildtool.ModifyAbleCommand)
 
 // BuildCommandCallback ...
 type BuildCommandCallback func(project project.Model, command buildtool.PrintableCommand)
@@ -77,7 +73,7 @@ func (builder Model) filteredProjects() []project.Model {
 	return projects
 }
 
-func (builder Model) buildableProjects(configuration, platform string) ([]project.Model, error) {
+func (builder Model) buildableProjects(configuration, platform string) []project.Model {
 	projects := []project.Model{}
 
 	solutionConfig := utility.ToConfig(configuration, platform)
@@ -110,7 +106,7 @@ func (builder Model) buildableProjects(configuration, platform string) ([]projec
 		}
 	}
 
-	return projects, nil
+	return projects
 }
 
 // CleanAll ...
@@ -154,43 +150,9 @@ func (builder Model) CleanAll(callback ClearCommandCallback) error {
 	return nil
 }
 
-// BuildSolution ...
-func (builder Model) BuildSolution(configuration, platform string, callback BuildSolutionCommandCallback) error {
-	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
-		return err
-	}
-
-	if builder.forceMDTool {
-		cmd := mdtool.New(builder.solution.Pth).SetTarget("build").SetConfiguration(configuration).SetPlatform(platform)
-
-		if callback != nil {
-			callback(cmd)
-		}
-
-		if err := cmd.Run(); err != nil {
-			return err
-		}
-	} else {
-		cmd := xbuild.New(builder.solution.Pth).SetTarget("Build").SetConfiguration(configuration).SetPlatform(platform)
-
-		if callback != nil {
-			callback(cmd)
-		}
-
-		if err := cmd.Run(); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // BuildAllProjects ...
-func (builder Model) BuildAllProjects(configuration, platform string, prepareCallback BuildCommandPrepareCallback, callback BuildCommandCallback) error {
-	buildableProjects, err := builder.buildableProjects(configuration, platform)
-	if err != nil {
-		return fmt.Errorf("Failed to list buildable project, error: %s", err)
-	}
+func (builder Model) BuildAllProjects(configuration, platform string, callback BuildCommandCallback) error {
+	buildableProjects := builder.buildableProjects(configuration, platform)
 
 	solutionConfig := utility.ToConfig(configuration, platform)
 
@@ -282,11 +244,6 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 
 		// Run build command
 		for _, buildCommand := range buildCommands {
-			if prepareCallback != nil {
-				modifyAbleCommand := buildtool.ModifyAbleCommand(buildCommand)
-				prepareCallback(proj, &modifyAbleCommand)
-			}
-
 			if callback != nil {
 				callback(proj, buildCommand)
 			}
@@ -304,10 +261,7 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 func (builder Model) CollectOutput(configuration, platform string) (OutputMap, error) {
 	outputMap := OutputMap{}
 
-	buildableProjects, err := builder.buildableProjects(configuration, platform)
-	if err != nil {
-		return OutputMap{}, fmt.Errorf("Failed to list buildable project, error: %s", err)
-	}
+	buildableProjects := builder.buildableProjects(configuration, platform)
 
 	solutionConfig := utility.ToConfig(configuration, platform)
 

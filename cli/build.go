@@ -48,7 +48,7 @@ func buildCmd(c *cli.Context) error {
 		fmt.Println()
 	}
 
-	err = buildHandler.BuildAllProjects(solutionConfiguration, solutionPlatform, nil, callback)
+	err = buildHandler.BuildAllProjects(solutionConfiguration, solutionPlatform, callback)
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
