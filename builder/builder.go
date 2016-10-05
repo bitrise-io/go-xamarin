@@ -26,6 +26,9 @@ type Model struct {
 // OutputMap ...
 type OutputMap map[constants.ProjectType]map[constants.OutputType]string
 
+// PrepareBuildCommandCallback ...
+type PrepareBuildCommandCallback func(project project.Model, command *buildtool.EditableCommand)
+
 // BuildCommandCallback ...
 type BuildCommandCallback func(project project.Model, command buildtool.PrintableCommand)
 
@@ -149,7 +152,7 @@ func (builder Model) CleanAll(callback ClearCommandCallback) error {
 }
 
 // BuildAllProjects ...
-func (builder Model) BuildAllProjects(configuration, platform string, callback BuildCommandCallback) ([]string, error) {
+func (builder Model) BuildAllProjects(configuration, platform string, prepareCallback PrepareBuildCommandCallback, callback BuildCommandCallback) ([]string, error) {
 	warnings := []string{}
 	buildableProjects := builder.buildableProjects(configuration, platform)
 	solutionConfig := utility.ToConfig(configuration, platform)
@@ -242,6 +245,12 @@ func (builder Model) BuildAllProjects(configuration, platform string, callback B
 
 		// Run build command
 		for _, buildCommand := range buildCommands {
+
+			if prepareCallback != nil {
+				editabeCommand := buildtool.EditableCommand(buildCommand)
+				prepareCallback(proj, &editabeCommand)
+			}
+
 			if callback != nil {
 				callback(proj, buildCommand)
 			}
