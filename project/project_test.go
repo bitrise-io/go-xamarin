@@ -64,7 +64,7 @@ func TestAnalyzeProject(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Equal(t, "90F3C584-FD69-4926-9903-6B9771847782", project.ID)
-		require.Equal(t, constants.ProjectTypeIos, project.ProjectType)
+		require.Equal(t, constants.ProjectTypeIOS, project.ProjectType)
 		require.Equal(t, "exe", project.OutputType)
 		require.Equal(t, "CreditCardValidator.iOS", project.AssemblyName)
 		require.Equal(t, 0, len(project.TestFramworks))
@@ -162,7 +162,7 @@ func TestAnalyzeProject(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Equal(t, "4DA5EAC6-6F80-4FEC-AF81-194210F10B51", project.ID)
-		require.Equal(t, constants.ProjectTypeMac, project.ProjectType)
+		require.Equal(t, constants.ProjectTypeMacOS, project.ProjectType)
 		require.Equal(t, "exe", project.OutputType)
 		require.Equal(t, "Hello_Mac", project.AssemblyName)
 		require.Equal(t, 0, len(project.TestFramworks))
@@ -202,7 +202,7 @@ func TestAnalyzeProject(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Equal(t, "51D9C362-2997-4029-B38F-06C36F17056E", project.ID)
-		require.Equal(t, constants.ProjectTypeTVOs, project.ProjectType)
+		require.Equal(t, constants.ProjectTypeTvOS, project.ProjectType)
 		require.Equal(t, "exe", project.OutputType)
 		require.Equal(t, "tvos", project.AssemblyName)
 		require.Equal(t, 0, len(project.TestFramworks))
@@ -340,7 +340,7 @@ func TestAnalyzeProject(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Equal(t, "95615CA5-0D75-4389-A6E0-78309A686712", project.ID)
-		require.Equal(t, constants.ProjectTypeIos, project.ProjectType)
+		require.Equal(t, constants.ProjectTypeIOS, project.ProjectType)
 		require.Equal(t, "exe", project.OutputType)
 		require.Equal(t, "CreditCardValidator.iOS.NunitLiteTests", project.AssemblyName)
 		require.Equal(t, true, testFramworkSliceContainsOnly(project.TestFramworks, "MonoTouch.NUnitLite"))
