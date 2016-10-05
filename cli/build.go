@@ -41,10 +41,13 @@ func buildCmd(c *cli.Context) error {
 	fmt.Println()
 	log.Info("Building all projects in solution: %s", solutionPth)
 
-	callback := func(project project.Model, command buildtool.PrintableCommand) {
+	callback := func(project project.Model, command buildtool.PrintableCommand, alreadyPerformed bool) {
 		fmt.Println()
 		log.Info("Building project: %s", project.Name)
 		log.Done("$ %s", command.PrintableCommand())
+		if alreadyPerformed {
+			log.Warn("build command already performed, skipping...")
+		}
 		fmt.Println()
 	}
 
