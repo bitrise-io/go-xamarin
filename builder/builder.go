@@ -30,7 +30,7 @@ type OutputMap map[constants.ProjectType]map[constants.OutputType]string
 type PrepareBuildCommandCallback func(project project.Model, command *buildtool.EditableCommand)
 
 // BuildCommandCallback ...
-type BuildCommandCallback func(project project.Model, command buildtool.PrintableCommand, alreadyPerfomed bool)
+type BuildCommandCallback func(project project.Model, command buildtool.PrintableCommand, alreadyPerformed bool)
 
 // ClearCommandCallback ...
 type ClearCommandCallback func(project project.Model, dir string)
