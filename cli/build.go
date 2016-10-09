@@ -62,10 +62,7 @@ func buildCmd(c *cli.Context) error {
 	fmt.Println()
 	log.Info("Collecting generated outputs")
 
-	outputMap, warnings := buildHandler.CollectOutput(solutionConfiguration, solutionPlatform)
-	for _, warning := range warnings {
-		log.Warn(warning)
-	}
+	outputMap, err := buildHandler.CollectOutput(solutionConfiguration, solutionPlatform)
 	if err != nil {
 		return err
 	}
