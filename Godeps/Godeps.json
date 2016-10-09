@@ -7,28 +7,36 @@
 	],
 	"Deps": [
 		{
+			"ImportPath": "github.com/bitrise-io/go-utils/builtinutil",
+			"Rev": "5c210e4691a5a75e5685d2e842a104ca55ec7697"
+		},
+		{
 			"ImportPath": "github.com/bitrise-io/go-utils/cmdex",
-			"Rev": "915cadec690f55a7c65911069fccc7b68c9803a9"
+			"Rev": "5c210e4691a5a75e5685d2e842a104ca55ec7697"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/colorstring",
-			"Rev": "915cadec690f55a7c65911069fccc7b68c9803a9"
+			"Rev": "5c210e4691a5a75e5685d2e842a104ca55ec7697"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/errorutil",
-			"Rev": "915cadec690f55a7c65911069fccc7b68c9803a9"
+			"Rev": "5c210e4691a5a75e5685d2e842a104ca55ec7697"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/fileutil",
-			"Rev": "915cadec690f55a7c65911069fccc7b68c9803a9"
+			"Rev": "5c210e4691a5a75e5685d2e842a104ca55ec7697"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/log",
-			"Rev": "915cadec690f55a7c65911069fccc7b68c9803a9"
+			"Rev": "5c210e4691a5a75e5685d2e842a104ca55ec7697"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/pathutil",
-			"Rev": "915cadec690f55a7c65911069fccc7b68c9803a9"
+			"Rev": "5c210e4691a5a75e5685d2e842a104ca55ec7697"
+		},
+		{
+			"ImportPath": "github.com/bitrise-io/go-utils/testutil",
+			"Rev": "5c210e4691a5a75e5685d2e842a104ca55ec7697"
 		},
 		{
 			"ImportPath": "github.com/davecgh/go-spew/spew",
