@@ -161,9 +161,9 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 	}
 
 	solutionConfig := utility.ToConfig(configuration, platform)
-	buildableProjects, warnings := builder.buildableProjects(configuration, platform)
+	buildableProjects, warns := builder.buildableProjects(configuration, platform)
 	if len(buildableProjects) == 0 {
-		return warnings, nil
+		return warns, nil
 	}
 
 	for _, proj := range buildableProjects {
