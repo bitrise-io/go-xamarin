@@ -320,10 +320,12 @@ func (builder Model) CollectOutput(configuration, platform string) (OutputMap, e
 				projectTypeOutputMap[constants.OutputTypeDSYM] = dsymPth
 			}
 		case constants.ProjectTypeMacOS:
-			if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
-				return OutputMap{}, err
-			} else if xcarchivePth != "" {
-				projectTypeOutputMap[constants.OutputTypeXCArchive] = xcarchivePth
+			if builder.forceMDTool {
+				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
+					return OutputMap{}, err
+				} else if xcarchivePth != "" {
+					projectTypeOutputMap[constants.OutputTypeXCArchive] = xcarchivePth
+				}
 			}
 			if appPth, err := exportApp(projectConfig.OutputDir, proj.AssemblyName); err != nil {
 				return OutputMap{}, err

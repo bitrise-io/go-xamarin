@@ -228,7 +228,7 @@ func (d ByArchiveDate) Less(i, j int) bool {
 		if len(matches) == 3 {
 			date, err := time.Parse(layout, matches[1])
 			if err != nil {
-				log.Error("failed to parse xcrachive dir name (%s) with layout (%s), error: %s", matches[1], layout, err)
+				log.Error("failed to parse xcrachive file name (%s) with layout (%s), error: %s", matches[1], layout, err)
 				return false
 			}
 
@@ -252,7 +252,7 @@ func (d ByArchiveDate) Less(i, j int) bool {
 		return true
 	}
 
-	if baseCounts[0] > baseCounts[1] {
+	if baseDates[0].Equal(baseDates[1]) && baseCounts[0] > baseCounts[1] {
 		return true
 	}
 
@@ -312,7 +312,7 @@ func (d ByIpaDate) Less(i, j int) bool {
 	// compare directory name
 	// Multiplatform.iOS 2016-10-06 11-45-23
 	// Multiplatform.iOS 2016-10-06 22-45-23
-	layout := "2006-01-02 03-04-05"
+	layout := "2006-01-02 15-04-05"
 	datePattern := `.* (?P<date>[0-9-]+-[0-9-]+-[0-9-]+ [0-9-]+-[0-9-]+-[0-9-]+)[ ]*(?P<count>[0-9]+|)`
 	re := regexp.MustCompile(datePattern)
 
@@ -327,7 +327,7 @@ func (d ByIpaDate) Less(i, j int) bool {
 		if len(matches) == 3 {
 			date, err := time.Parse(layout, matches[1])
 			if err != nil {
-				log.Error("failed to parse xcrachive dir name (%s) with layout (%s), error: %s", matches[1], layout, err)
+				log.Error("failed to parse ipa dir name (%s) with layout (%s), error: %s", matches[1], layout, err)
 				return false
 			}
 
@@ -351,7 +351,7 @@ func (d ByIpaDate) Less(i, j int) bool {
 		return true
 	}
 
-	if dirDateCounts[0] > dirDateCounts[1] {
+	if dirDates[0].Equal(dirDates[1]) && dirDateCounts[0] > dirDateCounts[1] {
 		return true
 	}
 

@@ -251,7 +251,7 @@ func TestExportLatestXCArchiveFromXcodeArchives(t *testing.T) {
 
 		archives := []string{
 			"2016-07-10/XamarinSampleApp.iOS 10-07-16 4.41 PM.xcarchive", // latest
-			"2016-07-10/XamarinSampleApp.iOS 10-07-16 3.41 PM.xcarchive",
+			"2016-07-10/XamarinSampleApp.iOS 10-07-16 3.41 PM 2.xcarchive",
 			"2016-07-10/XamarinSampleApp.iOS 10-07-16 2.41 PM.xcarchive",
 			"2016-07-10/XamarinSampleApp.iOS 10-07-16 1.41 PM.xcarchive",
 		}
@@ -345,9 +345,9 @@ func TestExportLatestIpa(t *testing.T) {
 
 		archives := []string{
 			"Multiplatform.iOS 2016-10-06 11-45-23/Multiplatform.iOS.ipa", // latest
-			"Multiplatform.iOS 2016-09-06 11-45-23/Multiplatform.iOS.ipa",
+			"Multiplatform.iOS 2016-09-06 11-45-23 2/Multiplatform.iOS.ipa",
 			"Multiplatform.iOS 2016-08-06 11-45-23/Multiplatform.iOS.ipa",
-			"Multiplatform.iOS 2016-07-06 11-45-23/Multiplatform.iOS.ipa",
+			"Multiplatform.iOS 2016-07-06 17-45-23/Multiplatform.iOS.ipa",
 		}
 
 		for _, archive := range archives {
