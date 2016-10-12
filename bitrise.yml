@@ -10,7 +10,7 @@ workflows:
   # --- workflows for Testing
   ci:
     before_run:
-    - _install_test_tools
+    - _install-test-tools
     - test
     
   test:
@@ -57,7 +57,7 @@ workflows:
 
             go test ./...
 
-  _install_test_tools:
+  _install-test-tools:
     steps:
     - script:
         title: Install required testing tools
@@ -74,9 +74,9 @@ workflows:
 
   # ----------------------------------------------------------------
   # --- workflows for Releasing
-  create_release: 
+  create-release: 
     after_run:
-    - create_binaries
+    - create-binaries
     steps:
     - script:
         title: Create CHANGELOG and git release
@@ -90,7 +90,7 @@ workflows:
               --version $RELEASE_VERSION \
               --set-version-script "bash _scripts/set_version.sh version/version.go"
 
-  create_binaries:
+  create-binaries:
     steps:
     - script:
         title: Create binaries
@@ -143,7 +143,7 @@ workflows:
 
   # ----------------------------------------------------------------
   # --- workflows for Utility
-  godeps_update:
+  godeps-update:
     title: Godeps update
     steps:
     - script:
