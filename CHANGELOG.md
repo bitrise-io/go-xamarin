@@ -6,8 +6,18 @@
 
 ### Release Notes
 
-* __BREAKING__ : change 1
-* change 2
+* verbose mode, outputmap fix
+* build tools package
+* dsym search fix
+* warning handling
+* fixed errors
+* edit build command
+* mdtool timeout handling
+* duplicated commands fix
+* analyze target definition fix
+* builder tests
+* validate solution config before build
+* copy command in diagnostic mode, instead of using directly
 
 ### Install or upgrade
 
