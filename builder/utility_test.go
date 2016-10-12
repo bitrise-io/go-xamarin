@@ -251,6 +251,25 @@ func TestExportLatestXCArchiveFromXcodeArchives(t *testing.T) {
 
 		archives := []string{
 			"2016-07-10/XamarinSampleApp.iOS 10-07-16 4.41 PM.xcarchive", // latest
+			"2016-07-10/XamarinSampleApp.iOS 10-07-16 3.41 AM.xcarchive",
+		}
+
+		for _, archive := range archives {
+			createTestFile(t, tmpDir, archive)
+		}
+
+		output, err := exportLatestXCArchive(tmpDir, "XamarinSampleApp.iOS")
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "2016-07-10/XamarinSampleApp.iOS 10-07-16 4.41 PM.xcarchive"), output)
+	}
+
+	t.Log("it sorts by filename")
+	{
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
+		require.NoError(t, err)
+
+		archives := []string{
+			"2016-07-10/XamarinSampleApp.iOS 10-07-16 4.41 PM.xcarchive", // latest
 			"2016-07-10/XamarinSampleApp.iOS 10-07-16 3.41 PM 2.xcarchive",
 			"2016-07-10/XamarinSampleApp.iOS 10-07-16 2.41 PM.xcarchive",
 			"2016-07-10/XamarinSampleApp.iOS 10-07-16 1.41 PM.xcarchive",
