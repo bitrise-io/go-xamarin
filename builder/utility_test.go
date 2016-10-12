@@ -173,6 +173,25 @@ func TestExportApk(t *testing.T) {
 		require.Equal(t, "", output)
 	}
 
+	t.Log("it finds apk - assembly name test")
+	{
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
+		require.NoError(t, err)
+
+		archives := []string{
+			"com.bitrise.sampleapp.apk",
+			"com.bitrise.xamarin.sampleapp.apk",
+		}
+
+		for _, archive := range archives {
+			createTestFile(t, tmpDir, archive)
+		}
+
+		output, err := exportApk(tmpDir, "com.bitrise.xamarin.sampleapp")
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "com.bitrise.xamarin.sampleapp.apk"), output)
+	}
+
 	t.Log("it finds apk")
 	{
 		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
@@ -244,7 +263,26 @@ func TestExportLatestXCArchiveFromXcodeArchives(t *testing.T) {
 		require.Equal(t, "", output)
 	}
 
-	t.Log("it sorts by filename")
+	t.Log("it sorts by filename - assembly name test")
+	{
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
+		require.NoError(t, err)
+
+		archives := []string{
+			"2016-07-10/XamarinSampleApp.Mac 10-07-16 4.41 PM.xcarchive", // latest
+			"2016-07-10/XamarinSampleApp.iOS 10-07-16 3.41 AM.xcarchive",
+		}
+
+		for _, archive := range archives {
+			createTestFile(t, tmpDir, archive)
+		}
+
+		output, err := exportLatestXCArchive(tmpDir, "XamarinSampleApp.iOS")
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "2016-07-10/XamarinSampleApp.iOS 10-07-16 3.41 AM.xcarchive"), output)
+	}
+
+	t.Log("it sorts by filename - am/pm test")
 	{
 		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
 		require.NoError(t, err)
@@ -357,6 +395,25 @@ func TestExportLatestIpa(t *testing.T) {
 		require.Equal(t, "", output)
 	}
 
+	t.Log("it sorts by dirname - assembly name test")
+	{
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
+		require.NoError(t, err)
+
+		archives := []string{
+			"Multiplatform.iOS 2016-10-06 11-45-23/CreditCardValidator.ipa", // latest
+			"Multiplatform.iOS 2016-09-06 11-45-23 2/Multiplatform.iOS.ipa",
+		}
+
+		for _, archive := range archives {
+			createTestFile(t, tmpDir, archive)
+		}
+
+		output, err := exportLatestIpa(tmpDir, "Multiplatform.iOS")
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.iOS 2016-09-06 11-45-23 2/Multiplatform.iOS.ipa"), output)
+	}
+
 	t.Log("it sorts by dirname")
 	{
 		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
@@ -428,6 +485,25 @@ func TestExportAppDsym(t *testing.T) {
 		output, err := exportAppDSYM(tmpDir, "Multiplatform.iOS")
 		require.NoError(t, err)
 		require.Equal(t, "", output)
+	}
+
+	t.Log("it finds dSYM - assembly name test")
+	{
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
+		require.NoError(t, err)
+
+		archives := []string{
+			"CreditCardValidator.iOS.app.dSYM",
+			"Multiplatform.iOS.app.dSYM",
+		}
+
+		for _, archive := range archives {
+			createTestFile(t, tmpDir, archive)
+		}
+
+		output, err := exportAppDSYM(tmpDir, "Multiplatform.iOS")
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.iOS.app.dSYM"), output)
 	}
 
 	t.Log("it finds dSYM")
@@ -519,6 +595,25 @@ func TestExportPKG(t *testing.T) {
 		require.Equal(t, "", output)
 	}
 
+	t.Log("it finds pkg - assembly name test")
+	{
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
+		require.NoError(t, err)
+
+		archives := []string{
+			"Multiplatform.Mac-1.0.pkg",
+			"CreditCardValidator.Mac-1.0.pkg",
+		}
+
+		for _, archive := range archives {
+			createTestFile(t, tmpDir, archive)
+		}
+
+		output, err := exportPKG(tmpDir, "Multiplatform.Mac")
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac-1.0.pkg"), output)
+	}
+
 	t.Log("it finds pkg")
 	{
 		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
@@ -561,7 +656,7 @@ func TestExportPKG(t *testing.T) {
 }
 
 func TestExportApp(t *testing.T) {
-	t.Log("it retruns empty path if no pkg found")
+	t.Log("it retruns empty path if no app found")
 	{
 		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
 		require.NoError(t, err)
@@ -571,7 +666,26 @@ func TestExportApp(t *testing.T) {
 		require.Equal(t, "", output)
 	}
 
-	t.Log("it finds pkg")
+	t.Log("it finds app - assembly name test")
+	{
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
+		require.NoError(t, err)
+
+		archives := []string{
+			"CreditCardValidator.Mac.app",
+			"Multiplatform.Mac.app",
+		}
+
+		for _, archive := range archives {
+			createTestFile(t, tmpDir, archive)
+		}
+
+		output, err := exportApp(tmpDir, "Multiplatform.Mac")
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac.app"), output)
+	}
+
+	t.Log("it finds app")
 	{
 		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
 		require.NoError(t, err)
@@ -591,7 +705,7 @@ func TestExportApp(t *testing.T) {
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac.app"), output)
 	}
 
-	t.Log("it finds pkg - even if assembly name empty")
+	t.Log("it finds app - even if assembly name empty")
 	{
 		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
 		require.NoError(t, err)
