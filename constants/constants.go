@@ -7,6 +7,8 @@ const (
 	MDToolPath = "/Applications/Xamarin Studio.app/Contents/MacOS/mdtool"
 	// XbuildPath ...
 	XbuildPath = "/Library/Frameworks/Mono.framework/Commands/xbuild"
+	// MonoPath ...
+	MonoPath = "/Library/Frameworks/Mono.framework/Versions/4.6.1/bin/mono"
 )
 
 const (

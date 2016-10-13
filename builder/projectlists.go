@@ -91,8 +91,6 @@ func (builder Model) buildableXamarinUITestProjectsAndReferredProjects(configura
 		}
 
 		// Collect referred projects
-		referredProjects := []project.Model{}
-
 		if len(proj.ReferredProjectIDs) == 0 {
 			warnings = append(warnings, fmt.Sprintf("no referred projects found for test project: %s, skipping...", proj.Name))
 			continue
