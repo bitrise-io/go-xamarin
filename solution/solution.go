@@ -30,9 +30,9 @@ type Model struct {
 	ID  string
 	Pth string
 
-	ConfigMap map[string]string
+	ConfigMap map[string]string // Internal Configuartion|Platform - External Configuartion|Platform map
 
-	ProjectMap map[string]project.Model
+	ProjectMap map[string]project.Model // Project ID - Project Model map
 }
 
 // New ...

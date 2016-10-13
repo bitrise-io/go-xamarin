@@ -62,17 +62,17 @@ func buildCmd(c *cli.Context) error {
 	fmt.Println()
 	log.Info("Collecting generated outputs")
 
-	outputMap, err := buildHandler.CollectOutput(solutionConfiguration, solutionPlatform)
+	outputMap, err := buildHandler.CollectProjectOutputs(solutionConfiguration, solutionPlatform)
 	if err != nil {
 		return err
 	}
 
-	for projectType, output := range outputMap {
+	for projectName, outputs := range outputMap {
 		fmt.Println()
-		log.Info("%s outputs:", projectType)
+		log.Info("%s outputs:", projectName)
 
-		for outputType, pth := range output {
-			log.Done("%s: %s", outputType, pth)
+		for _, output := range outputs {
+			log.Done("%s: %s", output.OutputType, output.Pth)
 		}
 	}
 

@@ -76,7 +76,7 @@ type Model struct {
 	OutputType   string
 	AssemblyName string
 
-	TestFramworks      []constants.TestFramwork
+	TestFrameworks     []constants.TestFramework
 	ReferredProjectIDs []string
 
 	ManifestPth        string
@@ -109,7 +109,7 @@ func (project Model) String() string {
 	s += fmt.Sprintf("ProjectType: %s\n", project.ProjectType)
 	s += "\n"
 	s += fmt.Sprintf("TestFramworks:\n")
-	for _, framwork := range project.TestFramworks {
+	for _, framwork := range project.TestFrameworks {
 		s += fmt.Sprintf("%s\n", framwork)
 	}
 	s += "\n"
@@ -324,17 +324,17 @@ func analyzeTargetDefinition(project Model, pth string) (Model, error) {
 		}
 
 		if match := regexp.MustCompile(referenceXamarinUITestPattern).FindString(line); match != "" {
-			project.TestFramworks = append(project.TestFramworks, constants.XamarinUITest)
+			project.TestFrameworks = append(project.TestFrameworks, constants.TestFrameworkXamarinUITest)
 			continue
 		}
 
 		if match := regexp.MustCompile(referenceNunitFramework).FindString(line); match != "" {
-			project.TestFramworks = append(project.TestFramworks, constants.NunitTest)
+			project.TestFrameworks = append(project.TestFrameworks, constants.TestFrameworkNunitTest)
 			continue
 		}
 
 		if match := regexp.MustCompile(referenceNunitLiteFramework).FindString(line); match != "" {
-			project.TestFramworks = append(project.TestFramworks, constants.NunitLiteTest)
+			project.TestFrameworks = append(project.TestFrameworks, constants.TestFrameworkNunitLiteTest)
 			continue
 		}
 
