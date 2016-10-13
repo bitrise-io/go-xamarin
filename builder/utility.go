@@ -384,7 +384,7 @@ func (d ByIpaDate) Less(i, j int) bool {
 	ipaPthI := d[i]
 	ipaPthJ := d[j]
 
-	// compare directory name
+	// Directory Date & Index
 	// ./Multiplatform.iOS 2016-10-06 11-45-23/
 	// ./Multiplatform.iOS 2016-10-06 22-45-23 2/
 	if ipaPthI.dirNameDate.After(ipaPthJ.dirNameDate) {
