@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/bitrise-io/go-utils/fileutil"
-	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-xamarin/constants"
 	"github.com/bitrise-tools/go-xamarin/solution"
@@ -174,8 +173,68 @@ func exportLatestXCArchiveFromXcodeArchives(assemblyName string) (string, error)
 
 // Sort path
 
+// SortableArchivePth ...
+type SortableArchivePth struct {
+	pth          string
+	dirNameDate  time.Time
+	fileNameDate time.Time
+	fileNameIdx  int
+}
+
+// NewSortableArchivePth ...
+func NewSortableArchivePth(pth string) (SortableArchivePth, error) {
+	archivePth := SortableArchivePth{
+		pth: pth,
+	}
+
+	// Directory Date
+	// $HOME/Library/Developer/Xcode/Archives/2016-10-07/
+	dirNameDateLayout := "2006-01-02"
+
+	dirPth := filepath.Dir(pth)
+	dirName := filepath.Base(dirPth)
+
+	dirNameDate, err := time.Parse(dirNameDateLayout, dirName)
+	if err != nil {
+		return SortableArchivePth{}, fmt.Errorf("failed to parse xcrachive dir name (%s) with layout (%s), error: %s", dirName, dirNameDateLayout, err)
+	}
+
+	archivePth.dirNameDate = dirNameDate
+
+	// File Date & Index
+	// XamarinSampleApp.iOS 10-07-16 3.41 PM 2.xcarchive
+	fileNameDateLayout := "01-02-06 3.04 PM"
+	fileNamePattern := `.* (?P<date>[0-9-]+ [0-9.]+ [PM|AM]+)[ ]*(?P<count>|[0-9]+).xcarchive`
+	fileNameRegexp := regexp.MustCompile(fileNamePattern)
+
+	fileName := filepath.Base(pth)
+
+	matches := fileNameRegexp.FindStringSubmatch(fileName)
+	if len(matches) == 3 {
+		fileNameDate, err := time.Parse(fileNameDateLayout, matches[1])
+		if err != nil {
+			return SortableArchivePth{}, fmt.Errorf("failed to parse xcrachive file name (%s) with layout (%s), error: %s", matches[1], fileNameDateLayout, err)
+		}
+
+		archivePth.fileNameDate = fileNameDate
+
+		if matches[2] != "" {
+			fileNameIdx, err := strconv.Atoi(matches[2])
+			if err != nil {
+				return SortableArchivePth{}, fmt.Errorf("failed to parse (%s) as int, error: %s", matches[2], err)
+			}
+
+			archivePth.fileNameIdx = fileNameIdx
+		} else {
+			archivePth.fileNameIdx = 0
+		}
+	}
+
+	return archivePth, nil
+}
+
 // ByArchiveDate ...
-type ByArchiveDate []string
+type ByArchiveDate []SortableArchivePth
 
 // Len ...
 func (d ByArchiveDate) Len() int {
@@ -188,71 +247,24 @@ func (d ByArchiveDate) Swap(i, j int) {
 }
 
 func (d ByArchiveDate) Less(i, j int) bool {
-	pths := []string{string(d[i]), string(d[j])}
+	archivePthI := d[i]
+	archivePthJ := d[j]
 
 	// compare directory name
 	// $HOME/Library/Developer/Xcode/Archives/2016-10-07/
 	// $HOME/Library/Developer/Xcode/Archives/2017-10-09/
-	layout := "2006-01-02"
-
-	dirDates := []time.Time{}
-	for _, pth := range pths {
-		dirPth := filepath.Dir(pth)
-		dir := filepath.Base(dirPth)
-		date, err := time.Parse(layout, dir)
-		if err != nil {
-			log.Error("failed to parse xcrachive dir name (%s) with layout (%s), error: %s", dir, layout, err)
-			return false
-		}
-
-		dirDates = append(dirDates, date)
-	}
-
-	if dirDates[0].After(dirDates[1]) {
+	if archivePthI.dirNameDate.After(archivePthJ.dirNameDate) {
 		return true
 	}
 
 	// compare file name
 	// XamarinSampleApp.iOS 10-07-16 3.41 PM 2.xcarchive
 	// XamarinSampleApp.iOS 10-09-16 3.41 PM.xcarchive
-	layout = "01-02-06 3.04 PM"
-	datePattern := `.* (?P<date>[0-9-]+ [0-9.]+ [PM|AM]+)[ ]*(?P<count>|[0-9]+).xcarchive`
-	re := regexp.MustCompile(datePattern)
-
-	baseDates := []time.Time{}
-	baseCounts := []int{}
-
-	for _, pth := range pths {
-		base := filepath.Base(pth)
-		matches := re.FindStringSubmatch(base)
-		if len(matches) == 3 {
-			date, err := time.Parse(layout, matches[1])
-			if err != nil {
-				log.Error("failed to parse xcrachive file name (%s) with layout (%s), error: %s", matches[1], layout, err)
-				return false
-			}
-
-			baseDates = append(baseDates, date)
-
-			if matches[2] != "" {
-				count, err := strconv.Atoi(matches[2])
-				if err != nil {
-					log.Error("failed to parse (%s) as int, error: %s", matches[2], err)
-					return false
-				}
-
-				baseCounts = append(baseCounts, count)
-			} else {
-				baseCounts = append(baseCounts, 0)
-			}
-		}
-	}
-
-	if baseDates[0].After(baseDates[1]) {
+	if archivePthI.fileNameDate.After(archivePthJ.fileNameDate) {
 		return true
 	}
 
-	if baseDates[0].Equal(baseDates[1]) && baseCounts[0] > baseCounts[1] {
+	if archivePthI.fileNameDate.Equal(archivePthJ.fileNameDate) && archivePthI.fileNameIdx > archivePthJ.fileNameIdx {
 		return true
 	}
 
@@ -288,13 +300,75 @@ func exportLatestXCArchive(outputDir, assemblyName string) (string, error) {
 		return "", nil
 	}
 
-	sort.Sort(ByArchiveDate(filteredArchives))
+	// sort matching paths
+	sortableArchivePths := []SortableArchivePth{}
+	for _, pth := range filteredArchives {
+		sortableArchivePth, err := NewSortableArchivePth(pth)
+		if err != nil {
+			return "", err
+		}
 
-	return string(filteredArchives[0]), nil
+		sortableArchivePths = append(sortableArchivePths, sortableArchivePth)
+	}
+
+	sort.Sort(ByArchiveDate(sortableArchivePths))
+
+	sortedArchivePths := []string{}
+	for _, archivePth := range sortableArchivePths {
+		sortedArchivePths = append(sortedArchivePths, archivePth.pth)
+	}
+
+	return sortedArchivePths[0], nil
+}
+
+// SortableIPAPth ...
+type SortableIPAPth struct {
+	pth         string
+	dirNameDate time.Time
+	dirNameIdx  int
+}
+
+// NewSortableIPAPth ...
+func NewSortableIPAPth(pth string) (SortableIPAPth, error) {
+	ipaPth := SortableIPAPth{
+		pth: pth,
+	}
+
+	// Directory Date
+	// ./Multiplatform.iOS 2016-10-06 22-45-23 2/
+	dirNameDatelayout := "2006-01-02 15-04-05"
+	dirNamePattern := `.* (?P<date>[0-9-]+-[0-9-]+-[0-9-]+ [0-9-]+-[0-9-]+-[0-9-]+)[ ]*(?P<count>[0-9]+|)`
+	dirNameRegexp := regexp.MustCompile(dirNamePattern)
+
+	dirPth := filepath.Dir(pth)
+	dirName := filepath.Base(dirPth)
+
+	matches := dirNameRegexp.FindStringSubmatch(dirName)
+	if len(matches) == 3 {
+		dirNameDate, err := time.Parse(dirNameDatelayout, matches[1])
+		if err != nil {
+			return SortableIPAPth{}, fmt.Errorf("failed to parse ipa dir name (%s) with layout (%s), error: %s", matches[1], dirNameDatelayout, err)
+		}
+
+		ipaPth.dirNameDate = dirNameDate
+
+		if matches[2] != "" {
+			dirNameIdx, err := strconv.Atoi(matches[2])
+			if err != nil {
+				return SortableIPAPth{}, fmt.Errorf("failed to parse (%s) as int, error: %s", matches[2], err)
+			}
+
+			ipaPth.dirNameIdx = dirNameIdx
+		} else {
+			ipaPth.dirNameIdx = 0
+		}
+	}
+
+	return ipaPth, nil
 }
 
 // ByIpaDate ...
-type ByIpaDate []string
+type ByIpaDate []SortableIPAPth
 
 // Len ...
 func (d ByIpaDate) Len() int {
@@ -307,51 +381,17 @@ func (d ByIpaDate) Swap(i, j int) {
 }
 
 func (d ByIpaDate) Less(i, j int) bool {
-	pths := []string{string(d[i]), string(d[j])}
+	ipaPthI := d[i]
+	ipaPthJ := d[j]
 
-	// compare directory name
-	// Multiplatform.iOS 2016-10-06 11-45-23
-	// Multiplatform.iOS 2016-10-06 22-45-23
-	layout := "2006-01-02 15-04-05"
-	datePattern := `.* (?P<date>[0-9-]+-[0-9-]+-[0-9-]+ [0-9-]+-[0-9-]+-[0-9-]+)[ ]*(?P<count>[0-9]+|)`
-	re := regexp.MustCompile(datePattern)
-
-	dirDates := []time.Time{}
-	dirDateCounts := []int{}
-
-	for _, pth := range pths {
-		dirPth := filepath.Dir(pth)
-		dir := filepath.Base(dirPth)
-
-		matches := re.FindStringSubmatch(dir)
-		if len(matches) == 3 {
-			date, err := time.Parse(layout, matches[1])
-			if err != nil {
-				log.Error("failed to parse ipa dir name (%s) with layout (%s), error: %s", matches[1], layout, err)
-				return false
-			}
-
-			dirDates = append(dirDates, date)
-
-			if matches[2] != "" {
-				count, err := strconv.Atoi(matches[2])
-				if err != nil {
-					log.Error("failed to parse (%s) as int, error: %s", matches[2], err)
-					return false
-				}
-
-				dirDateCounts = append(dirDateCounts, count)
-			} else {
-				dirDateCounts = append(dirDateCounts, 0)
-			}
-		}
-	}
-
-	if dirDates[0].After(dirDates[1]) {
+	// Directory Date & Index
+	// ./Multiplatform.iOS 2016-10-06 11-45-23/
+	// ./Multiplatform.iOS 2016-10-06 22-45-23 2/
+	if ipaPthI.dirNameDate.After(ipaPthJ.dirNameDate) {
 		return true
 	}
 
-	if dirDates[0].Equal(dirDates[1]) && dirDateCounts[0] > dirDateCounts[1] {
+	if ipaPthI.dirNameDate.Equal(ipaPthJ.dirNameDate) && ipaPthI.dirNameIdx > ipaPthJ.dirNameIdx {
 		return true
 	}
 
@@ -387,9 +427,24 @@ func exportLatestIpa(outputDir, assemblyName string) (string, error) {
 		return "", nil
 	}
 
-	sort.Sort(ByIpaDate(filteredIpas))
+	sortableIpaPths := []SortableIPAPth{}
+	for _, pth := range filteredIpas {
+		ipaPth, err := NewSortableIPAPth(pth)
+		if err != nil {
+			return "", err
+		}
 
-	return string(filteredIpas[0]), nil
+		sortableIpaPths = append(sortableIpaPths, ipaPth)
+	}
+
+	sort.Sort(ByIpaDate(sortableIpaPths))
+
+	sortedIPAPths := []string{}
+	for _, ipaPth := range sortableIpaPths {
+		sortedIPAPths = append(sortedIPAPths, ipaPth.pth)
+	}
+
+	return sortedIPAPths[0], nil
 }
 
 func exportAppDSYM(outputDir, assemblyName string) (string, error) {
