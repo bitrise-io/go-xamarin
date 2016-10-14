@@ -149,7 +149,7 @@ func (testCloud *Model) submitCommandSlice() []string {
 		cmdSlice = append(cmdSlice, testCloud.ipaPth)
 	}
 	if testCloud.dsymPth != "" {
-		cmdSlice = append(cmdSlice, fmt.Sprintf("--dsym %s", testCloud.dsymPth))
+		cmdSlice = append(cmdSlice, "--dsym", testCloud.dsymPth)
 	}
 
 	cmdSlice = append(cmdSlice, testCloud.apiKey)
@@ -158,18 +158,18 @@ func (testCloud *Model) submitCommandSlice() []string {
 		cmdSlice = append(cmdSlice, option)
 	}
 
-	cmdSlice = append(cmdSlice, fmt.Sprintf("--user %s", testCloud.user))
-	cmdSlice = append(cmdSlice, fmt.Sprintf("--assembly-dir %s", testCloud.assemblyDir))
-	cmdSlice = append(cmdSlice, fmt.Sprintf("--devices %s", testCloud.devices))
+	cmdSlice = append(cmdSlice, "--user", testCloud.user)
+	cmdSlice = append(cmdSlice, "--assembly-dir", testCloud.assemblyDir)
+	cmdSlice = append(cmdSlice, "--devices", testCloud.devices)
 
 	if testCloud.isAsyncJSON {
 		cmdSlice = append(cmdSlice, "--async-json")
 	}
 
-	cmdSlice = append(cmdSlice, fmt.Sprintf("--series %s", testCloud.series))
+	cmdSlice = append(cmdSlice, "--series", testCloud.series)
 
 	if testCloud.nunitXMLPth != "" {
-		cmdSlice = append(cmdSlice, fmt.Sprintf("--nunit-xml %s", testCloud.nunitXMLPth))
+		cmdSlice = append(cmdSlice, "--nunit-xml", testCloud.nunitXMLPth)
 	}
 
 	if testCloud.parallelization == ParallelizationByTestChunk {
