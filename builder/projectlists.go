@@ -3,8 +3,8 @@ package builder
 import (
 	"fmt"
 
+	"github.com/bitrise-tools/go-xamarin/analyzers/project"
 	"github.com/bitrise-tools/go-xamarin/constants"
-	"github.com/bitrise-tools/go-xamarin/project"
 	"github.com/bitrise-tools/go-xamarin/utility"
 )
 
@@ -122,4 +122,37 @@ func (builder Model) buildableXamarinUITestProjectsAndReferredProjects(configura
 	}
 
 	return testProjects, referredProjects, warnings
+}
+
+func (builder Model) buildableNunitTestProjects(configuration, platform string) ([]project.Model, []string) {
+	testProjects := []project.Model{}
+
+	warnings := []string{}
+
+	solutionConfig := utility.ToConfig(configuration, platform)
+
+	for _, proj := range builder.solution.ProjectMap {
+		// Check if is nunit test project
+		isNunitTestProject := false
+		for _, testFramework := range proj.TestFrameworks {
+			if testFramework == constants.TestFrameworkNunitTest {
+				isNunitTestProject = true
+			}
+		}
+
+		if !isNunitTestProject {
+			continue
+		}
+
+		// Check if contains config mapping
+		_, ok := proj.ConfigMap[solutionConfig]
+		if !ok {
+			warnings = append(warnings, fmt.Sprintf("project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig))
+			continue
+		}
+
+		testProjects = append(testProjects, proj)
+	}
+
+	return testProjects, warnings
 }

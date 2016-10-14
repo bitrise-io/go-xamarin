@@ -4,9 +4,10 @@ import (
 	"fmt"
 
 	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-tools/go-xamarin/analyzers/project"
+	"github.com/bitrise-tools/go-xamarin/analyzers/solution"
 	"github.com/bitrise-tools/go-xamarin/builder"
-	"github.com/bitrise-tools/go-xamarin/project"
-	"github.com/bitrise-tools/go-xamarin/tools/buildtools"
+	"github.com/bitrise-tools/go-xamarin/tools"
 	"github.com/urfave/cli"
 )
 
@@ -41,14 +42,16 @@ func buildCmd(c *cli.Context) error {
 	fmt.Println()
 	log.Info("Building all projects in solution: %s", solutionPth)
 
-	callback := func(project project.Model, command buildtools.PrintableCommand, alreadyPerformed bool) {
-		fmt.Println()
-		log.Info("Building project: %s", project.Name)
-		log.Done("$ %s", command.PrintableCommand())
-		if alreadyPerformed {
-			log.Warn("build command already performed, skipping...")
+	callback := func(solution solution.Model, project *project.Model, command tools.Printable, alreadyPerformed bool) {
+		if project != nil {
+			fmt.Println()
+			log.Info("Building project: %s", (*project).Name)
+			log.Done("$ %s", command.PrintableCommand())
+			if alreadyPerformed {
+				log.Warn("build command already performed, skipping...")
+			}
+			fmt.Println()
 		}
-		fmt.Println()
 	}
 
 	warnings, err := buildHandler.BuildAllProjects(solutionConfiguration, solutionPlatform, nil, callback)

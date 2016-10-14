@@ -66,8 +66,8 @@ type ConfigurationPlatformModel struct {
 // Model ...
 type Model struct {
 	// These properties are set througth solution analyze
-	Name      string
 	Pth       string
+	Name      string
 	ConfigMap map[string]string
 	// ---
 
@@ -88,51 +88,6 @@ type Model struct {
 // New ...
 func New(pth string) (Model, error) {
 	return analyzeProject(pth)
-}
-
-func (config ConfigurationPlatformModel) String() string {
-	s := ""
-	s += fmt.Sprintf("Configuration: %s\n", config.Configuration)
-	s += fmt.Sprintf("Platform: %s\n", config.Platform)
-	s += fmt.Sprintf("OutputDir: %s\n", config.OutputDir)
-	s += fmt.Sprintf("MtouchArchs: %v\n", config.MtouchArchs)
-	s += fmt.Sprintf("SignAndroid: %v\n", config.SignAndroid)
-	s += fmt.Sprintf("BuildIpa: %v\n", config.BuildIpa)
-	return s
-}
-
-func (project Model) String() string {
-	s := ""
-	s += fmt.Sprintf("ID: %s\n", project.ID)
-	s += fmt.Sprintf("Name: %s\n", project.Name)
-	s += fmt.Sprintf("Pth: %s\n", project.Pth)
-	s += fmt.Sprintf("ProjectType: %s\n", project.ProjectType)
-	s += "\n"
-	s += fmt.Sprintf("TestFrameworks:\n")
-	for _, framwork := range project.TestFrameworks {
-		s += fmt.Sprintf("%s\n", framwork)
-	}
-	s += "\n"
-	s += fmt.Sprintf("ReferredProjectIDs:\n")
-	for _, ID := range project.ReferredProjectIDs {
-		s += fmt.Sprintf("%s\n", ID)
-	}
-	s += "\n"
-	s += fmt.Sprintf("OutputType: %s\n", project.OutputType)
-	s += fmt.Sprintf("AssemblyName: %s\n", project.AssemblyName)
-	s += fmt.Sprintf("ManifestPth: %s\n", project.ManifestPth)
-	s += fmt.Sprintf("AndroidApplication: %v\n", project.AndroidApplication)
-	s += "\n"
-	s += fmt.Sprintf("ConfigMap:\n")
-	for config, mappedConfig := range project.ConfigMap {
-		s += fmt.Sprintf("%s -> %s\n", config, mappedConfig)
-	}
-	s += "\n"
-	s += fmt.Sprintf("Configs:\n")
-	for _, config := range project.Configs {
-		s += fmt.Sprintf("%s\n", config.String())
-	}
-	return s
 }
 
 func analyzeTargetDefinition(project Model, pth string) (Model, error) {
@@ -374,7 +329,13 @@ func analyzeTargetDefinition(project Model, pth string) (Model, error) {
 }
 
 func analyzeProject(pth string) (Model, error) {
+	fileName := filepath.Base(pth)
+	ext := filepath.Ext(pth)
+	fileName = strings.TrimSuffix(fileName, ext)
+
 	project := Model{
+		Pth:       pth,
+		Name:      fileName,
 		ConfigMap: map[string]string{},
 		Configs:   map[string]ConfigurationPlatformModel{},
 	}

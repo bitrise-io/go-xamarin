@@ -6,11 +6,15 @@ import (
 	"path/filepath"
 
 	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-tools/go-xamarin/analyzers/project"
+	"github.com/bitrise-tools/go-xamarin/analyzers/solution"
 	"github.com/bitrise-tools/go-xamarin/constants"
-	"github.com/bitrise-tools/go-xamarin/project"
-	"github.com/bitrise-tools/go-xamarin/solution"
-	"github.com/bitrise-tools/go-xamarin/tools/buildtools"
+	"github.com/bitrise-tools/go-xamarin/tools"
 	"github.com/bitrise-tools/go-xamarin/utility"
+)
+
+const (
+	nunit3Console = "nunit3-console.exe"
 )
 
 // Model ...
@@ -40,14 +44,11 @@ type ProjectOutputMap map[string][]ProjectOutputModel // Project Name - ProjectO
 // TestProjectOutputMap ...
 type TestProjectOutputMap map[string]TestProjectOutputModel // Test Project Name - TestProjectOutputModel
 
-// PrepareBuildCommandCallback ...
-type PrepareBuildCommandCallback func(project project.Model, command *buildtools.EditableCommand)
+// PrepareCommandCallback ...
+type PrepareCommandCallback func(solution solution.Model, project *project.Model, command *tools.Editable)
 
-// SolutionBuildCommandCallback ...
-type SolutionBuildCommandCallback func(solution solution.Model, command buildtools.PrintableCommand)
-
-// ProjectBuildCommandCallback ...
-type ProjectBuildCommandCallback func(project project.Model, command buildtools.PrintableCommand, alreadyPerformed bool)
+// BuildCommandCallback ...
+type BuildCommandCallback func(solution solution.Model, project *project.Model, command tools.Printable, alreadyPerformed bool)
 
 // ClearCommandCallback ...
 type ClearCommandCallback func(project project.Model, dir string)
@@ -118,19 +119,19 @@ func (builder Model) CleanAll(callback ClearCommandCallback) error {
 }
 
 // BuildSolution ...
-func (builder Model) BuildSolution(configuration, platform string, callback SolutionBuildCommandCallback) error {
+func (builder Model) BuildSolution(configuration, platform string, callback BuildCommandCallback) error {
 	buildCommand := builder.buildSolutionCommand(configuration, platform)
 
 	// Callback to notify the caller about next running command
 	if callback != nil {
-		callback(builder.solution, buildCommand)
+		callback(builder.solution, nil, buildCommand, true)
 	}
 
 	return buildCommand.Run()
 }
 
 // BuildAllProjects ...
-func (builder Model) BuildAllProjects(configuration, platform string, prepareCallback PrepareBuildCommandCallback, callback ProjectBuildCommandCallback) ([]string, error) {
+func (builder Model) BuildAllProjects(configuration, platform string, prepareCallback PrepareCommandCallback, callback BuildCommandCallback) ([]string, error) {
 	warnings := []string{}
 
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
@@ -142,7 +143,7 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 		return warns, nil
 	}
 
-	perfomedCommands := []buildtools.RunnableCommand{}
+	perfomedCommands := []tools.Printable{}
 
 	for _, proj := range buildableProjects {
 		buildCommands, warns := builder.buildProjectCommand(configuration, platform, proj)
@@ -151,19 +152,19 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 		for _, buildCommand := range buildCommands {
 			// Callback to let the caller to modify the command
 			if prepareCallback != nil {
-				editabeCommand := buildtools.EditableCommand(buildCommand)
-				prepareCallback(proj, &editabeCommand)
+				editabeCommand := tools.Editable(buildCommand)
+				prepareCallback(builder.solution, &proj, &editabeCommand)
 			}
 
 			// Check if same command was already performed
 			alreadyPerformed := false
-			if buildtools.BuildCommandSliceContains(perfomedCommands, buildCommand) {
+			if tools.PrintableSliceContains(perfomedCommands, buildCommand) {
 				alreadyPerformed = true
 			}
 
 			// Callback to notify the caller about next running command
 			if callback != nil {
-				callback(proj, buildCommand, alreadyPerformed)
+				callback(builder.solution, &proj, buildCommand, alreadyPerformed)
 			}
 
 			if !alreadyPerformed {
@@ -179,7 +180,7 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 }
 
 // BuildAllXamarinUITestAndReferredProjects ...
-func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, platform string, prepareCallback PrepareBuildCommandCallback, callback ProjectBuildCommandCallback) ([]string, error) {
+func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, platform string, prepareCallback PrepareCommandCallback, callback BuildCommandCallback) ([]string, error) {
 	warnings := []string{}
 
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
@@ -191,8 +192,10 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 		return warns, nil
 	}
 
-	perfomedCommands := []buildtools.RunnableCommand{}
+	perfomedCommands := []tools.Printable{}
 
+	//
+	// First build all referred projects
 	for _, proj := range buildableReferredProjects {
 		buildCommands, warns := builder.buildProjectCommand(configuration, platform, proj)
 		warnings = append(warnings, warns...)
@@ -200,19 +203,19 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 		for _, buildCommand := range buildCommands {
 			// Callback to let the caller to modify the command
 			if prepareCallback != nil {
-				editabeCommand := buildtools.EditableCommand(buildCommand)
-				prepareCallback(proj, &editabeCommand)
+				editabeCommand := tools.Editable(buildCommand)
+				prepareCallback(builder.solution, &proj, &editabeCommand)
 			}
 
 			// Check if same command was already performed
 			alreadyPerformed := false
-			if buildtools.BuildCommandSliceContains(perfomedCommands, buildCommand) {
+			if tools.PrintableSliceContains(perfomedCommands, buildCommand) {
 				alreadyPerformed = true
 			}
 
 			// Callback to notify the caller about next running command
 			if callback != nil {
-				callback(proj, buildCommand, alreadyPerformed)
+				callback(builder.solution, &proj, buildCommand, alreadyPerformed)
 			}
 
 			if !alreadyPerformed {
@@ -223,26 +226,29 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 			}
 		}
 	}
+	// ---
 
+	//
+	// Then build all test projects
 	for _, testProj := range buildableTestProjects {
 		buildCommand, warns := builder.buildXamarinUITestProjectCommand(configuration, platform, testProj)
 		warnings = append(warnings, warns...)
 
 		// Callback to let the caller to modify the command
 		if prepareCallback != nil {
-			editabeCommand := buildtools.EditableCommand(buildCommand)
-			prepareCallback(testProj, &editabeCommand)
+			editabeCommand := tools.Editable(buildCommand)
+			prepareCallback(builder.solution, &testProj, &editabeCommand)
 		}
 
 		// Check if same command was already performed
 		alreadyPerformed := false
-		if buildtools.BuildCommandSliceContains(perfomedCommands, buildCommand) {
+		if tools.PrintableSliceContains(perfomedCommands, buildCommand) {
 			alreadyPerformed = true
 		}
 
 		// Callback to notify the caller about next running command
 		if callback != nil {
-			callback(testProj, buildCommand, alreadyPerformed)
+			callback(builder.solution, &testProj, buildCommand, alreadyPerformed)
 		}
 
 		if !alreadyPerformed {
@@ -252,6 +258,98 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 			perfomedCommands = append(perfomedCommands, buildCommand)
 		}
 	}
+	//
+
+	return warnings, nil
+}
+
+// BuildAllNunitTestProjects ...
+func (builder Model) BuildAllNunitTestProjects(configuration, platform string, prepareCallback PrepareCommandCallback, callback BuildCommandCallback) ([]string, error) {
+	warnings := []string{}
+
+	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
+		return []string{}, err
+	}
+
+	buildableProjects, warns := builder.buildableNunitTestProjects(configuration, platform)
+	if len(buildableProjects) == 0 {
+		return warns, nil
+	}
+
+	nunitDir := os.Getenv("NUNIT_PATH")
+	if nunitDir == "" {
+		return warnings, fmt.Errorf("NUNIT_PATH environment is not set, failed to determin nunit console path")
+	}
+
+	nunitConsolePth := filepath.Join(nunitDir, nunit3Console)
+	if exist, err := pathutil.IsPathExists(nunitConsolePth); err != nil {
+		return warnings, fmt.Errorf("Failed to check if nunit console exist at (%s), error: %s", nunitConsolePth, err)
+	} else if !exist {
+		return warnings, fmt.Errorf("nunit console not exist at: %s", nunitConsolePth)
+	}
+
+	perfomedCommands := []tools.Printable{}
+
+	//
+	// First build solution
+	buildCommand := builder.buildSolutionCommand(configuration, platform)
+
+	// Callback to let the caller to modify the command
+	if prepareCallback != nil {
+		editabeCommand := tools.Editable(buildCommand)
+		prepareCallback(builder.solution, nil, &editabeCommand)
+	}
+
+	// Check if same command was already performed
+	alreadyPerformed := false
+	if tools.PrintableSliceContains(perfomedCommands, buildCommand) {
+		alreadyPerformed = true
+	}
+
+	// Callback to notify the caller about next running command
+	if callback != nil {
+		callback(builder.solution, nil, buildCommand, alreadyPerformed)
+	}
+
+	if !alreadyPerformed {
+		if err := buildCommand.Run(); err != nil {
+			return warnings, err
+		}
+		perfomedCommands = append(perfomedCommands, buildCommand)
+	}
+	// ---
+
+	//
+	// Then build all test projects
+	for _, testProj := range buildableProjects {
+		buildCommand, warns := builder.buildNunitTestProjectCommand(configuration, platform, testProj, nunitConsolePth)
+		warnings = append(warnings, warns...)
+
+		// Callback to let the caller to modify the command
+		if prepareCallback != nil {
+			editabeCommand := tools.Editable(buildCommand)
+			prepareCallback(builder.solution, &testProj, &editabeCommand)
+		}
+
+		// Check if same command was already performed
+		alreadyPerformed := false
+		if tools.PrintableSliceContains(perfomedCommands, buildCommand) {
+			alreadyPerformed = true
+		}
+
+		// Callback to notify the caller about next running command
+		if callback != nil {
+			callback(builder.solution, &testProj, buildCommand, alreadyPerformed)
+		}
+
+		if !alreadyPerformed {
+			if err := buildCommand.Run(); err != nil {
+				return warnings, err
+			}
+			perfomedCommands = append(perfomedCommands, buildCommand)
+		}
+	}
+	// ---
 
 	return warnings, nil
 }
