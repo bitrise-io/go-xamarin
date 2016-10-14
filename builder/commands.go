@@ -16,13 +16,15 @@ func (builder Model) buildSolutionCommand(configuration, platform string) tools.
 	var buildCommand tools.Runnable
 
 	if builder.forceMDTool {
-		buildCommand := mdtool.New(builder.solution.Pth).SetTarget("build")
-		buildCommand.SetConfiguration(configuration)
-		buildCommand.SetPlatform(platform)
+		command := mdtool.New(builder.solution.Pth).SetTarget("build")
+		command.SetConfiguration(configuration)
+		command.SetPlatform(platform)
+		buildCommand = command
 	} else {
-		buildCommand := xbuild.New(builder.solution.Pth).SetTarget("Build")
-		buildCommand.SetConfiguration(configuration)
-		buildCommand.SetPlatform(platform)
+		command := xbuild.New(builder.solution.Pth).SetTarget("Build")
+		command.SetConfiguration(configuration)
+		command.SetPlatform(platform)
+		buildCommand = command
 	}
 
 	return buildCommand
