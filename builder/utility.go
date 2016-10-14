@@ -523,6 +523,7 @@ func exportPKG(outputDir, assemblyName string) (string, error) {
 
 func exportApp(outputDir, assemblyName string) (string, error) {
 	// Multiplatform/Mac/bin/Release/Multiplatform.Mac.app
+	// xamarin-sample-app/iOS/bin/iPhoneSimulator/Debug/XamarinSampleApp.iOS.app
 	pattern := filepath.Join(outputDir, "*.app")
 	apps, err := filepath.Glob(pattern)
 	if err != nil {

@@ -291,6 +291,14 @@ func (builder Model) CollectProjectOutputs(configuration, platform string) (Proj
 					OutputType: constants.OutputTypeDSYM,
 				})
 			}
+			if appPth, err := exportApp(projectConfig.OutputDir, proj.AssemblyName); err != nil {
+				return ProjectOutputMap{}, err
+			} else if appPth != "" {
+				projectOutputs = append(projectOutputs, ProjectOutputModel{
+					Pth:        appPth,
+					OutputType: constants.OutputTypeAPP,
+				})
+			}
 		case constants.ProjectTypeMacOS:
 			if builder.forceMDTool {
 				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
