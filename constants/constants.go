@@ -8,7 +8,7 @@ const (
 	// XbuildPath ...
 	XbuildPath = "/Library/Frameworks/Mono.framework/Commands/xbuild"
 	// MonoPath ...
-	MonoPath = "/Library/Frameworks/Mono.framework/Versions/4.6.1/bin/mono"
+	MonoPath = "/Library/Frameworks/Mono.framework/Versions/Current/Commands/mono"
 )
 
 const (
