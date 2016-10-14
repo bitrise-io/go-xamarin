@@ -45,7 +45,7 @@ func (nunitConsole *Model) commandSlice() []string {
 	cmdSlice := []string{constants.MonoPath}
 	cmdSlice = append(cmdSlice, nunitConsole.nunitConsolePth)
 	cmdSlice = append(cmdSlice, nunitConsole.projectPth)
-	cmdSlice = append(cmdSlice, fmt.Sprintf("config:%s", nunitConsole.config))
+	cmdSlice = append(cmdSlice, fmt.Sprintf("/config:%s", nunitConsole.config))
 	return cmdSlice
 }
 
