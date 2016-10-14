@@ -134,13 +134,17 @@ func (builder Model) buildableNunitTestProjects(configuration, platform string) 
 	for _, proj := range builder.solution.ProjectMap {
 		// Check if is nunit test project
 		isNunitTestProject := false
+		isXamarinUITestProject := false
 		for _, testFramework := range proj.TestFrameworks {
 			if testFramework == constants.TestFrameworkNunitTest {
 				isNunitTestProject = true
 			}
+			if testFramework == constants.TestFrameworkXamarinUITest {
+				isXamarinUITestProject = true
+			}
 		}
 
-		if !isNunitTestProject {
+		if !isNunitTestProject || isXamarinUITestProject {
 			continue
 		}
 
