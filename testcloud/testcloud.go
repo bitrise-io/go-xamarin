@@ -1,50 +1,36 @@
 package testcloud
 
 import (
+	"bufio"
 	"fmt"
-	"os"
 
 	"github.com/bitrise-io/go-utils/cmdex"
 	"github.com/bitrise-tools/go-xamarin/constants"
 )
 
-/*
-   request = ['mono', "\"#{test_cloud}\"", 'submit', "\"#{apk_path}\"", options[:api_key]]
-   request << options[:sign_parameters] if options[:sign_parameters]
-   request << "--user #{options[:user]}"
-   request << "--assembly-dir \"#{assembly_dir}\""
-   request << "--devices #{options[:devices]}"
-   request << '--async-json' if options[:async] == 'yes'
-   request << "--series #{options[:series]}" if options[:series]
-   request << "--nunit-xml #{@result_log_path}"
-   request << '--fixture-chunk' if options[:parallelization] == 'by_test_fixture'
-   request << '--test-chunk' if options[:parallelization] == 'by_test_chunk'
-   request << options[:other_parameters]
-
-   request = [
-     "mono \"#{test_cloud}\"",
-     "submit \"#{ipa_path}\"",
-     options[:api_key],
-     "--assembly-dir \"#{assembly_dir}\"",
-     "--nunit-xml \"#{@result_log_path}\"",
-     "--user #{options[:user]}",
-     "--devices \"#{options[:devices]}\""
-   ]
-   request << '--async-json' if options[:async] == 'yes'
-   request << "--dsym \"#{dsym_path}\"" if dsym_path
-   request << "--series \"#{options[:series]}\"" if options[:series]
-   request << '--fixture-chunk' if options[:parallelization] == 'by_test_fixture'
-   request << '--test-chunk' if options[:parallelization] == 'by_test_chunk'
-   request << options[:other_parameters].to_s if options[:other_parameters]
-*/
+// Parallelization ...
 type Parallelization string
 
 const (
+	// ParallelizationUnknown ...
+	ParallelizationUnknown Parallelization = "unkown"
 	// ParallelizationByTestFixture ...
-	ParallelizationByTestFixture Parallelization = "fixture-chunk"
+	ParallelizationByTestFixture Parallelization = "by_test_fixture"
 	// ParallelizationByTestChunk ...
-	ParallelizationByTestChunk Parallelization = "test-chunk"
+	ParallelizationByTestChunk Parallelization = "by_test_chunk"
 )
+
+// ParseParallelization ...
+func ParseParallelization(parallelization string) (Parallelization, error) {
+	switch parallelization {
+	case "by_test_fixture":
+		return ParallelizationByTestFixture, nil
+	case "by_test_chunk":
+		return ParallelizationByTestChunk, nil
+	default:
+		return ParallelizationUnknown, fmt.Errorf("Unkown parallelization (%s)", parallelization)
+	}
+}
 
 // Model ...
 type Model struct {
@@ -206,8 +192,11 @@ func (testCloud Model) PrintableCommand() string {
 	return cmdex.PrintableCommandArgs(true, cmdSlice)
 }
 
+// CaptureLineCallback ...
+type CaptureLineCallback func(line string)
+
 // Submit ...
-func (testCloud Model) Submit() error {
+func (testCloud Model) Submit(callback CaptureLineCallback) error {
 	cmdSlice := testCloud.submitCommandSlice()
 
 	command, err := cmdex.NewCommandFromSlice(cmdSlice)
@@ -215,8 +204,30 @@ func (testCloud Model) Submit() error {
 		return err
 	}
 
-	command.SetStdout(os.Stdout)
-	command.SetStderr(os.Stderr)
+	cmd := *command.GetCmd()
 
-	return command.Run()
+	// Redirect output
+	stdoutReader, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+
+	scanner := bufio.NewScanner(stdoutReader)
+	go func() {
+		for scanner.Scan() {
+			line := scanner.Text()
+			if callback != nil {
+				callback(line)
+			}
+		}
+	}()
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+
+	return cmd.Wait()
 }
