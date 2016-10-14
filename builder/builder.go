@@ -163,8 +163,8 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 	return warnings, nil
 }
 
-// BuildAllProjectsAndXamarinUITestprojects ...
-func (builder Model) BuildAllProjectsAndXamarinUITestprojects(configuration, platform string, prepareCallback PrepareBuildCommandCallback, callback BuildCommandCallback) ([]string, error) {
+// BuildAllXamarinUITestAndReferredProjects ...
+func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, platform string, prepareCallback PrepareBuildCommandCallback, callback BuildCommandCallback) ([]string, error) {
 	warnings := []string{}
 
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {

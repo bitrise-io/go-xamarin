@@ -119,7 +119,6 @@ func (builder Model) buildableXamarinUITestProjectsAndReferredProjects(configura
 		}
 
 		testProjects = append(testProjects, proj)
-		referredProjects = append(referredProjects, referredProjects...)
 	}
 
 	return testProjects, referredProjects, warnings
