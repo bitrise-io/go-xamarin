@@ -43,7 +43,7 @@ func stringSliceContainsOnly(slice []string, item ...string) bool {
 	return true
 }
 
-func testFramworkSliceContainsOnly(slice []constants.TestFramwork, item ...string) bool {
+func frameworkSliceContainsOnly(slice []constants.TestFramework, item ...string) bool {
 	stringSlice := []string{}
 	for _, s := range slice {
 		stringSlice = append(stringSlice, string(s))
@@ -67,7 +67,7 @@ func TestAnalyzeProject(t *testing.T) {
 		require.Equal(t, constants.ProjectTypeIOS, project.ProjectType)
 		require.Equal(t, "exe", project.OutputType)
 		require.Equal(t, "CreditCardValidator.iOS", project.AssemblyName)
-		require.Equal(t, 0, len(project.TestFramworks))
+		require.Equal(t, 0, len(project.TestFrameworks))
 		require.Equal(t, true, stringSliceContainsOnly(project.ReferredProjectIDs, "99A825A6-6F99-4B94-9F65-E908A6347F1E"))
 		require.Equal(t, "", project.ManifestPth)
 		require.Equal(t, false, project.AndroidApplication)
@@ -125,7 +125,7 @@ func TestAnalyzeProject(t *testing.T) {
 		require.Equal(t, constants.ProjectTypeAndroid, project.ProjectType)
 		require.Equal(t, "library", project.OutputType)
 		require.Equal(t, "CreditCardValidator.Droid", project.AssemblyName)
-		require.Equal(t, 0, len(project.TestFramworks))
+		require.Equal(t, 0, len(project.TestFrameworks))
 		require.Equal(t, true, stringSliceContainsOnly(project.ReferredProjectIDs, "99A825A6-6F99-4B94-9F65-E908A6347F1E"))
 		require.Equal(t, filepath.Join(dir, "Properties/AndroidManifest.xml"), project.ManifestPth)
 		require.Equal(t, true, project.AndroidApplication)
@@ -165,7 +165,7 @@ func TestAnalyzeProject(t *testing.T) {
 		require.Equal(t, constants.ProjectTypeMacOS, project.ProjectType)
 		require.Equal(t, "exe", project.OutputType)
 		require.Equal(t, "Hello_Mac", project.AssemblyName)
-		require.Equal(t, 0, len(project.TestFramworks))
+		require.Equal(t, 0, len(project.TestFrameworks))
 		require.Equal(t, 0, len(project.ReferredProjectIDs))
 		require.Equal(t, "", project.ManifestPth)
 		require.Equal(t, false, project.AndroidApplication)
@@ -205,7 +205,7 @@ func TestAnalyzeProject(t *testing.T) {
 		require.Equal(t, constants.ProjectTypeTvOS, project.ProjectType)
 		require.Equal(t, "exe", project.OutputType)
 		require.Equal(t, "tvos", project.AssemblyName)
-		require.Equal(t, 0, len(project.TestFramworks))
+		require.Equal(t, 0, len(project.TestFrameworks))
 		require.Equal(t, 0, len(project.ReferredProjectIDs))
 		require.Equal(t, "", project.ManifestPth)
 		require.Equal(t, false, project.AndroidApplication)
@@ -263,7 +263,7 @@ func TestAnalyzeProject(t *testing.T) {
 		require.Equal(t, "", string(project.ProjectType))
 		require.Equal(t, "library", project.OutputType)
 		require.Equal(t, "CreditCardValidator.iOS.UITests", project.AssemblyName)
-		require.Equal(t, true, testFramworkSliceContainsOnly(project.TestFramworks, "Xamarin.UITest", "nunit.framework"))
+		require.Equal(t, true, frameworkSliceContainsOnly(project.TestFrameworks, "Xamarin.UITest", "nunit.framework"))
 		require.Equal(t, true, stringSliceContainsOnly(project.ReferredProjectIDs, "90F3C584-FD69-4926-9903-6B9771847782"))
 		require.Equal(t, "", project.ManifestPth)
 		require.Equal(t, false, project.AndroidApplication)
@@ -303,7 +303,7 @@ func TestAnalyzeProject(t *testing.T) {
 		require.Equal(t, "", string(project.ProjectType))
 		require.Equal(t, "library", project.OutputType)
 		require.Equal(t, "CreditCardValidator.iOS.NunitTests", project.AssemblyName)
-		require.Equal(t, true, testFramworkSliceContainsOnly(project.TestFramworks, "nunit.framework"))
+		require.Equal(t, true, frameworkSliceContainsOnly(project.TestFrameworks, "nunit.framework"))
 		require.Equal(t, 0, len(project.ReferredProjectIDs))
 		require.Equal(t, "", project.ManifestPth)
 		require.Equal(t, false, project.AndroidApplication)
@@ -343,7 +343,7 @@ func TestAnalyzeProject(t *testing.T) {
 		require.Equal(t, constants.ProjectTypeIOS, project.ProjectType)
 		require.Equal(t, "exe", project.OutputType)
 		require.Equal(t, "CreditCardValidator.iOS.NunitLiteTests", project.AssemblyName)
-		require.Equal(t, true, testFramworkSliceContainsOnly(project.TestFramworks, "MonoTouch.NUnitLite"))
+		require.Equal(t, true, frameworkSliceContainsOnly(project.TestFrameworks, "MonoTouch.NUnitLite"))
 		require.Equal(t, 0, len(project.ReferredProjectIDs))
 		require.Equal(t, "", project.ManifestPth)
 		require.Equal(t, false, project.AndroidApplication)

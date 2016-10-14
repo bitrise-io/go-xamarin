@@ -108,7 +108,7 @@ func (project Model) String() string {
 	s += fmt.Sprintf("Pth: %s\n", project.Pth)
 	s += fmt.Sprintf("ProjectType: %s\n", project.ProjectType)
 	s += "\n"
-	s += fmt.Sprintf("TestFramworks:\n")
+	s += fmt.Sprintf("TestFrameworks:\n")
 	for _, framwork := range project.TestFrameworks {
 		s += fmt.Sprintf("%s\n", framwork)
 	}

@@ -75,35 +75,35 @@ func TestValidateSolutionConfig(t *testing.T) {
 	}
 }
 
-func TestIsProjectTypeAllowed(t *testing.T) {
+func TestWhitelistAllows(t *testing.T) {
 	t.Log("empty whitelist means allow any project type")
 	{
 		whitelist := []constants.ProjectType{}
-		require.Equal(t, true, isProjectTypeAllowed(constants.ProjectTypeIOS, whitelist...))
+		require.Equal(t, true, whitelistAllows(constants.ProjectTypeIOS, whitelist...))
 	}
 
 	t.Log("it allows project type that exists in whitelist")
 	{
 		whitelist := []constants.ProjectType{constants.ProjectTypeIOS}
-		require.Equal(t, true, isProjectTypeAllowed(constants.ProjectTypeIOS, whitelist...))
+		require.Equal(t, true, whitelistAllows(constants.ProjectTypeIOS, whitelist...))
 	}
 
 	t.Log("it allows project type that exists in whitelist")
 	{
 		whitelist := []constants.ProjectType{constants.ProjectTypeAndroid, constants.ProjectTypeIOS}
-		require.Equal(t, true, isProjectTypeAllowed(constants.ProjectTypeIOS, whitelist...))
+		require.Equal(t, true, whitelistAllows(constants.ProjectTypeIOS, whitelist...))
 	}
 
 	t.Log("it allows project type that exists in whitelist")
 	{
 		whitelist := []constants.ProjectType{constants.ProjectTypeAndroid, constants.ProjectTypeIOS}
-		require.Equal(t, true, isProjectTypeAllowed(constants.ProjectTypeAndroid, whitelist...))
+		require.Equal(t, true, whitelistAllows(constants.ProjectTypeAndroid, whitelist...))
 	}
 
 	t.Log("it does not allows project type that does not exists in whitelist")
 	{
 		whitelist := []constants.ProjectType{constants.ProjectTypeIOS}
-		require.Equal(t, false, isProjectTypeAllowed(constants.ProjectTypeAndroid, whitelist...))
+		require.Equal(t, false, whitelistAllows(constants.ProjectTypeAndroid, whitelist...))
 	}
 }
 
