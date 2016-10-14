@@ -1,4 +1,4 @@
-package buildtool
+package buildtools
 
 import (
 	"testing"

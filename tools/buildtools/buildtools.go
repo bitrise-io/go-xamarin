@@ -1,4 +1,4 @@
-package buildtool
+package buildtools
 
 // RunnableCommand ...
 type RunnableCommand interface {

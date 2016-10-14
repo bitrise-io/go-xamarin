@@ -3,15 +3,31 @@ package builder
 import (
 	"fmt"
 
-	"github.com/bitrise-tools/go-xamarin/buildtool"
-	"github.com/bitrise-tools/go-xamarin/buildtool/mdtool"
-	"github.com/bitrise-tools/go-xamarin/buildtool/xbuild"
 	"github.com/bitrise-tools/go-xamarin/constants"
 	"github.com/bitrise-tools/go-xamarin/project"
+	"github.com/bitrise-tools/go-xamarin/tools/buildtools"
+	"github.com/bitrise-tools/go-xamarin/tools/buildtools/mdtool"
+	"github.com/bitrise-tools/go-xamarin/tools/buildtools/xbuild"
 	"github.com/bitrise-tools/go-xamarin/utility"
 )
 
-func (builder Model) buildCommandsForProject(configuration, platform string, proj project.Model) ([]buildtool.RunnableCommand, []string) {
+func (builder Model) buildSolutionCommand(configuration, platform string) buildtools.RunnableCommand {
+	var buildCommand buildtools.RunnableCommand
+
+	if builder.forceMDTool {
+		buildCommand := mdtool.New(builder.solution.Pth).SetTarget("build")
+		buildCommand.SetConfiguration(configuration)
+		buildCommand.SetPlatform(platform)
+	} else {
+		buildCommand := xbuild.New(builder.solution.Pth).SetTarget("Build")
+		buildCommand.SetConfiguration(configuration)
+		buildCommand.SetPlatform(platform)
+	}
+
+	return buildCommand
+}
+
+func (builder Model) buildProjectCommand(configuration, platform string, proj project.Model) ([]buildtools.RunnableCommand, []string) {
 	warnings := []string{}
 
 	solutionConfig := utility.ToConfig(configuration, platform)
@@ -27,7 +43,7 @@ func (builder Model) buildCommandsForProject(configuration, platform string, pro
 	}
 
 	// Prepare build commands
-	buildCommands := []buildtool.RunnableCommand{}
+	buildCommands := []buildtools.RunnableCommand{}
 
 	switch proj.ProjectType {
 	case constants.ProjectTypeIOS, constants.ProjectTypeTvOS:
@@ -102,7 +118,7 @@ func (builder Model) buildCommandsForProject(configuration, platform string, pro
 	return buildCommands, warnings
 }
 
-func (builder Model) buildCommandForTestProject(configuration, platform string, proj project.Model) (buildtool.RunnableCommand, []string) {
+func (builder Model) buildXamarinUITestProjectCommand(configuration, platform string, proj project.Model) (buildtools.RunnableCommand, []string) {
 	warnings := []string{}
 
 	solutionConfig := utility.ToConfig(configuration, platform)
@@ -124,3 +140,20 @@ func (builder Model) buildCommandForTestProject(configuration, platform string, 
 
 	return command, warnings
 }
+
+// func (builder Model) buildNunitTestProjectCommand(configuration, platform string, proj project.Model) (buildtools.RunnableCommand, []string) {
+// 	warnings := []string{}
+
+// 	solutionConfig := utility.ToConfig(configuration, platform)
+
+// 	projectConfigKey, ok := proj.ConfigMap[solutionConfig]
+// 	if !ok {
+// 		warnings = append(warnings, fmt.Sprintf("project (%s) do not have config for solution config (%s), skipping...", proj.Name, solutionConfig))
+// 	}
+
+// 	projectConfig, ok := proj.Configs[projectConfigKey]
+// 	if !ok {
+// 		warnings = append(warnings, fmt.Sprintf("project (%s) contains mapping for solution config (%s), but does not have project configuration", proj.Name, solutionConfig))
+// 	}
+
+// }

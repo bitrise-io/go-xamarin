@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 
 	"github.com/bitrise-io/go-utils/pathutil"
-	"github.com/bitrise-tools/go-xamarin/buildtool"
 	"github.com/bitrise-tools/go-xamarin/constants"
 	"github.com/bitrise-tools/go-xamarin/project"
 	"github.com/bitrise-tools/go-xamarin/solution"
+	"github.com/bitrise-tools/go-xamarin/tools/buildtools"
 	"github.com/bitrise-tools/go-xamarin/utility"
 )
 
@@ -41,10 +41,13 @@ type ProjectOutputMap map[string][]ProjectOutputModel // Project Name - ProjectO
 type TestProjectOutputMap map[string]TestProjectOutputModel // Test Project Name - TestProjectOutputModel
 
 // PrepareBuildCommandCallback ...
-type PrepareBuildCommandCallback func(project project.Model, command *buildtool.EditableCommand)
+type PrepareBuildCommandCallback func(project project.Model, command *buildtools.EditableCommand)
 
-// BuildCommandCallback ...
-type BuildCommandCallback func(project project.Model, command buildtool.PrintableCommand, alreadyPerformed bool)
+// SolutionBuildCommandCallback ...
+type SolutionBuildCommandCallback func(solution solution.Model, command buildtools.PrintableCommand)
+
+// ProjectBuildCommandCallback ...
+type ProjectBuildCommandCallback func(project project.Model, command buildtools.PrintableCommand, alreadyPerformed bool)
 
 // ClearCommandCallback ...
 type ClearCommandCallback func(project project.Model, dir string)
@@ -114,8 +117,20 @@ func (builder Model) CleanAll(callback ClearCommandCallback) error {
 	return nil
 }
 
+// BuildSolution ...
+func (builder Model) BuildSolution(configuration, platform string, callback SolutionBuildCommandCallback) error {
+	buildCommand := builder.buildSolutionCommand(configuration, platform)
+
+	// Callback to notify the caller about next running command
+	if callback != nil {
+		callback(builder.solution, buildCommand)
+	}
+
+	return buildCommand.Run()
+}
+
 // BuildAllProjects ...
-func (builder Model) BuildAllProjects(configuration, platform string, prepareCallback PrepareBuildCommandCallback, callback BuildCommandCallback) ([]string, error) {
+func (builder Model) BuildAllProjects(configuration, platform string, prepareCallback PrepareBuildCommandCallback, callback ProjectBuildCommandCallback) ([]string, error) {
 	warnings := []string{}
 
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
@@ -127,22 +142,22 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 		return warns, nil
 	}
 
-	perfomedCommands := []buildtool.RunnableCommand{}
+	perfomedCommands := []buildtools.RunnableCommand{}
 
 	for _, proj := range buildableProjects {
-		buildCommands, warns := builder.buildCommandsForProject(configuration, platform, proj)
+		buildCommands, warns := builder.buildProjectCommand(configuration, platform, proj)
 		warnings = append(warnings, warns...)
 
 		for _, buildCommand := range buildCommands {
 			// Callback to let the caller to modify the command
 			if prepareCallback != nil {
-				editabeCommand := buildtool.EditableCommand(buildCommand)
+				editabeCommand := buildtools.EditableCommand(buildCommand)
 				prepareCallback(proj, &editabeCommand)
 			}
 
 			// Check if same command was already performed
 			alreadyPerformed := false
-			if buildtool.BuildCommandSliceContains(perfomedCommands, buildCommand) {
+			if buildtools.BuildCommandSliceContains(perfomedCommands, buildCommand) {
 				alreadyPerformed = true
 			}
 
@@ -164,7 +179,7 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 }
 
 // BuildAllXamarinUITestAndReferredProjects ...
-func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, platform string, prepareCallback PrepareBuildCommandCallback, callback BuildCommandCallback) ([]string, error) {
+func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, platform string, prepareCallback PrepareBuildCommandCallback, callback ProjectBuildCommandCallback) ([]string, error) {
 	warnings := []string{}
 
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
@@ -176,22 +191,22 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 		return warns, nil
 	}
 
-	perfomedCommands := []buildtool.RunnableCommand{}
+	perfomedCommands := []buildtools.RunnableCommand{}
 
 	for _, proj := range buildableReferredProjects {
-		buildCommands, warns := builder.buildCommandsForProject(configuration, platform, proj)
+		buildCommands, warns := builder.buildProjectCommand(configuration, platform, proj)
 		warnings = append(warnings, warns...)
 
 		for _, buildCommand := range buildCommands {
 			// Callback to let the caller to modify the command
 			if prepareCallback != nil {
-				editabeCommand := buildtool.EditableCommand(buildCommand)
+				editabeCommand := buildtools.EditableCommand(buildCommand)
 				prepareCallback(proj, &editabeCommand)
 			}
 
 			// Check if same command was already performed
 			alreadyPerformed := false
-			if buildtool.BuildCommandSliceContains(perfomedCommands, buildCommand) {
+			if buildtools.BuildCommandSliceContains(perfomedCommands, buildCommand) {
 				alreadyPerformed = true
 			}
 
@@ -210,18 +225,18 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 	}
 
 	for _, testProj := range buildableTestProjects {
-		buildCommand, warns := builder.buildCommandForTestProject(configuration, platform, testProj)
+		buildCommand, warns := builder.buildXamarinUITestProjectCommand(configuration, platform, testProj)
 		warnings = append(warnings, warns...)
 
 		// Callback to let the caller to modify the command
 		if prepareCallback != nil {
-			editabeCommand := buildtool.EditableCommand(buildCommand)
+			editabeCommand := buildtools.EditableCommand(buildCommand)
 			prepareCallback(testProj, &editabeCommand)
 		}
 
 		// Check if same command was already performed
 		alreadyPerformed := false
-		if buildtool.BuildCommandSliceContains(perfomedCommands, buildCommand) {
+		if buildtools.BuildCommandSliceContains(perfomedCommands, buildCommand) {
 			alreadyPerformed = true
 		}
 

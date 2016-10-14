@@ -5,8 +5,8 @@ import (
 
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-tools/go-xamarin/builder"
-	"github.com/bitrise-tools/go-xamarin/buildtool"
 	"github.com/bitrise-tools/go-xamarin/project"
+	"github.com/bitrise-tools/go-xamarin/tools/buildtools"
 	"github.com/urfave/cli"
 )
 
@@ -41,7 +41,7 @@ func buildCmd(c *cli.Context) error {
 	fmt.Println()
 	log.Info("Building all projects in solution: %s", solutionPth)
 
-	callback := func(project project.Model, command buildtool.PrintableCommand, alreadyPerformed bool) {
+	callback := func(project project.Model, command buildtools.PrintableCommand, alreadyPerformed bool) {
 		fmt.Println()
 		log.Info("Building project: %s", project.Name)
 		log.Done("$ %s", command.PrintableCommand())
