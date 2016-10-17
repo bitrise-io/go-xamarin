@@ -25,21 +25,27 @@ type Model struct {
 	forceMDTool          bool
 }
 
-// ProjectOutputModel ...
-type ProjectOutputModel struct {
+// OutputModel ...
+type OutputModel struct {
 	Pth        string
 	OutputType constants.OutputType
 }
 
-// TestProjectOutputModel ...
-type TestProjectOutputModel struct {
-	Pth                  string
-	OutputType           constants.OutputType
-	ReferredProjectNames []string
+// ProjectOutputModel ...
+type ProjectOutputModel struct {
+	ProjectType constants.ProjectType
+	Outputs     []OutputModel
 }
 
 // ProjectOutputMap ...
-type ProjectOutputMap map[string][]ProjectOutputModel // Project Name - ProjectOutputModels
+type ProjectOutputMap map[string]ProjectOutputModel // Project Name - ProjectOutputModel
+
+// TestProjectOutputModel ...
+type TestProjectOutputModel struct {
+	ProjectType          constants.ProjectType
+	ReferredProjectNames []string
+	Output               OutputModel
+}
 
 // TestProjectOutputMap ...
 type TestProjectOutputMap map[string]TestProjectOutputModel // Test Project Name - TestProjectOutputModel
@@ -375,7 +381,10 @@ func (builder Model) CollectProjectOutputs(configuration, platform string) (Proj
 
 		projectOutputs, ok := projectOutputMap[proj.Name]
 		if !ok {
-			projectOutputs = []ProjectOutputModel{}
+			projectOutputs = ProjectOutputModel{
+				ProjectType: proj.ProjectType,
+				Outputs:     []OutputModel{},
+			}
 		}
 
 		switch proj.ProjectType {
@@ -383,7 +392,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string) (Proj
 			if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
 				return ProjectOutputMap{}, err
 			} else if xcarchivePth != "" {
-				projectOutputs = append(projectOutputs, ProjectOutputModel{
+				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
 					Pth:        xcarchivePth,
 					OutputType: constants.OutputTypeXCArchive,
 				})
@@ -391,7 +400,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string) (Proj
 			if ipaPth, err := exportLatestIpa(projectConfig.OutputDir, proj.AssemblyName); err != nil {
 				return ProjectOutputMap{}, err
 			} else if ipaPth != "" {
-				projectOutputs = append(projectOutputs, ProjectOutputModel{
+				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
 					Pth:        ipaPth,
 					OutputType: constants.OutputTypeIPA,
 				})
@@ -399,7 +408,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string) (Proj
 			if dsymPth, err := exportAppDSYM(projectConfig.OutputDir, proj.AssemblyName); err != nil {
 				return ProjectOutputMap{}, err
 			} else if dsymPth != "" {
-				projectOutputs = append(projectOutputs, ProjectOutputModel{
+				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
 					Pth:        dsymPth,
 					OutputType: constants.OutputTypeDSYM,
 				})
@@ -407,7 +416,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string) (Proj
 			if appPth, err := exportApp(projectConfig.OutputDir, proj.AssemblyName); err != nil {
 				return ProjectOutputMap{}, err
 			} else if appPth != "" {
-				projectOutputs = append(projectOutputs, ProjectOutputModel{
+				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
 					Pth:        appPth,
 					OutputType: constants.OutputTypeAPP,
 				})
@@ -417,7 +426,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string) (Proj
 				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
 					return ProjectOutputMap{}, err
 				} else if xcarchivePth != "" {
-					projectOutputs = append(projectOutputs, ProjectOutputModel{
+					projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
 						Pth:        xcarchivePth,
 						OutputType: constants.OutputTypeXCArchive,
 					})
@@ -426,7 +435,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string) (Proj
 			if appPth, err := exportApp(projectConfig.OutputDir, proj.AssemblyName); err != nil {
 				return ProjectOutputMap{}, err
 			} else if appPth != "" {
-				projectOutputs = append(projectOutputs, ProjectOutputModel{
+				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
 					Pth:        appPth,
 					OutputType: constants.OutputTypeAPP,
 				})
@@ -434,7 +443,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string) (Proj
 			if pkgPth, err := exportPKG(projectConfig.OutputDir, proj.AssemblyName); err != nil {
 				return ProjectOutputMap{}, err
 			} else if pkgPth != "" {
-				projectOutputs = append(projectOutputs, ProjectOutputModel{
+				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
 					Pth:        pkgPth,
 					OutputType: constants.OutputTypePKG,
 				})
@@ -448,14 +457,14 @@ func (builder Model) CollectProjectOutputs(configuration, platform string) (Proj
 			if apkPth, err := exportApk(projectConfig.OutputDir, packageName); err != nil {
 				return ProjectOutputMap{}, err
 			} else if apkPth != "" {
-				projectOutputs = append(projectOutputs, ProjectOutputModel{
+				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
 					Pth:        apkPth,
 					OutputType: constants.OutputTypeAPK,
 				})
 			}
 		}
 
-		if len(projectOutputs) > 0 {
+		if len(projectOutputs.Outputs) > 0 {
 			projectOutputMap[proj.Name] = projectOutputs
 		}
 	}
@@ -497,9 +506,12 @@ func (builder Model) CollectXamarinUITestProjectOutputs(configuration, platform 
 			}
 
 			testProjectOutputMap[testProj.Name] = TestProjectOutputModel{
-				Pth:                  dllPth,
-				OutputType:           constants.OutputTypeDLL,
+				ProjectType:          testProj.ProjectType,
 				ReferredProjectNames: referredProjectNames,
+				Output: OutputModel{
+					Pth:        dllPth,
+					OutputType: constants.OutputTypeDLL,
+				},
 			}
 		}
 	}
