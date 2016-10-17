@@ -45,10 +45,10 @@ type ProjectOutputMap map[string][]ProjectOutputModel // Project Name - ProjectO
 type TestProjectOutputMap map[string]TestProjectOutputModel // Test Project Name - TestProjectOutputModel
 
 // PrepareCommandCallback ...
-type PrepareCommandCallback func(solutionName string, projectName string, isTestProject bool, command *tools.Editable)
+type PrepareCommandCallback func(solutionName string, projectName string, projectType constants.ProjectType, command *tools.Editable)
 
 // BuildCommandCallback ...
-type BuildCommandCallback func(solutionName string, projectName string, isTestProject bool, commandStr string, alreadyPerformed bool)
+type BuildCommandCallback func(solutionName string, projectName string, projectType constants.ProjectType, commandStr string, alreadyPerformed bool)
 
 // ClearCommandCallback ...
 type ClearCommandCallback func(project project.Model, dir string)
@@ -124,7 +124,7 @@ func (builder Model) BuildSolution(configuration, platform string, callback Buil
 
 	// Callback to notify the caller about next running command
 	if callback != nil {
-		callback(builder.solution.Name, "", false, buildCommand.PrintableCommand(), true)
+		callback(builder.solution.Name, "", constants.ProjectTypeUnknown, buildCommand.PrintableCommand(), true)
 	}
 
 	return buildCommand.Run()
@@ -153,7 +153,7 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 			// Callback to let the caller to modify the command
 			if prepareCallback != nil {
 				editabeCommand := tools.Editable(buildCommand)
-				prepareCallback(builder.solution.Name, proj.Name, false, &editabeCommand)
+				prepareCallback(builder.solution.Name, proj.Name, proj.ProjectType, &editabeCommand)
 			}
 
 			// Check if same command was already performed
@@ -164,7 +164,7 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 
 			// Callback to notify the caller about next running command
 			if callback != nil {
-				callback(builder.solution.Name, proj.Name, false, buildCommand.PrintableCommand(), alreadyPerformed)
+				callback(builder.solution.Name, proj.Name, proj.ProjectType, buildCommand.PrintableCommand(), alreadyPerformed)
 			}
 
 			if !alreadyPerformed {
@@ -204,7 +204,7 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 			// Callback to let the caller to modify the command
 			if prepareCallback != nil {
 				editabeCommand := tools.Editable(buildCommand)
-				prepareCallback(builder.solution.Name, proj.Name, false, &editabeCommand)
+				prepareCallback(builder.solution.Name, proj.Name, proj.ProjectType, &editabeCommand)
 			}
 
 			// Check if same command was already performed
@@ -215,7 +215,7 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 
 			// Callback to notify the caller about next running command
 			if callback != nil {
-				callback(builder.solution.Name, proj.Name, false, buildCommand.PrintableCommand(), alreadyPerformed)
+				callback(builder.solution.Name, proj.Name, proj.ProjectType, buildCommand.PrintableCommand(), alreadyPerformed)
 			}
 
 			if !alreadyPerformed {
@@ -237,7 +237,7 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 		// Callback to let the caller to modify the command
 		if prepareCallback != nil {
 			editabeCommand := tools.Editable(buildCommand)
-			prepareCallback(builder.solution.Name, testProj.Name, true, &editabeCommand)
+			prepareCallback(builder.solution.Name, testProj.Name, testProj.ProjectType, &editabeCommand)
 		}
 
 		// Check if same command was already performed
@@ -248,7 +248,7 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 
 		// Callback to notify the caller about next running command
 		if callback != nil {
-			callback(builder.solution.Name, testProj.Name, true, buildCommand.PrintableCommand(), alreadyPerformed)
+			callback(builder.solution.Name, testProj.Name, testProj.ProjectType, buildCommand.PrintableCommand(), alreadyPerformed)
 		}
 
 		if !alreadyPerformed {
@@ -297,7 +297,7 @@ func (builder Model) BuildAllNunitTestProjects(configuration, platform string, p
 	// Callback to let the caller to modify the command
 	if prepareCallback != nil {
 		editabeCommand := tools.Editable(buildCommand)
-		prepareCallback(builder.solution.Name, "", false, &editabeCommand)
+		prepareCallback(builder.solution.Name, "", constants.ProjectTypeUnknown, &editabeCommand)
 	}
 
 	// Check if same command was already performed
@@ -308,7 +308,7 @@ func (builder Model) BuildAllNunitTestProjects(configuration, platform string, p
 
 	// Callback to notify the caller about next running command
 	if callback != nil {
-		callback(builder.solution.Name, "", false, buildCommand.PrintableCommand(), alreadyPerformed)
+		callback(builder.solution.Name, "", constants.ProjectTypeUnknown, buildCommand.PrintableCommand(), alreadyPerformed)
 	}
 
 	if !alreadyPerformed {
@@ -328,7 +328,7 @@ func (builder Model) BuildAllNunitTestProjects(configuration, platform string, p
 		// Callback to let the caller to modify the command
 		if prepareCallback != nil {
 			editabeCommand := tools.Editable(buildCommand)
-			prepareCallback(builder.solution.Name, testProj.Name, true, &editabeCommand)
+			prepareCallback(builder.solution.Name, testProj.Name, testProj.ProjectType, &editabeCommand)
 		}
 
 		// Check if same command was already performed
@@ -339,7 +339,7 @@ func (builder Model) BuildAllNunitTestProjects(configuration, platform string, p
 
 		// Callback to notify the caller about next running command
 		if callback != nil {
-			callback(builder.solution.Name, testProj.Name, true, buildCommand.PrintableCommand(), alreadyPerformed)
+			callback(builder.solution.Name, testProj.Name, testProj.ProjectType, buildCommand.PrintableCommand(), alreadyPerformed)
 		}
 
 		if !alreadyPerformed {

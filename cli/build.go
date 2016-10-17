@@ -5,6 +5,7 @@ import (
 
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-tools/go-xamarin/builder"
+	"github.com/bitrise-tools/go-xamarin/constants"
 	"github.com/urfave/cli"
 )
 
@@ -39,7 +40,7 @@ func buildCmd(c *cli.Context) error {
 	fmt.Println()
 	log.Info("Building all projects in solution: %s", solutionPth)
 
-	callback := func(solutionName string, projectName string, isTestProject bool, commandStr string, alreadyPerformed bool) {
+	callback := func(solutionName string, projectName string, projectType constants.ProjectType, commandStr string, alreadyPerformed bool) {
 		if projectName != "" {
 			fmt.Println()
 			log.Info("Building project: %s", projectName)
