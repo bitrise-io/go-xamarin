@@ -7,8 +7,8 @@ import (
 
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-tools/go-xamarin/analyzers/solution"
 	"github.com/bitrise-tools/go-xamarin/constants"
-	"github.com/bitrise-tools/go-xamarin/solution"
 	"github.com/bitrise-tools/go-xamarin/utility"
 	"github.com/stretchr/testify/require"
 )
@@ -75,35 +75,35 @@ func TestValidateSolutionConfig(t *testing.T) {
 	}
 }
 
-func TestIsProjectTypeAllowed(t *testing.T) {
+func TestWhitelistAllows(t *testing.T) {
 	t.Log("empty whitelist means allow any project type")
 	{
 		whitelist := []constants.ProjectType{}
-		require.Equal(t, true, isProjectTypeAllowed(constants.ProjectTypeIOS, whitelist...))
+		require.Equal(t, true, whitelistAllows(constants.ProjectTypeIOS, whitelist...))
 	}
 
 	t.Log("it allows project type that exists in whitelist")
 	{
 		whitelist := []constants.ProjectType{constants.ProjectTypeIOS}
-		require.Equal(t, true, isProjectTypeAllowed(constants.ProjectTypeIOS, whitelist...))
+		require.Equal(t, true, whitelistAllows(constants.ProjectTypeIOS, whitelist...))
 	}
 
 	t.Log("it allows project type that exists in whitelist")
 	{
 		whitelist := []constants.ProjectType{constants.ProjectTypeAndroid, constants.ProjectTypeIOS}
-		require.Equal(t, true, isProjectTypeAllowed(constants.ProjectTypeIOS, whitelist...))
+		require.Equal(t, true, whitelistAllows(constants.ProjectTypeIOS, whitelist...))
 	}
 
 	t.Log("it allows project type that exists in whitelist")
 	{
 		whitelist := []constants.ProjectType{constants.ProjectTypeAndroid, constants.ProjectTypeIOS}
-		require.Equal(t, true, isProjectTypeAllowed(constants.ProjectTypeAndroid, whitelist...))
+		require.Equal(t, true, whitelistAllows(constants.ProjectTypeAndroid, whitelist...))
 	}
 
 	t.Log("it does not allows project type that does not exists in whitelist")
 	{
 		whitelist := []constants.ProjectType{constants.ProjectTypeIOS}
-		require.Equal(t, false, isProjectTypeAllowed(constants.ProjectTypeAndroid, whitelist...))
+		require.Equal(t, false, whitelistAllows(constants.ProjectTypeAndroid, whitelist...))
 	}
 }
 
@@ -723,5 +723,76 @@ func TestExportApp(t *testing.T) {
 		output, err := exportApp(tmpDir, "Multiplatform.Mac")
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac.app"), output)
+	}
+}
+
+func TestExportDLL(t *testing.T) {
+	t.Log("it retruns empty path if no dll found")
+	{
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
+		require.NoError(t, err)
+
+		output, err := exportDLL(tmpDir, "Multiplatform.Mac")
+		require.NoError(t, err)
+		require.Equal(t, "", output)
+	}
+
+	t.Log("it finds dll - assembly name test")
+	{
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
+		require.NoError(t, err)
+
+		archives := []string{
+			"CreditCardValidator.Mac.dll",
+			"Multiplatform.Mac.dll",
+		}
+
+		for _, archive := range archives {
+			createTestFile(t, tmpDir, archive)
+		}
+
+		output, err := exportDLL(tmpDir, "Multiplatform.Mac")
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac.dll"), output)
+	}
+
+	t.Log("it finds dll")
+	{
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
+		require.NoError(t, err)
+
+		archives := []string{
+			"Multiplatform.Mac-1.0.pkg",
+			"Multiplatform.Mac.dll",
+			"Multiplatform.Mac.exe",
+		}
+
+		for _, archive := range archives {
+			createTestFile(t, tmpDir, archive)
+		}
+
+		output, err := exportDLL(tmpDir, "Multiplatform.Mac")
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac.dll"), output)
+	}
+
+	t.Log("it finds dll - even if assembly name empty")
+	{
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
+		require.NoError(t, err)
+
+		archives := []string{
+			"Multiplatform.Mac-1.0.pkg",
+			"Multiplatform.Mac.dll",
+			"Multiplatform.Mac.exe",
+		}
+
+		for _, archive := range archives {
+			createTestFile(t, tmpDir, archive)
+		}
+
+		output, err := exportDLL(tmpDir, "Multiplatform.Mac")
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac.dll"), output)
 	}
 }

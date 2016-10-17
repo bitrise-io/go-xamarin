@@ -6,57 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestParseOutputType(t *testing.T) {
-	t.Log("it parses apk")
-	{
-		outputType, err := ParseOutputType("apk")
-		require.NoError(t, err)
-		require.Equal(t, OutputTypeAPK, outputType)
-	}
-
-	t.Log("it parses xcarchive")
-	{
-		outputType, err := ParseOutputType("xcarchive")
-		require.NoError(t, err)
-		require.Equal(t, OutputTypeXCArchive, outputType)
-	}
-
-	t.Log("it parses ipa")
-	{
-		outputType, err := ParseOutputType("ipa")
-		require.NoError(t, err)
-		require.Equal(t, OutputTypeIPA, outputType)
-	}
-
-	t.Log("it parses dsym")
-	{
-		outputType, err := ParseOutputType("dsym")
-		require.NoError(t, err)
-		require.Equal(t, OutputTypeDSYM, outputType)
-	}
-
-	t.Log("it parses pkg")
-	{
-		outputType, err := ParseOutputType("pkg")
-		require.NoError(t, err)
-		require.Equal(t, OutputTypePKG, outputType)
-	}
-
-	t.Log("it parses app")
-	{
-		outputType, err := ParseOutputType("app")
-		require.NoError(t, err)
-		require.Equal(t, OutputTypeAPP, outputType)
-	}
-
-	t.Log("it failes for unknown type")
-	{
-		outputType, err := ParseOutputType("zip")
-		require.Error(t, err)
-		require.Equal(t, OutputTypeUnknown, outputType)
-	}
-}
-
 func TestParseProjectType(t *testing.T) {
 	t.Log("it parses android")
 	{
@@ -84,6 +33,27 @@ func TestParseProjectType(t *testing.T) {
 		projectType, err := ParseProjectType("macos")
 		require.NoError(t, err)
 		require.Equal(t, ProjectTypeMacOS, projectType)
+	}
+
+	t.Log("it parses xamarin-uitest")
+	{
+		projectType, err := ParseProjectType("xamarin-uitest")
+		require.NoError(t, err)
+		require.Equal(t, ProjectTypeXamarinUITest, projectType)
+	}
+
+	t.Log("it parses nunit-test")
+	{
+		projectType, err := ParseProjectType("nunit-test")
+		require.NoError(t, err)
+		require.Equal(t, ProjectTypeNunitTest, projectType)
+	}
+
+	t.Log("it parses nunit-lite-test")
+	{
+		projectType, err := ParseProjectType("nunit-lite-test")
+		require.NoError(t, err)
+		require.Equal(t, ProjectTypeNunitLiteTest, projectType)
 	}
 
 	t.Log("it failes for unknown type")
@@ -165,5 +135,63 @@ func TestParseProjectTypeGUID(t *testing.T) {
 			require.Error(t, err)
 			require.Equal(t, ProjectTypeUnknown, projectType)
 		}
+	}
+}
+
+func TestParseOutputType(t *testing.T) {
+	t.Log("it parses apk")
+	{
+		outputType, err := ParseOutputType("apk")
+		require.NoError(t, err)
+		require.Equal(t, OutputTypeAPK, outputType)
+	}
+
+	t.Log("it parses xcarchive")
+	{
+		outputType, err := ParseOutputType("xcarchive")
+		require.NoError(t, err)
+		require.Equal(t, OutputTypeXCArchive, outputType)
+	}
+
+	t.Log("it parses ipa")
+	{
+		outputType, err := ParseOutputType("ipa")
+		require.NoError(t, err)
+		require.Equal(t, OutputTypeIPA, outputType)
+	}
+
+	t.Log("it parses dsym")
+	{
+		outputType, err := ParseOutputType("dsym")
+		require.NoError(t, err)
+		require.Equal(t, OutputTypeDSYM, outputType)
+	}
+
+	t.Log("it parses pkg")
+	{
+		outputType, err := ParseOutputType("pkg")
+		require.NoError(t, err)
+		require.Equal(t, OutputTypePKG, outputType)
+	}
+
+	t.Log("it parses app")
+	{
+		outputType, err := ParseOutputType("app")
+		require.NoError(t, err)
+		require.Equal(t, OutputTypeAPP, outputType)
+	}
+
+	t.Log("it parses dll")
+	{
+		outputType, err := ParseOutputType("dll")
+		require.NoError(t, err)
+		require.Equal(t, OutputTypeDLL, outputType)
+	}
+
+	t.Log("it failes for unknown type")
+	{
+		outputType, err := ParseOutputType("zip")
+		require.Error(t, err)
+		require.Equal(t, OutputTypeUnknown, outputType)
 	}
 }

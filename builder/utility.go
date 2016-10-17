@@ -13,8 +13,8 @@ import (
 
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-tools/go-xamarin/analyzers/solution"
 	"github.com/bitrise-tools/go-xamarin/constants"
-	"github.com/bitrise-tools/go-xamarin/solution"
 	"github.com/bitrise-tools/go-xamarin/utility"
 )
 
@@ -39,7 +39,7 @@ func validateSolutionConfig(solution solution.Model, configuration, platform str
 	return nil
 }
 
-func isProjectTypeAllowed(projectType constants.ProjectType, projectTypeWhiteList ...constants.ProjectType) bool {
+func whitelistAllows(projectType constants.ProjectType, projectTypeWhiteList ...constants.ProjectType) bool {
 	if len(projectTypeWhiteList) == 0 {
 		return true
 	}
@@ -499,6 +499,7 @@ func exportPKG(outputDir, assemblyName string) (string, error) {
 	if len(pkgs) == 0 {
 		return "", nil
 	}
+
 	rePattern := fmt.Sprintf("%s.*.pkg", assemblyName)
 	re := regexp.MustCompile(rePattern)
 
@@ -522,6 +523,7 @@ func exportPKG(outputDir, assemblyName string) (string, error) {
 
 func exportApp(outputDir, assemblyName string) (string, error) {
 	// Multiplatform/Mac/bin/Release/Multiplatform.Mac.app
+	// xamarin-sample-app/iOS/bin/iPhoneSimulator/Debug/XamarinSampleApp.iOS.app
 	pattern := filepath.Join(outputDir, "*.app")
 	apps, err := filepath.Glob(pattern)
 	if err != nil {
@@ -530,6 +532,7 @@ func exportApp(outputDir, assemblyName string) (string, error) {
 	if len(apps) == 0 {
 		return "", nil
 	}
+
 	rePattern := fmt.Sprintf("%s.app", assemblyName)
 	re := regexp.MustCompile(rePattern)
 
@@ -549,4 +552,36 @@ func exportApp(outputDir, assemblyName string) (string, error) {
 	}
 
 	return filteredAPPs[0], nil
+}
+
+func exportDLL(outputDir, assemblyName string) (string, error) {
+	// xamarin-sample-app/UITests/bin/Release/XamarinSampleApp.UITests.dll
+	pattern := filepath.Join(outputDir, "*.dll")
+	dlls, err := filepath.Glob(pattern)
+	if err != nil {
+		return "", fmt.Errorf("failed to find dll with pattern (%s), error: %s", pattern, err)
+	}
+	if len(dlls) == 0 {
+		return "", nil
+	}
+
+	rePattern := fmt.Sprintf("%s.dll", assemblyName)
+	re := regexp.MustCompile(rePattern)
+
+	filteredDLLs := []string{}
+	for _, dll := range dlls {
+		if match := re.FindString(dll); match != "" {
+			filteredDLLs = append(filteredDLLs, dll)
+		}
+	}
+
+	if len(filteredDLLs) == 0 {
+		filteredDLLs = dlls
+	}
+
+	if len(filteredDLLs) == 0 {
+		return "", nil
+	}
+
+	return filteredDLLs[0], nil
 }

@@ -5,8 +5,6 @@ import (
 
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-tools/go-xamarin/builder"
-	"github.com/bitrise-tools/go-xamarin/buildtool"
-	"github.com/bitrise-tools/go-xamarin/project"
 	"github.com/urfave/cli"
 )
 
@@ -41,14 +39,16 @@ func buildCmd(c *cli.Context) error {
 	fmt.Println()
 	log.Info("Building all projects in solution: %s", solutionPth)
 
-	callback := func(project project.Model, command buildtool.PrintableCommand, alreadyPerformed bool) {
-		fmt.Println()
-		log.Info("Building project: %s", project.Name)
-		log.Done("$ %s", command.PrintableCommand())
-		if alreadyPerformed {
-			log.Warn("build command already performed, skipping...")
+	callback := func(solutionName string, projectName string, isTestProject bool, commandStr string, alreadyPerformed bool) {
+		if projectName != "" {
+			fmt.Println()
+			log.Info("Building project: %s", projectName)
+			log.Done("$ %s", commandStr)
+			if alreadyPerformed {
+				log.Warn("build command already performed, skipping...")
+			}
+			fmt.Println()
 		}
-		fmt.Println()
 	}
 
 	warnings, err := buildHandler.BuildAllProjects(solutionConfiguration, solutionPlatform, nil, callback)
@@ -62,17 +62,17 @@ func buildCmd(c *cli.Context) error {
 	fmt.Println()
 	log.Info("Collecting generated outputs")
 
-	outputMap, err := buildHandler.CollectOutput(solutionConfiguration, solutionPlatform)
+	outputMap, err := buildHandler.CollectProjectOutputs(solutionConfiguration, solutionPlatform)
 	if err != nil {
 		return err
 	}
 
-	for projectType, output := range outputMap {
+	for projectName, outputs := range outputMap {
 		fmt.Println()
-		log.Info("%s outputs:", projectType)
+		log.Info("%s outputs:", projectName)
 
-		for outputType, pth := range output {
-			log.Done("%s: %s", outputType, pth)
+		for _, output := range outputs {
+			log.Done("%s: %s", output.OutputType, output.Pth)
 		}
 	}
 
