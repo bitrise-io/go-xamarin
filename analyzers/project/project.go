@@ -65,11 +65,12 @@ type ConfigurationPlatformModel struct {
 
 // Model ...
 type Model struct {
-	// These properties are set througth solution analyze
-	Pth       string
-	Name      string
+	Pth  string
+	Name string // Set by solution analyze or set its path's filename without extension
+
+	// Solution Configuration|Platform - Project Configuration|Platform map
+	// !!! only set by solution analyze
 	ConfigMap map[string]string
-	// ---
 
 	ID           string
 	ProjectType  constants.ProjectType
@@ -82,7 +83,7 @@ type Model struct {
 	ManifestPth        string
 	AndroidApplication bool
 
-	Configs map[string]ConfigurationPlatformModel
+	Configs map[string]ConfigurationPlatformModel // Project Configuration|Platform - ConfigurationPlatformModel map
 }
 
 // New ...
@@ -108,6 +109,7 @@ func analyzeTargetDefinition(project Model, pth string) (Model, error) {
 		line := strings.TrimSpace(scanner.Text())
 
 		// Target definition
+		// Analyze target definition and point the current project to the target analyze result
 		if matches := regexp.MustCompile(targetDefinitionPattern).FindStringSubmatch(line); len(matches) == 2 {
 			targetDefinitionRelativePth := utility.FixWindowsPath(matches[1])
 
@@ -117,11 +119,18 @@ func analyzeTargetDefinition(project Model, pth string) (Model, error) {
 				if exist, err := pathutil.IsPathExists(targetDefinitionPth); err != nil {
 					return Model{}, err
 				} else if exist {
-					proj, err := analyzeTargetDefinition(project, targetDefinitionPth)
+					projectFromTargetDefinition, err := analyzeTargetDefinition(project, targetDefinitionPth)
 					if err != nil {
 						return Model{}, err
 					}
-					project = proj
+
+					// Set properties became from solution analyze
+					projectFromTargetDefinition.Name = project.Name
+					projectFromTargetDefinition.Pth = project.Pth
+					projectFromTargetDefinition.ConfigMap = project.ConfigMap
+					// ---
+
+					project = projectFromTargetDefinition
 				}
 			}
 
@@ -323,6 +332,33 @@ func analyzeTargetDefinition(project Model, pth string) (Model, error) {
 	}
 	if err := scanner.Err(); err != nil {
 		return Model{}, err
+	}
+
+	// Set Project Test Project Type
+	includesXamarinUITestFramwork := false
+	includesNunitTestFramework := false
+	includesNunitLiteTestFramwork := false
+
+	for _, testFramework := range project.TestFrameworks {
+		if testFramework == constants.TestFrameworkXamarinUITest {
+			includesXamarinUITestFramwork = true
+		}
+		if testFramework == constants.TestFrameworkNunitTest {
+			includesNunitTestFramework = true
+		}
+		if testFramework == constants.TestFrameworkNunitLiteTest {
+			includesNunitLiteTestFramwork = true
+		}
+	}
+
+	if includesXamarinUITestFramwork {
+		project.ProjectType = constants.ProjectTypeXamarinUITest
+	} else if includesNunitTestFramework {
+		project.ProjectType = constants.ProjectTypeNunitTest
+	}
+
+	if includesNunitLiteTestFramwork {
+		project.ProjectType = constants.ProjectTypeNunitLiteTest
 	}
 
 	return project, nil

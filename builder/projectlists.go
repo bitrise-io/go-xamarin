@@ -72,14 +72,7 @@ func (builder Model) buildableXamarinUITestProjectsAndReferredProjects(configura
 
 	for _, proj := range builder.solution.ProjectMap {
 		// Check if is XamarinUITest project
-		isXamarinUITestProject := false
-		for _, testFramework := range proj.TestFrameworks {
-			if testFramework == constants.TestFrameworkXamarinUITest {
-				isXamarinUITestProject = true
-			}
-		}
-
-		if !isXamarinUITestProject {
+		if proj.ProjectType != constants.ProjectTypeXamarinUITest {
 			continue
 		}
 
@@ -133,18 +126,7 @@ func (builder Model) buildableNunitTestProjects(configuration, platform string) 
 
 	for _, proj := range builder.solution.ProjectMap {
 		// Check if is nunit test project
-		isNunitTestProject := false
-		isXamarinUITestProject := false
-		for _, testFramework := range proj.TestFrameworks {
-			if testFramework == constants.TestFrameworkNunitTest {
-				isNunitTestProject = true
-			}
-			if testFramework == constants.TestFrameworkXamarinUITest {
-				isXamarinUITestProject = true
-			}
-		}
-
-		if !isNunitTestProject || isXamarinUITestProject {
+		if proj.ProjectType != constants.ProjectTypeNunitTest {
 			continue
 		}
 

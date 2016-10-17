@@ -725,3 +725,74 @@ func TestExportApp(t *testing.T) {
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac.app"), output)
 	}
 }
+
+func TestExportDLL(t *testing.T) {
+	t.Log("it retruns empty path if no dll found")
+	{
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
+		require.NoError(t, err)
+
+		output, err := exportDLL(tmpDir, "Multiplatform.Mac")
+		require.NoError(t, err)
+		require.Equal(t, "", output)
+	}
+
+	t.Log("it finds dll - assembly name test")
+	{
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
+		require.NoError(t, err)
+
+		archives := []string{
+			"CreditCardValidator.Mac.dll",
+			"Multiplatform.Mac.dll",
+		}
+
+		for _, archive := range archives {
+			createTestFile(t, tmpDir, archive)
+		}
+
+		output, err := exportDLL(tmpDir, "Multiplatform.Mac")
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac.dll"), output)
+	}
+
+	t.Log("it finds dll")
+	{
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
+		require.NoError(t, err)
+
+		archives := []string{
+			"Multiplatform.Mac-1.0.pkg",
+			"Multiplatform.Mac.dll",
+			"Multiplatform.Mac.exe",
+		}
+
+		for _, archive := range archives {
+			createTestFile(t, tmpDir, archive)
+		}
+
+		output, err := exportDLL(tmpDir, "Multiplatform.Mac")
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac.dll"), output)
+	}
+
+	t.Log("it finds dll - even if assembly name empty")
+	{
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
+		require.NoError(t, err)
+
+		archives := []string{
+			"Multiplatform.Mac-1.0.pkg",
+			"Multiplatform.Mac.dll",
+			"Multiplatform.Mac.exe",
+		}
+
+		for _, archive := range archives {
+			createTestFile(t, tmpDir, archive)
+		}
+
+		output, err := exportDLL(tmpDir, "Multiplatform.Mac")
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac.dll"), output)
+	}
+}
