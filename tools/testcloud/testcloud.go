@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/bitrise-io/go-utils/cmdex"
+	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-xamarin/constants"
 )
 
@@ -54,8 +55,13 @@ type Model struct {
 }
 
 // NewModel ...
-func NewModel(testCloudExexPth string) Model {
-	return Model{testCloudExePth: testCloudExexPth}
+func NewModel(testCloudExexPth string) (*Model, error) {
+	absTestCloudExexPth, err := pathutil.AbsPath(testCloudExexPth)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to expand path (%s), error: %s", testCloudExexPth, err)
+	}
+
+	return &Model{testCloudExePth: absTestCloudExexPth}, nil
 }
 
 // SetAPKPth ...

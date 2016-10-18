@@ -2,8 +2,10 @@ package xbuild
 
 import (
 	"fmt"
+	"path/filepath"
 	"testing"
 
+	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/testutil"
 	"github.com/bitrise-tools/go-xamarin/constants"
 	"github.com/stretchr/testify/require"
@@ -12,11 +14,37 @@ import (
 func TestNew(t *testing.T) {
 	t.Log("it create new xbuild model")
 	{
-		xbuild := New("solution.sln")
+		currentDir, err := pathutil.CurrentWorkingDirectoryAbsolutePath()
+		require.NoError(t, err)
+
+		xbuild, err := New("solution.sln", "")
+		require.NoError(t, err)
 		require.NotNil(t, xbuild)
 
 		require.Equal(t, constants.XbuildPath, xbuild.buildTool)
-		require.Equal(t, "solution.sln", xbuild.solutionPth)
+		require.Equal(t, filepath.Join(currentDir, "solution.sln"), xbuild.solutionPth)
+		require.Equal(t, "", xbuild.configuration)
+		require.Equal(t, "", xbuild.platform)
+		require.Equal(t, "", xbuild.target)
+
+		require.Equal(t, false, xbuild.buildIpa)
+		require.Equal(t, false, xbuild.archiveOnBuild)
+
+		require.Equal(t, 0, len(xbuild.customOptions))
+	}
+
+	t.Log("it create new xbuild model")
+	{
+		currentDir, err := pathutil.CurrentWorkingDirectoryAbsolutePath()
+		require.NoError(t, err)
+
+		xbuild, err := New("solution.sln", "project.csproj")
+		require.NoError(t, err)
+		require.NotNil(t, xbuild)
+
+		require.Equal(t, constants.XbuildPath, xbuild.buildTool)
+		require.Equal(t, filepath.Join(currentDir, "solution.sln"), xbuild.solutionPth)
+		require.Equal(t, filepath.Join(currentDir, "project.csproj"), xbuild.projectPth)
 		require.Equal(t, "", xbuild.configuration)
 		require.Equal(t, "", xbuild.platform)
 		require.Equal(t, "", xbuild.target)
@@ -31,7 +59,8 @@ func TestNew(t *testing.T) {
 func TestSetProperties(t *testing.T) {
 	t.Log("it sets target")
 	{
-		xbuild := New("solution.sln")
+		xbuild, err := New("/solution.sln", "")
+		require.NoError(t, err)
 		require.NotNil(t, xbuild)
 		require.Equal(t, "", xbuild.target)
 
@@ -41,7 +70,8 @@ func TestSetProperties(t *testing.T) {
 
 	t.Log("it sets configuration")
 	{
-		xbuild := New("solution.sln")
+		xbuild, err := New("/solution.sln", "")
+		require.NoError(t, err)
 		require.NotNil(t, xbuild)
 		require.Equal(t, "", xbuild.configuration)
 
@@ -51,7 +81,8 @@ func TestSetProperties(t *testing.T) {
 
 	t.Log("it sets platform")
 	{
-		xbuild := New("solution.sln")
+		xbuild, err := New("/solution.sln", "")
+		require.NoError(t, err)
 		require.NotNil(t, xbuild)
 		require.Equal(t, "", xbuild.platform)
 
@@ -61,7 +92,8 @@ func TestSetProperties(t *testing.T) {
 
 	t.Log("it sets build ipa")
 	{
-		xbuild := New("solution.sln")
+		xbuild, err := New("/solution.sln", "")
+		require.NoError(t, err)
 		require.NotNil(t, xbuild)
 		require.Equal(t, false, xbuild.buildIpa)
 
@@ -71,7 +103,8 @@ func TestSetProperties(t *testing.T) {
 
 	t.Log("it sets archive on build")
 	{
-		xbuild := New("solution.sln")
+		xbuild, err := New("/solution.sln", "")
+		require.NoError(t, err)
 		require.NotNil(t, xbuild)
 		require.Equal(t, false, xbuild.archiveOnBuild)
 
@@ -81,7 +114,8 @@ func TestSetProperties(t *testing.T) {
 
 	t.Log("it appends custom options")
 	{
-		xbuild := New("solution.sln")
+		xbuild, err := New("/solution.sln", "")
+		require.NoError(t, err)
 		require.NotNil(t, xbuild)
 		require.Equal(t, 0, len(xbuild.customOptions))
 
@@ -92,67 +126,107 @@ func TestSetProperties(t *testing.T) {
 }
 
 func TestBuildCommandSlice(t *testing.T) {
+	t.Log("solution-dir test")
+	{
+		currentDir, err := pathutil.CurrentWorkingDirectoryAbsolutePath()
+		require.NoError(t, err)
+
+		xbuild, err := New("./test/solution.sln", "./test/ios/project.csproj")
+		require.NoError(t, err)
+		desired := []string{constants.XbuildPath, filepath.Join(currentDir, "test/ios/project.csproj"), fmt.Sprintf("/p:SolutionDir=%s", filepath.Join(currentDir, "test"))}
+		require.Equal(t, desired, xbuild.buildCommandSlice())
+	}
+
+	t.Log("solution-dir test")
+	{
+		xbuild, err := New("/Users/Develop/test/solution.sln", "/Users/Develop/test/test/ios/project.csproj")
+		require.NoError(t, err)
+		desired := []string{constants.XbuildPath, "/Users/Develop/test/test/ios/project.csproj", "/p:SolutionDir=/Users/Develop/test"}
+		require.Equal(t, desired, xbuild.buildCommandSlice())
+	}
+
 	t.Log("it build command slice from model")
 	{
-		xbuild := New("solution.sln")
-		desired := []string{constants.XbuildPath, "solution.sln", "/p:SolutionDir=."}
+		xbuild, err := New("/solution.sln", "")
+		require.NoError(t, err)
+		desired := []string{constants.XbuildPath, "/solution.sln", "/p:SolutionDir=/"}
 		require.Equal(t, desired, xbuild.buildCommandSlice())
 
 		xbuild.SetTarget("Build")
-		desired = []string{constants.XbuildPath, "solution.sln", "/target:Build", "/p:SolutionDir=."}
+		desired = []string{constants.XbuildPath, "/solution.sln", "/target:Build", "/p:SolutionDir=/"}
 		require.Equal(t, desired, xbuild.buildCommandSlice())
 
 		xbuild.SetConfiguration("Release")
-		desired = []string{constants.XbuildPath, "solution.sln", "/target:Build", "/p:SolutionDir=.", "/p:Configuration=Release"}
+		desired = []string{constants.XbuildPath, "/solution.sln", "/target:Build", "/p:SolutionDir=/", "/p:Configuration=Release"}
 		require.Equal(t, desired, xbuild.buildCommandSlice())
 
 		xbuild.SetPlatform("iPhone")
-		desired = []string{constants.XbuildPath, "solution.sln", "/target:Build", "/p:SolutionDir=.", "/p:Configuration=Release", "/p:Platform=iPhone"}
+		desired = []string{constants.XbuildPath, "/solution.sln", "/target:Build", "/p:SolutionDir=/", "/p:Configuration=Release", "/p:Platform=iPhone"}
 		require.Equal(t, desired, xbuild.buildCommandSlice())
 
 		xbuild.SetArchiveOnBuild(true)
-		desired = []string{constants.XbuildPath, "solution.sln", "/target:Build", "/p:SolutionDir=.", "/p:Configuration=Release", "/p:Platform=iPhone", "/p:ArchiveOnBuild=true"}
+		desired = []string{constants.XbuildPath, "/solution.sln", "/target:Build", "/p:SolutionDir=/", "/p:Configuration=Release", "/p:Platform=iPhone", "/p:ArchiveOnBuild=true"}
 		require.Equal(t, desired, xbuild.buildCommandSlice())
 
 		xbuild.SetBuildIpa(true)
-		desired = []string{constants.XbuildPath, "solution.sln", "/target:Build", "/p:SolutionDir=.", "/p:Configuration=Release", "/p:Platform=iPhone", "/p:ArchiveOnBuild=true", "/p:BuildIpa=true"}
+		desired = []string{constants.XbuildPath, "/solution.sln", "/target:Build", "/p:SolutionDir=/", "/p:Configuration=Release", "/p:Platform=iPhone", "/p:ArchiveOnBuild=true", "/p:BuildIpa=true"}
 		require.Equal(t, desired, xbuild.buildCommandSlice())
 
 		xbuild.SetCustomOptions("/nologo")
-		desired = []string{constants.XbuildPath, "solution.sln", "/target:Build", "/p:SolutionDir=.", "/p:Configuration=Release", "/p:Platform=iPhone", "/p:ArchiveOnBuild=true", "/p:BuildIpa=true", "/nologo"}
+		desired = []string{constants.XbuildPath, "/solution.sln", "/target:Build", "/p:SolutionDir=/", "/p:Configuration=Release", "/p:Platform=iPhone", "/p:ArchiveOnBuild=true", "/p:BuildIpa=true", "/nologo"}
 		require.Equal(t, desired, xbuild.buildCommandSlice())
 	}
 }
 
 func TestPrintableCommand(t *testing.T) {
+	t.Log("solution-dir test")
+	{
+		currentDir, err := pathutil.CurrentWorkingDirectoryAbsolutePath()
+		require.NoError(t, err)
+
+		xbuild, err := New("./test/solution.sln", "./test/ios/project.csproj")
+		require.NoError(t, err)
+		desired := fmt.Sprintf(`"%s" "%s" "%s"`, constants.XbuildPath, filepath.Join(currentDir, "test/ios/project.csproj"), fmt.Sprintf("/p:SolutionDir=%s", filepath.Join(currentDir, "test")))
+		require.Equal(t, desired, xbuild.PrintableCommand())
+	}
+
+	t.Log("solution-dir test")
+	{
+		xbuild, err := New("/Users/Develop/test/solution.sln", "/Users/Develop/test/test/ios/project.csproj")
+		require.NoError(t, err)
+		desired := fmt.Sprintf(`"%s" "/Users/Develop/test/test/ios/project.csproj" "/p:SolutionDir=/Users/Develop/test"`, constants.XbuildPath)
+		require.Equal(t, desired, xbuild.PrintableCommand())
+	}
+
 	t.Log("it creates printable command")
 	{
-		xbuild := New("solution.sln")
-		desired := fmt.Sprintf(`"%s" "solution.sln" "/p:SolutionDir=."`, constants.XbuildPath)
+		xbuild, err := New("/solution.sln", "")
+		require.NoError(t, err)
+		desired := fmt.Sprintf(`"%s" "/solution.sln" "/p:SolutionDir=/"`, constants.XbuildPath)
 		require.Equal(t, desired, xbuild.PrintableCommand())
 
 		xbuild.SetTarget("Build")
-		desired = fmt.Sprintf(`"%s" "solution.sln" "/target:Build" "/p:SolutionDir=."`, constants.XbuildPath)
+		desired = fmt.Sprintf(`"%s" "/solution.sln" "/target:Build" "/p:SolutionDir=/"`, constants.XbuildPath)
 		require.Equal(t, desired, xbuild.PrintableCommand())
 
 		xbuild.SetConfiguration("Release")
-		desired = fmt.Sprintf(`"%s" "solution.sln" "/target:Build" "/p:SolutionDir=." "/p:Configuration=Release"`, constants.XbuildPath)
+		desired = fmt.Sprintf(`"%s" "/solution.sln" "/target:Build" "/p:SolutionDir=/" "/p:Configuration=Release"`, constants.XbuildPath)
 		require.Equal(t, desired, xbuild.PrintableCommand())
 
 		xbuild.SetPlatform("iPhone")
-		desired = fmt.Sprintf(`"%s" "solution.sln" "/target:Build" "/p:SolutionDir=." "/p:Configuration=Release" "/p:Platform=iPhone"`, constants.XbuildPath)
+		desired = fmt.Sprintf(`"%s" "/solution.sln" "/target:Build" "/p:SolutionDir=/" "/p:Configuration=Release" "/p:Platform=iPhone"`, constants.XbuildPath)
 		require.Equal(t, desired, xbuild.PrintableCommand())
 
 		xbuild.SetArchiveOnBuild(true)
-		desired = fmt.Sprintf(`"%s" "solution.sln" "/target:Build" "/p:SolutionDir=." "/p:Configuration=Release" "/p:Platform=iPhone" "/p:ArchiveOnBuild=true"`, constants.XbuildPath)
+		desired = fmt.Sprintf(`"%s" "/solution.sln" "/target:Build" "/p:SolutionDir=/" "/p:Configuration=Release" "/p:Platform=iPhone" "/p:ArchiveOnBuild=true"`, constants.XbuildPath)
 		require.Equal(t, desired, xbuild.PrintableCommand())
 
 		xbuild.SetBuildIpa(true)
-		desired = fmt.Sprintf(`"%s" "solution.sln" "/target:Build" "/p:SolutionDir=." "/p:Configuration=Release" "/p:Platform=iPhone" "/p:ArchiveOnBuild=true" "/p:BuildIpa=true"`, constants.XbuildPath)
+		desired = fmt.Sprintf(`"%s" "/solution.sln" "/target:Build" "/p:SolutionDir=/" "/p:Configuration=Release" "/p:Platform=iPhone" "/p:ArchiveOnBuild=true" "/p:BuildIpa=true"`, constants.XbuildPath)
 		require.Equal(t, desired, xbuild.PrintableCommand())
 
 		xbuild.SetCustomOptions("/nologo")
-		desired = fmt.Sprintf(`"%s" "solution.sln" "/target:Build" "/p:SolutionDir=." "/p:Configuration=Release" "/p:Platform=iPhone" "/p:ArchiveOnBuild=true" "/p:BuildIpa=true" "/nologo"`, constants.XbuildPath)
+		desired = fmt.Sprintf(`"%s" "/solution.sln" "/target:Build" "/p:SolutionDir=/" "/p:Configuration=Release" "/p:Platform=iPhone" "/p:ArchiveOnBuild=true" "/p:BuildIpa=true" "/nologo"`, constants.XbuildPath)
 		require.Equal(t, desired, xbuild.PrintableCommand())
 	}
 }

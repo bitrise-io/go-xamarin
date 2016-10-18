@@ -68,11 +68,11 @@ func buildCmd(c *cli.Context) error {
 		return err
 	}
 
-	for projectName, outputs := range outputMap {
+	for projectName, projectOutput := range outputMap {
 		fmt.Println()
 		log.Info("%s outputs:", projectName)
 
-		for _, output := range outputs {
+		for _, output := range projectOutput.Outputs {
 			log.Done("%s: %s", output.OutputType, output.Pth)
 		}
 	}

@@ -2,8 +2,10 @@ package mdtool
 
 import (
 	"fmt"
+	"path/filepath"
 	"testing"
 
+	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/testutil"
 	"github.com/bitrise-tools/go-xamarin/constants"
 	"github.com/stretchr/testify/require"
@@ -12,11 +14,15 @@ import (
 func TestNew(t *testing.T) {
 	t.Log("it create new xbuild model")
 	{
-		mdtool := New("solution.sln")
+		currentDir, err := pathutil.CurrentWorkingDirectoryAbsolutePath()
+		require.NoError(t, err)
+
+		mdtool, err := New("solution.sln")
+		require.NoError(t, err)
 		require.NotNil(t, mdtool)
 
 		require.Equal(t, constants.MDToolPath, mdtool.buildTool)
-		require.Equal(t, "solution.sln", mdtool.solutionPth)
+		require.Equal(t, filepath.Join(currentDir, "solution.sln"), mdtool.solutionPth)
 		require.Equal(t, "", mdtool.projectName)
 		require.Equal(t, "", mdtool.configuration)
 		require.Equal(t, "", mdtool.platform)
@@ -29,7 +35,8 @@ func TestNew(t *testing.T) {
 func TestSetProperties(t *testing.T) {
 	t.Log("it sets target")
 	{
-		mdtool := New("solution.sln")
+		mdtool, err := New("/solution.sln")
+		require.NoError(t, err)
 		require.NotNil(t, mdtool)
 		require.Equal(t, "", mdtool.target)
 
@@ -39,7 +46,8 @@ func TestSetProperties(t *testing.T) {
 
 	t.Log("it sets configuration")
 	{
-		mdtool := New("solution.sln")
+		mdtool, err := New("/solution.sln")
+		require.NoError(t, err)
 		require.NotNil(t, mdtool)
 		require.Equal(t, "", mdtool.configuration)
 
@@ -49,7 +57,8 @@ func TestSetProperties(t *testing.T) {
 
 	t.Log("it sets platform")
 	{
-		mdtool := New("solution.sln")
+		mdtool, err := New("/solution.sln")
+		require.NoError(t, err)
 		require.NotNil(t, mdtool)
 		require.Equal(t, "", mdtool.platform)
 
@@ -59,7 +68,8 @@ func TestSetProperties(t *testing.T) {
 
 	t.Log("it sets project name")
 	{
-		mdtool := New("solution.sln")
+		mdtool, err := New("/solution.sln")
+		require.NoError(t, err)
 		require.NotNil(t, mdtool)
 		require.Equal(t, "", mdtool.projectName)
 
@@ -69,7 +79,8 @@ func TestSetProperties(t *testing.T) {
 
 	t.Log("it appends custom options")
 	{
-		mdtool := New("solution.sln")
+		mdtool, err := New("/solution.sln")
+		require.NoError(t, err)
 		require.NotNil(t, mdtool)
 		require.Equal(t, 0, len(mdtool.customOptions))
 
@@ -82,32 +93,33 @@ func TestSetProperties(t *testing.T) {
 func TestBuildCommandSlice(t *testing.T) {
 	t.Log("it build command slice from model")
 	{
-		mdtool := New("solution.sln")
-		desired := []string{constants.MDToolPath, "solution.sln"}
+		mdtool, err := New("/solution.sln")
+		require.NoError(t, err)
+		desired := []string{constants.MDToolPath, "/solution.sln"}
 		require.Equal(t, desired, mdtool.buildCommandSlice())
 
 		mdtool.SetTarget("build")
-		desired = []string{constants.MDToolPath, "build", "solution.sln"}
+		desired = []string{constants.MDToolPath, "build", "/solution.sln"}
 		require.Equal(t, desired, mdtool.buildCommandSlice())
 
 		mdtool.SetConfiguration("Release")
-		desired = []string{constants.MDToolPath, "build", "solution.sln", "-c:Release"}
+		desired = []string{constants.MDToolPath, "build", "/solution.sln", "-c:Release"}
 		require.Equal(t, desired, mdtool.buildCommandSlice())
 
 		mdtool.SetPlatform("iPhone")
-		desired = []string{constants.MDToolPath, "build", "solution.sln", "-c:Release|iPhone"}
+		desired = []string{constants.MDToolPath, "build", "/solution.sln", "-c:Release|iPhone"}
 		require.Equal(t, desired, mdtool.buildCommandSlice())
 
 		mdtool.SetPlatform("AnyCPU")
-		desired = []string{constants.MDToolPath, "build", "solution.sln", "-c:Release"}
+		desired = []string{constants.MDToolPath, "build", "/solution.sln", "-c:Release"}
 		require.Equal(t, desired, mdtool.buildCommandSlice())
 
 		mdtool.SetProjectName("project.csproj")
-		desired = []string{constants.MDToolPath, "build", "solution.sln", "-c:Release", "-p:project.csproj"}
+		desired = []string{constants.MDToolPath, "build", "/solution.sln", "-c:Release", "-p:project.csproj"}
 		require.Equal(t, desired, mdtool.buildCommandSlice())
 
 		mdtool.SetCustomOptions("-r:PREFIX")
-		desired = []string{constants.MDToolPath, "build", "solution.sln", "-c:Release", "-p:project.csproj", "-r:PREFIX"}
+		desired = []string{constants.MDToolPath, "build", "/solution.sln", "-c:Release", "-p:project.csproj", "-r:PREFIX"}
 		require.Equal(t, desired, mdtool.buildCommandSlice())
 	}
 }
@@ -115,32 +127,33 @@ func TestBuildCommandSlice(t *testing.T) {
 func TestPrintableCommand(t *testing.T) {
 	t.Log("it creates printable command")
 	{
-		mdtool := New("solution.sln")
-		desired := fmt.Sprintf(`"%s" "solution.sln"`, constants.MDToolPath)
+		mdtool, err := New("/solution.sln")
+		require.NoError(t, err)
+		desired := fmt.Sprintf(`"%s" "/solution.sln"`, constants.MDToolPath)
 		require.Equal(t, desired, mdtool.PrintableCommand())
 
 		mdtool.SetTarget("build")
-		desired = fmt.Sprintf(`"%s" "build" "solution.sln"`, constants.MDToolPath)
+		desired = fmt.Sprintf(`"%s" "build" "/solution.sln"`, constants.MDToolPath)
 		require.Equal(t, desired, mdtool.PrintableCommand())
 
 		mdtool.SetConfiguration("Release")
-		desired = fmt.Sprintf(`"%s" "build" "solution.sln" "-c:Release"`, constants.MDToolPath)
+		desired = fmt.Sprintf(`"%s" "build" "/solution.sln" "-c:Release"`, constants.MDToolPath)
 		require.Equal(t, desired, mdtool.PrintableCommand())
 
 		mdtool.SetPlatform("iPhone")
-		desired = fmt.Sprintf(`"%s" "build" "solution.sln" "-c:Release|iPhone"`, constants.MDToolPath)
+		desired = fmt.Sprintf(`"%s" "build" "/solution.sln" "-c:Release|iPhone"`, constants.MDToolPath)
 		require.Equal(t, desired, mdtool.PrintableCommand())
 
 		mdtool.SetPlatform("AnyCPU")
-		desired = fmt.Sprintf(`"%s" "build" "solution.sln" "-c:Release"`, constants.MDToolPath)
+		desired = fmt.Sprintf(`"%s" "build" "/solution.sln" "-c:Release"`, constants.MDToolPath)
 		require.Equal(t, desired, mdtool.PrintableCommand())
 
 		mdtool.SetProjectName("project.csproj")
-		desired = fmt.Sprintf(`"%s" "build" "solution.sln" "-c:Release" "-p:project.csproj"`, constants.MDToolPath)
+		desired = fmt.Sprintf(`"%s" "build" "/solution.sln" "-c:Release" "-p:project.csproj"`, constants.MDToolPath)
 		require.Equal(t, desired, mdtool.PrintableCommand())
 
 		mdtool.SetCustomOptions("-r:PREFIX")
-		desired = fmt.Sprintf(`"%s" "build" "solution.sln" "-c:Release" "-p:project.csproj" "-r:PREFIX"`, constants.MDToolPath)
+		desired = fmt.Sprintf(`"%s" "build" "/solution.sln" "-c:Release" "-p:project.csproj" "-r:PREFIX"`, constants.MDToolPath)
 		require.Equal(t, desired, mdtool.PrintableCommand())
 	}
 }
