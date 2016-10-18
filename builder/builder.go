@@ -144,12 +144,12 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 	warnings := []string{}
 
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
-		return []string{}, err
+		return warnings, err
 	}
 
 	buildableProjects, warns := builder.buildableProjects(configuration, platform)
 	if len(buildableProjects) == 0 {
-		return warns, nil
+		return warns, fmt.Errorf("No project to build found")
 	}
 
 	perfomedCommands := []tools.Printable{}
@@ -196,12 +196,12 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 	warnings := []string{}
 
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
-		return []string{}, err
+		return warnings, err
 	}
 
 	buildableTestProjects, buildableReferredProjects, warns := builder.buildableXamarinUITestProjectsAndReferredProjects(configuration, platform)
 	if len(buildableTestProjects) == 0 || len(buildableReferredProjects) == 0 {
-		return warns, nil
+		return warns, fmt.Errorf("No project to build found")
 	}
 
 	perfomedCommands := []tools.Printable{}
@@ -286,12 +286,12 @@ func (builder Model) BuildAllNunitTestProjects(configuration, platform string, p
 	warnings := []string{}
 
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
-		return []string{}, err
+		return warnings, err
 	}
 
 	buildableProjects, warns := builder.buildableNunitTestProjects(configuration, platform)
 	if len(buildableProjects) == 0 {
-		return warns, nil
+		return warns, fmt.Errorf("No project to build found")
 	}
 
 	nunitDir := os.Getenv("NUNIT_PATH")
