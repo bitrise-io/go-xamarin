@@ -144,12 +144,12 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 	warnings := []string{}
 
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
-		return []string{}, err
+		return warnings, err
 	}
 
 	buildableProjects, warns := builder.buildableProjects(configuration, platform)
 	if len(buildableProjects) == 0 {
-		return warns, nil
+		return warns, fmt.Errorf("No project to build found")
 	}
 
 	perfomedCommands := []tools.Printable{}
@@ -196,12 +196,12 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 	warnings := []string{}
 
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
-		return []string{}, err
+		return warnings, err
 	}
 
 	buildableTestProjects, buildableReferredProjects, warns := builder.buildableXamarinUITestProjectsAndReferredProjects(configuration, platform)
 	if len(buildableTestProjects) == 0 || len(buildableReferredProjects) == 0 {
-		return warns, nil
+		return warns, fmt.Errorf("No project to build found")
 	}
 
 	perfomedCommands := []tools.Printable{}
@@ -286,12 +286,12 @@ func (builder Model) BuildAllNunitTestProjects(configuration, platform string, p
 	warnings := []string{}
 
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
-		return []string{}, err
+		return warnings, err
 	}
 
 	buildableProjects, warns := builder.buildableNunitTestProjects(configuration, platform)
 	if len(buildableProjects) == 0 {
-		return warns, nil
+		return warns, fmt.Errorf("No project to build found")
 	}
 
 	nunitDir := os.Getenv("NUNIT_PATH")
@@ -491,8 +491,9 @@ func (builder Model) CollectProjectOutputs(configuration, platform string) (Proj
 }
 
 // CollectXamarinUITestProjectOutputs ...
-func (builder Model) CollectXamarinUITestProjectOutputs(configuration, platform string) (TestProjectOutputMap, error) {
+func (builder Model) CollectXamarinUITestProjectOutputs(configuration, platform string) (TestProjectOutputMap, []string, error) {
 	testProjectOutputMap := TestProjectOutputMap{}
+	warnings := []string{}
 
 	buildableTestProjects, _, _ := builder.buildableXamarinUITestProjectsAndReferredProjects(configuration, platform)
 
@@ -510,14 +511,14 @@ func (builder Model) CollectXamarinUITestProjectOutputs(configuration, platform 
 		}
 
 		if dllPth, err := exportDLL(projectConfig.OutputDir, testProj.AssemblyName); err != nil {
-			return TestProjectOutputMap{}, err
+			return TestProjectOutputMap{}, warnings, err
 		} else if dllPth != "" {
 			referredProjectNames := []string{}
 			referredProjectIDs := testProj.ReferredProjectIDs
 			for _, referredProjectID := range referredProjectIDs {
 				referredProject, ok := builder.solution.ProjectMap[referredProjectID]
 				if !ok {
-					return TestProjectOutputMap{}, fmt.Errorf("project reference exist with project id: %s, but project not found in solution", referredProjectID)
+					warnings = append(warnings, fmt.Sprintf("project reference exist with project id: %s, but project not found in solution", referredProjectID))
 				}
 
 				referredProjectNames = append(referredProjectNames, referredProject.Name)
@@ -534,5 +535,5 @@ func (builder Model) CollectXamarinUITestProjectOutputs(configuration, platform 
 		}
 	}
 
-	return testProjectOutputMap, nil
+	return testProjectOutputMap, warnings, nil
 }
