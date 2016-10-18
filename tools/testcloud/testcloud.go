@@ -184,9 +184,7 @@ func (testCloud *Model) submitCommandSlice() []string {
 		cmdSlice = append(cmdSlice, "--fixture-chunk")
 	}
 
-	for _, option := range testCloud.customOptions {
-		cmdSlice = append(cmdSlice, option)
-	}
+	cmdSlice = append(cmdSlice, testCloud.customOptions...)
 
 	return cmdSlice
 }
