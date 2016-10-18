@@ -50,6 +50,7 @@ func (nunitConsole *Model) commandSlice() []string {
 	cmdSlice = append(cmdSlice, nunitConsole.nunitConsolePth)
 	cmdSlice = append(cmdSlice, nunitConsole.projectPth)
 	cmdSlice = append(cmdSlice, fmt.Sprintf("/config:%s", nunitConsole.config))
+	cmdSlice = append(cmdSlice, nunitConsole.customOptions...)
 	return cmdSlice
 }
 
