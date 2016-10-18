@@ -12,11 +12,29 @@ import (
 func TestNew(t *testing.T) {
 	t.Log("it create new xbuild model")
 	{
-		xbuild := New("solution.sln")
+		xbuild := New("solution.sln", "")
 		require.NotNil(t, xbuild)
 
 		require.Equal(t, constants.XbuildPath, xbuild.buildTool)
 		require.Equal(t, "solution.sln", xbuild.solutionPth)
+		require.Equal(t, "", xbuild.configuration)
+		require.Equal(t, "", xbuild.platform)
+		require.Equal(t, "", xbuild.target)
+
+		require.Equal(t, false, xbuild.buildIpa)
+		require.Equal(t, false, xbuild.archiveOnBuild)
+
+		require.Equal(t, 0, len(xbuild.customOptions))
+	}
+
+	t.Log("it create new xbuild model")
+	{
+		xbuild := New("solution.sln", "project.csproj")
+		require.NotNil(t, xbuild)
+
+		require.Equal(t, constants.XbuildPath, xbuild.buildTool)
+		require.Equal(t, "solution.sln", xbuild.solutionPth)
+		require.Equal(t, "project.csproj", xbuild.projectPth)
 		require.Equal(t, "", xbuild.configuration)
 		require.Equal(t, "", xbuild.platform)
 		require.Equal(t, "", xbuild.target)
@@ -31,7 +49,7 @@ func TestNew(t *testing.T) {
 func TestSetProperties(t *testing.T) {
 	t.Log("it sets target")
 	{
-		xbuild := New("solution.sln")
+		xbuild := New("solution.sln", "")
 		require.NotNil(t, xbuild)
 		require.Equal(t, "", xbuild.target)
 
@@ -41,7 +59,7 @@ func TestSetProperties(t *testing.T) {
 
 	t.Log("it sets configuration")
 	{
-		xbuild := New("solution.sln")
+		xbuild := New("solution.sln", "")
 		require.NotNil(t, xbuild)
 		require.Equal(t, "", xbuild.configuration)
 
@@ -51,7 +69,7 @@ func TestSetProperties(t *testing.T) {
 
 	t.Log("it sets platform")
 	{
-		xbuild := New("solution.sln")
+		xbuild := New("solution.sln", "")
 		require.NotNil(t, xbuild)
 		require.Equal(t, "", xbuild.platform)
 
@@ -61,7 +79,7 @@ func TestSetProperties(t *testing.T) {
 
 	t.Log("it sets build ipa")
 	{
-		xbuild := New("solution.sln")
+		xbuild := New("solution.sln", "")
 		require.NotNil(t, xbuild)
 		require.Equal(t, false, xbuild.buildIpa)
 
@@ -71,7 +89,7 @@ func TestSetProperties(t *testing.T) {
 
 	t.Log("it sets archive on build")
 	{
-		xbuild := New("solution.sln")
+		xbuild := New("solution.sln", "")
 		require.NotNil(t, xbuild)
 		require.Equal(t, false, xbuild.archiveOnBuild)
 
@@ -81,7 +99,7 @@ func TestSetProperties(t *testing.T) {
 
 	t.Log("it appends custom options")
 	{
-		xbuild := New("solution.sln")
+		xbuild := New("solution.sln", "")
 		require.NotNil(t, xbuild)
 		require.Equal(t, 0, len(xbuild.customOptions))
 
@@ -92,9 +110,23 @@ func TestSetProperties(t *testing.T) {
 }
 
 func TestBuildCommandSlice(t *testing.T) {
+	t.Log("solution-dir test")
+	{
+		xbuild := New("./test/solution.sln", "./test/ios/project.csproj")
+		desired := []string{constants.XbuildPath, "./test/ios/project.csproj", "/p:SolutionDir=test"}
+		require.Equal(t, desired, xbuild.buildCommandSlice())
+	}
+
+	t.Log("solution-dir test")
+	{
+		xbuild := New("/Users/Develop/test/solution.sln", "/Users/Develop/test/test/ios/project.csproj")
+		desired := []string{constants.XbuildPath, "/Users/Develop/test/test/ios/project.csproj", "/p:SolutionDir=/Users/Develop/test"}
+		require.Equal(t, desired, xbuild.buildCommandSlice())
+	}
+
 	t.Log("it build command slice from model")
 	{
-		xbuild := New("solution.sln")
+		xbuild := New("solution.sln", "")
 		desired := []string{constants.XbuildPath, "solution.sln", "/p:SolutionDir=."}
 		require.Equal(t, desired, xbuild.buildCommandSlice())
 
@@ -125,9 +157,23 @@ func TestBuildCommandSlice(t *testing.T) {
 }
 
 func TestPrintableCommand(t *testing.T) {
+	t.Log("solution-dir test")
+	{
+		xbuild := New("./test/solution.sln", "./test/ios/project.csproj")
+		desired := fmt.Sprintf(`"%s" "./test/ios/project.csproj" "/p:SolutionDir=test"`, constants.XbuildPath)
+		require.Equal(t, desired, xbuild.PrintableCommand())
+	}
+
+	t.Log("solution-dir test")
+	{
+		xbuild := New("/Users/Develop/test/solution.sln", "/Users/Develop/test/test/ios/project.csproj")
+		desired := fmt.Sprintf(`"%s" "/Users/Develop/test/test/ios/project.csproj" "/p:SolutionDir=/Users/Develop/test"`, constants.XbuildPath)
+		require.Equal(t, desired, xbuild.PrintableCommand())
+	}
+
 	t.Log("it creates printable command")
 	{
-		xbuild := New("solution.sln")
+		xbuild := New("solution.sln", "")
 		desired := fmt.Sprintf(`"%s" "solution.sln" "/p:SolutionDir=."`, constants.XbuildPath)
 		require.Equal(t, desired, xbuild.PrintableCommand())
 

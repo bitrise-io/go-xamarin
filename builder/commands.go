@@ -21,7 +21,7 @@ func (builder Model) buildSolutionCommand(configuration, platform string) tools.
 		command.SetPlatform(platform)
 		buildCommand = command
 	} else {
-		command := xbuild.New(builder.solution.Pth).SetTarget("Build")
+		command := xbuild.New(builder.solution.Pth, "").SetTarget("Build")
 		command.SetConfiguration(configuration)
 		command.SetPlatform(platform)
 		buildCommand = command
@@ -67,7 +67,7 @@ func (builder Model) buildProjectCommand(configuration, platform string, proj pr
 				buildCommands = append(buildCommands, command)
 			}
 		} else {
-			command := xbuild.New(builder.solution.Pth).SetTarget("Build")
+			command := xbuild.New(builder.solution.Pth, "").SetTarget("Build")
 			command.SetConfiguration(configuration)
 			command.SetPlatform(platform)
 
@@ -94,7 +94,7 @@ func (builder Model) buildProjectCommand(configuration, platform string, proj pr
 
 			buildCommands = append(buildCommands, command)
 		} else {
-			command := xbuild.New(builder.solution.Pth).SetTarget("Build")
+			command := xbuild.New(builder.solution.Pth, "").SetTarget("Build")
 			command.SetConfiguration(configuration)
 			command.SetPlatform(platform)
 			command.SetArchiveOnBuild(true)
@@ -102,7 +102,7 @@ func (builder Model) buildProjectCommand(configuration, platform string, proj pr
 			buildCommands = append(buildCommands, command)
 		}
 	case constants.ProjectTypeAndroid:
-		command := xbuild.New(proj.Pth)
+		command := xbuild.New(builder.solution.Pth, proj.Pth)
 		if projectConfig.SignAndroid {
 			command.SetTarget("SignAndroidPackage")
 		} else {

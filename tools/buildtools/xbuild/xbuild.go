@@ -12,7 +12,8 @@ import (
 // Model ...
 type Model struct {
 	buildTool   string
-	solutionPth string // can be solution or project path
+	solutionPth string
+	projectPth  string
 
 	target        string
 	configuration string
@@ -25,9 +26,10 @@ type Model struct {
 }
 
 // New ...
-func New(solutionPth string) *Model {
+func New(solutionPth, projectPth string) *Model {
 	return &Model{
 		solutionPth: solutionPth,
+		projectPth:  projectPth,
 		buildTool:   constants.XbuildPath,
 	}
 }
@@ -70,7 +72,9 @@ func (xbuild *Model) SetCustomOptions(options ...string) {
 func (xbuild Model) buildCommandSlice() []string {
 	cmdSlice := []string{xbuild.buildTool}
 
-	if xbuild.solutionPth != "" {
+	if xbuild.projectPth != "" {
+		cmdSlice = append(cmdSlice, xbuild.projectPth)
+	} else {
 		cmdSlice = append(cmdSlice, xbuild.solutionPth)
 	}
 
@@ -78,9 +82,7 @@ func (xbuild Model) buildCommandSlice() []string {
 		cmdSlice = append(cmdSlice, fmt.Sprintf("/target:%s", xbuild.target))
 	}
 
-	if xbuild.solutionPth != "" {
-		cmdSlice = append(cmdSlice, fmt.Sprintf("/p:SolutionDir=%s", filepath.Dir(xbuild.solutionPth)))
-	}
+	cmdSlice = append(cmdSlice, fmt.Sprintf("/p:SolutionDir=%s", filepath.Dir(xbuild.solutionPth)))
 
 	if xbuild.configuration != "" {
 		cmdSlice = append(cmdSlice, fmt.Sprintf("/p:Configuration=%s", xbuild.configuration))
