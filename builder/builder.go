@@ -491,8 +491,9 @@ func (builder Model) CollectProjectOutputs(configuration, platform string) (Proj
 }
 
 // CollectXamarinUITestProjectOutputs ...
-func (builder Model) CollectXamarinUITestProjectOutputs(configuration, platform string) (TestProjectOutputMap, error) {
+func (builder Model) CollectXamarinUITestProjectOutputs(configuration, platform string) (TestProjectOutputMap, []string, error) {
 	testProjectOutputMap := TestProjectOutputMap{}
+	warnings := []string{}
 
 	buildableTestProjects, _, _ := builder.buildableXamarinUITestProjectsAndReferredProjects(configuration, platform)
 
@@ -510,14 +511,14 @@ func (builder Model) CollectXamarinUITestProjectOutputs(configuration, platform 
 		}
 
 		if dllPth, err := exportDLL(projectConfig.OutputDir, testProj.AssemblyName); err != nil {
-			return TestProjectOutputMap{}, err
+			return TestProjectOutputMap{}, warnings, err
 		} else if dllPth != "" {
 			referredProjectNames := []string{}
 			referredProjectIDs := testProj.ReferredProjectIDs
 			for _, referredProjectID := range referredProjectIDs {
 				referredProject, ok := builder.solution.ProjectMap[referredProjectID]
 				if !ok {
-					return TestProjectOutputMap{}, fmt.Errorf("project reference exist with project id: %s, but project not found in solution", referredProjectID)
+					warnings = append(warnings, fmt.Sprintf("project reference exist with project id: %s, but project not found in solution", referredProjectID))
 				}
 
 				referredProjectNames = append(referredProjectNames, referredProject.Name)
@@ -534,5 +535,5 @@ func (builder Model) CollectXamarinUITestProjectOutputs(configuration, platform 
 		}
 	}
 
-	return testProjectOutputMap, nil
+	return testProjectOutputMap, warnings, nil
 }
