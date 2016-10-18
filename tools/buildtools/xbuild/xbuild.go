@@ -6,12 +6,14 @@ import (
 	"path/filepath"
 
 	"github.com/bitrise-io/go-utils/cmdex"
+	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-xamarin/constants"
 )
 
 // Model ...
 type Model struct {
-	buildTool   string
+	buildTool string
+
 	solutionPth string
 	projectPth  string
 
@@ -26,12 +28,22 @@ type Model struct {
 }
 
 // New ...
-func New(solutionPth, projectPth string) *Model {
-	return &Model{
-		solutionPth: solutionPth,
-		projectPth:  projectPth,
-		buildTool:   constants.XbuildPath,
+func New(solutionPth, projectPth string) (*Model, error) {
+	absSolutionPth, err := pathutil.AbsPath(solutionPth)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to expand path (%s), error: %s", solutionPth, err)
 	}
+
+	absProjectPth := ""
+	if projectPth != "" {
+		absPth, err := pathutil.AbsPath(projectPth)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to expand path (%s), error: %s", projectPth, err)
+		}
+		absProjectPth = absPth
+	}
+
+	return &Model{solutionPth: absSolutionPth, projectPth: absProjectPth, buildTool: constants.XbuildPath}, nil
 }
 
 // SetTarget ...

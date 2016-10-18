@@ -126,7 +126,10 @@ func (builder Model) CleanAll(callback ClearCommandCallback) error {
 
 // BuildSolution ...
 func (builder Model) BuildSolution(configuration, platform string, callback BuildCommandCallback) error {
-	buildCommand := builder.buildSolutionCommand(configuration, platform)
+	buildCommand, err := builder.buildSolutionCommand(configuration, platform)
+	if err != nil {
+		return fmt.Errorf("Failed to create build command, error: %s", err)
+	}
 
 	// Callback to notify the caller about next running command
 	if callback != nil {
@@ -152,8 +155,11 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 	perfomedCommands := []tools.Printable{}
 
 	for _, proj := range buildableProjects {
-		buildCommands, warns := builder.buildProjectCommand(configuration, platform, proj)
+		buildCommands, warns, err := builder.buildProjectCommand(configuration, platform, proj)
 		warnings = append(warnings, warns...)
+		if err != nil {
+			return warnings, fmt.Errorf("Failed to create build command, error: %s", err)
+		}
 
 		for _, buildCommand := range buildCommands {
 			// Callback to let the caller to modify the command
@@ -203,8 +209,11 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 	//
 	// First build all referred projects
 	for _, proj := range buildableReferredProjects {
-		buildCommands, warns := builder.buildProjectCommand(configuration, platform, proj)
+		buildCommands, warns, err := builder.buildProjectCommand(configuration, platform, proj)
 		warnings = append(warnings, warns...)
+		if err != nil {
+			return warnings, fmt.Errorf("Failed to create build command, error: %s", err)
+		}
 
 		for _, buildCommand := range buildCommands {
 			// Callback to let the caller to modify the command
@@ -237,8 +246,11 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 	//
 	// Then build all test projects
 	for _, testProj := range buildableTestProjects {
-		buildCommand, warns := builder.buildXamarinUITestProjectCommand(configuration, platform, testProj)
+		buildCommand, warns, err := builder.buildXamarinUITestProjectCommand(configuration, platform, testProj)
 		warnings = append(warnings, warns...)
+		if err != nil {
+			return warnings, fmt.Errorf("Failed to create build command, error: %s", err)
+		}
 
 		// Callback to let the caller to modify the command
 		if prepareCallback != nil {
@@ -298,7 +310,10 @@ func (builder Model) BuildAllNunitTestProjects(configuration, platform string, p
 
 	//
 	// First build solution
-	buildCommand := builder.buildSolutionCommand(configuration, platform)
+	buildCommand, err := builder.buildSolutionCommand(configuration, platform)
+	if err != nil {
+		return warnings, fmt.Errorf("Failed to create build command, error: %s", err)
+	}
 
 	// Callback to let the caller to modify the command
 	if prepareCallback != nil {
@@ -328,8 +343,11 @@ func (builder Model) BuildAllNunitTestProjects(configuration, platform string, p
 	//
 	// Then build all test projects
 	for _, testProj := range buildableProjects {
-		buildCommand, warns := builder.buildNunitTestProjectCommand(configuration, platform, testProj, nunitConsolePth)
+		buildCommand, warns, err := builder.buildNunitTestProjectCommand(configuration, platform, testProj, nunitConsolePth)
 		warnings = append(warnings, warns...)
+		if err != nil {
+			return warnings, fmt.Errorf("Failed to create build command, error: %s", err)
+		}
 
 		// Callback to let the caller to modify the command
 		if prepareCallback != nil {
