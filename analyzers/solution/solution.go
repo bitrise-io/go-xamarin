@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-utils/fileutil"
+	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-xamarin/analyzers/project"
 	"github.com/bitrise-tools/go-xamarin/constants"
 	"github.com/bitrise-tools/go-xamarin/utility"
@@ -51,12 +52,17 @@ func (solution Model) ConfigList() []string {
 }
 
 func analyzeSolution(pth string, analyzeProjects bool) (Model, error) {
-	fileName := filepath.Base(pth)
-	ext := filepath.Ext(pth)
+	absPth, err := pathutil.AbsPath(pth)
+	if err != nil {
+		return Model{}, fmt.Errorf("Failed to expand path (%s), error: %s", pth, err)
+	}
+
+	fileName := filepath.Base(absPth)
+	ext := filepath.Ext(absPth)
 	fileName = strings.TrimSuffix(fileName, ext)
 
 	solution := Model{
-		Pth:        pth,
+		Pth:        absPth,
 		Name:       fileName,
 		ConfigMap:  map[string]string{},
 		ProjectMap: map[string]project.Model{},
@@ -65,11 +71,11 @@ func analyzeSolution(pth string, analyzeProjects bool) (Model, error) {
 	isSolutionConfigurationPlatformsSection := false
 	isProjectConfigurationPlatformsSection := false
 
-	solutionDir := filepath.Dir(pth)
+	solutionDir := filepath.Dir(absPth)
 
-	content, err := fileutil.ReadStringFromFile(pth)
+	content, err := fileutil.ReadStringFromFile(absPth)
 	if err != nil {
-		return Model{}, fmt.Errorf("failed to read solution (%s), error: %s", pth, err)
+		return Model{}, fmt.Errorf("failed to read solution (%s), error: %s", absPth, err)
 	}
 
 	scanner := bufio.NewScanner(strings.NewReader(content))
