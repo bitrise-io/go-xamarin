@@ -17,8 +17,12 @@ const (
 // Model ...
 type Model struct {
 	nunitConsolePth string
-	projectPth      string
-	config          string
+
+	projectPth string
+	config     string
+
+	dllPth string
+	test   string
 
 	customOptions []string
 }
@@ -62,6 +66,18 @@ func (nunitConsole *Model) SetConfig(config string) *Model {
 	return nunitConsole
 }
 
+// SetDLLPth ...
+func (nunitConsole *Model) SetDLLPth(dllPth string) *Model {
+	nunitConsole.dllPth = dllPth
+	return nunitConsole
+}
+
+// SetTestToRun ...
+func (nunitConsole *Model) SetTestToRun(test string) *Model {
+	nunitConsole.test = test
+	return nunitConsole
+}
+
 // SetCustomOptions ...
 func (nunitConsole *Model) SetCustomOptions(options ...string) {
 	nunitConsole.customOptions = options
@@ -70,8 +86,21 @@ func (nunitConsole *Model) SetCustomOptions(options ...string) {
 func (nunitConsole *Model) commandSlice() []string {
 	cmdSlice := []string{constants.MonoPath}
 	cmdSlice = append(cmdSlice, nunitConsole.nunitConsolePth)
-	cmdSlice = append(cmdSlice, nunitConsole.projectPth)
-	cmdSlice = append(cmdSlice, fmt.Sprintf("/config:%s", nunitConsole.config))
+
+	if nunitConsole.projectPth != "" {
+		cmdSlice = append(cmdSlice, nunitConsole.projectPth)
+	}
+	if nunitConsole.config != "" {
+		cmdSlice = append(cmdSlice, fmt.Sprintf("/config:%s", nunitConsole.config))
+	}
+
+	if nunitConsole.dllPth != "" {
+		cmdSlice = append(cmdSlice, nunitConsole.dllPth)
+	}
+	if nunitConsole.test != "" {
+		cmdSlice = append(cmdSlice, fmt.Sprintf("--test=%s", nunitConsole.test))
+	}
+
 	cmdSlice = append(cmdSlice, nunitConsole.customOptions...)
 	return cmdSlice
 }
