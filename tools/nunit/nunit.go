@@ -24,6 +24,8 @@ type Model struct {
 	dllPth string
 	test   string
 
+	resultLogPth string
+
 	customOptions []string
 }
 
@@ -78,6 +80,12 @@ func (nunitConsole *Model) SetTestToRun(test string) *Model {
 	return nunitConsole
 }
 
+// SetResultLogPth ...
+func (nunitConsole *Model) SetResultLogPth(resultLogPth string) *Model {
+	nunitConsole.resultLogPth = resultLogPth
+	return nunitConsole
+}
+
 // SetCustomOptions ...
 func (nunitConsole *Model) SetCustomOptions(options ...string) {
 	nunitConsole.customOptions = options
@@ -98,7 +106,11 @@ func (nunitConsole *Model) commandSlice() []string {
 		cmdSlice = append(cmdSlice, nunitConsole.dllPth)
 	}
 	if nunitConsole.test != "" {
-		cmdSlice = append(cmdSlice, fmt.Sprintf("--test=%s", nunitConsole.test))
+		cmdSlice = append(cmdSlice, "--test", nunitConsole.test)
+	}
+
+	if nunitConsole.resultLogPth != "" {
+		cmdSlice = append(cmdSlice, "--result", nunitConsole.resultLogPth)
 	}
 
 	cmdSlice = append(cmdSlice, nunitConsole.customOptions...)
