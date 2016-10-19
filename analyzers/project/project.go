@@ -365,15 +365,20 @@ func analyzeTargetDefinition(project Model, pth string) (Model, error) {
 }
 
 func analyzeProject(pth string) (Model, error) {
-	fileName := filepath.Base(pth)
-	ext := filepath.Ext(pth)
+	absPth, err := pathutil.AbsPath(pth)
+	if err != nil {
+		return Model{}, fmt.Errorf("Failed to expand path (%s), error: %s", pth, err)
+	}
+
+	fileName := filepath.Base(absPth)
+	ext := filepath.Ext(absPth)
 	fileName = strings.TrimSuffix(fileName, ext)
 
 	project := Model{
-		Pth:       pth,
+		Pth:       absPth,
 		Name:      fileName,
 		ConfigMap: map[string]string{},
 		Configs:   map[string]ConfigurationPlatformModel{},
 	}
-	return analyzeTargetDefinition(project, pth)
+	return analyzeTargetDefinition(project, absPth)
 }

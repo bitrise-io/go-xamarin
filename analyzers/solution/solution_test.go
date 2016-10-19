@@ -10,15 +10,47 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func tmpSolutionWithContent(t *testing.T, content string) string {
-	tmpDir, err := pathutil.NormalizedOSTempDirPath("__xamarin-builder-test__")
-	require.NoError(t, err)
-	pth := filepath.Join(tmpDir, "solution.sln")
+func tmpSolutionWithContentInDir(t *testing.T, content, dir string) string {
+	pth := filepath.Join(dir, "solution.sln")
 	require.NoError(t, fileutil.WriteStringToFile(pth, content))
 	return pth
 }
 
+func tmpSolutionWithContent(t *testing.T, content string) string {
+	tmpDir, err := pathutil.NormalizedOSTempDirPath("__xamarin-builder-test__")
+	require.NoError(t, err)
+	return tmpSolutionWithContentInDir(t, content, tmpDir)
+}
+
 func TestAnalyzeSolution(t *testing.T) {
+	t.Log("relative path test")
+	{
+		currentDir, err := pathutil.CurrentWorkingDirectoryAbsolutePath()
+		require.NoError(t, err)
+		defer func() {
+			require.NoError(t, os.Chdir(currentDir))
+		}()
+
+		tmpDir := filepath.Join(currentDir, "__xamarin-builder-test__")
+		require.NoError(t, os.MkdirAll(tmpDir, 0777))
+		defer func() {
+			require.NoError(t, os.RemoveAll(tmpDir))
+		}()
+
+		pth := tmpSolutionWithContentInDir(t, iosTestSolutionContent, tmpDir)
+		defer func() {
+			require.NoError(t, os.Remove(pth))
+		}()
+		dir := filepath.Dir(pth)
+		base := filepath.Base(pth)
+
+		require.NoError(t, os.Chdir(dir))
+
+		solution, err := analyzeSolution(base, false)
+		require.NoError(t, err)
+		require.Equal(t, pth, solution.Pth)
+	}
+
 	t.Log("ios test")
 	{
 		pth := tmpSolutionWithContent(t, iosTestSolutionContent)

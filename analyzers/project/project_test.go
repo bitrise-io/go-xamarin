@@ -12,12 +12,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func tmpProjectWithContentInDir(t *testing.T, content, dir string) string {
+	pth := filepath.Join(dir, "project.csproj")
+	require.NoError(t, fileutil.WriteStringToFile(pth, content))
+	return pth
+}
+
 func tmpProjectWithContent(t *testing.T, content string) string {
 	tmpDir, err := pathutil.NormalizedOSTempDirPath("__xamarin-builder-test__")
 	require.NoError(t, err)
-	pth := filepath.Join(tmpDir, "project.csproj")
-	require.NoError(t, fileutil.WriteStringToFile(pth, content))
-	return pth
+	return tmpProjectWithContentInDir(t, content, tmpDir)
 }
 
 func stringSliceContainsOnly(slice []string, item ...string) bool {
@@ -83,6 +87,43 @@ func frameworkSliceContainsOnly(slice []constants.TestFramework, item ...constan
 }
 
 func TestAnalyzeProject(t *testing.T) {
+	t.Log("relative path test")
+	{
+		currentDir, err := pathutil.CurrentWorkingDirectoryAbsolutePath()
+		require.NoError(t, err)
+		defer func() {
+			require.NoError(t, os.Chdir(currentDir))
+		}()
+
+		tmpDir := filepath.Join(currentDir, "__xamarin-builder-test__")
+		require.NoError(t, os.MkdirAll(tmpDir, 0777))
+		defer func() {
+			require.NoError(t, os.RemoveAll(tmpDir))
+		}()
+
+		pth := tmpProjectWithContentInDir(t, iosTestProjectContent, tmpDir)
+		defer func() {
+			require.NoError(t, os.Remove(pth))
+		}()
+		dir := filepath.Dir(pth)
+		base := filepath.Base(pth)
+
+		require.NoError(t, os.Chdir(dir))
+
+		project, err := analyzeProject(base)
+		require.NoError(t, err)
+		require.Equal(t, pth, project.Pth)
+
+		config, ok := project.Configs["Debug|iPhoneSimulator"]
+		require.Equal(t, true, ok)
+		require.Equal(t, "Debug", config.Configuration)
+		require.Equal(t, "iPhoneSimulator", config.Platform)
+		require.Equal(t, filepath.Join(dir, "bin/iPhoneSimulator/Debug"), config.OutputDir)
+		require.Equal(t, true, stringSliceContainsOnly(config.MtouchArchs, "i386"))
+		require.Equal(t, false, config.BuildIpa)
+		require.Equal(t, false, config.SignAndroid)
+	}
+
 	t.Log("ios test")
 	{
 		pth := tmpProjectWithContent(t, iosTestProjectContent)
