@@ -3,10 +3,15 @@ package nunit
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/bitrise-io/go-utils/cmdex"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-xamarin/constants"
+)
+
+const (
+	nunit3Console = "nunit3-console.exe"
 )
 
 // Model ...
@@ -16,6 +21,23 @@ type Model struct {
 	config          string
 
 	customOptions []string
+}
+
+// SystemNunit3ConsolePath ...
+func SystemNunit3ConsolePath() (string, error) {
+	nunitDir := os.Getenv("NUNIT_PATH")
+	if nunitDir == "" {
+		return "", fmt.Errorf("NUNIT_PATH environment is not set, failed to determin nunit console path")
+	}
+
+	nunitConsolePth := filepath.Join(nunitDir, nunit3Console)
+	if exist, err := pathutil.IsPathExists(nunitConsolePth); err != nil {
+		return "", fmt.Errorf("Failed to check if nunit console exist at (%s), error: %s", nunitConsolePth, err)
+	} else if !exist {
+		return "", fmt.Errorf("nunit console not exist at: %s", nunitConsolePth)
+	}
+
+	return nunitConsolePth, nil
 }
 
 // New ...
