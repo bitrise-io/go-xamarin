@@ -445,7 +445,7 @@ const xamarinUITestProjectContent = `<?xml version="1.0" encoding="utf-8"?>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{ba48743d-06f3-4d2d-acfd-ee2642ce155a}</ProjectGuid>
+    <ProjectGuid>{BA48743D-06F3-4D2D-ACFD-EE2642CE155A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>CreditCardValidator.iOS.UITests</RootNamespace>
     <AssemblyName>CreditCardValidator.iOS.UITests</AssemblyName>
@@ -500,7 +500,7 @@ const testIDXamarinUITestProjectContent = `<?xml version="1.0" encoding="utf-8"?
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{BA48743D-06F3-4D2D-ACFD-EE2642CE155A}</ProjectGuid>
+    <ProjectGuid>{ba48743d-06f3-4d2d-acfd-ee2642ce155a}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>CreditCardValidator.iOS.UITests</RootNamespace>
     <AssemblyName>CreditCardValidator.iOS.UITests</AssemblyName>
