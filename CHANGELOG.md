@@ -1,6 +1,14 @@
-## Changelog (Current version: 1.1.0)
+## Changelog (Current version: 1.2.0)
 
 -----------------
+
+### 1.2.0 (2016 Oct 26)
+
+* [df94288] prepare for 1.2.0
+* [9f8ef00] Project id fix (#24)
+* [10287b3] export xcarchive, ipa and dsym if archivable architecture build (#23)
+* [911360f] Nunit (#22)
+* [8c1cfa8] custom options (#21)
 
 ### 1.1.0 (2016 Oct 18)
 
@@ -41,4 +49,4 @@
 
 -----------------
 
-Updated: 2016 Oct 18
+Updated: 2016 Oct 26
