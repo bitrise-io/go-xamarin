@@ -87,6 +87,22 @@ func frameworkSliceContainsOnly(slice []constants.TestFramework, item ...constan
 }
 
 func TestAnalyzeProject(t *testing.T) {
+	t.Log("xamarin uitest test ID test - all IDs should be upper case")
+	{
+		pth := tmpProjectWithContent(t, xamarinUITestProjectContent)
+		defer func() {
+			require.NoError(t, os.Remove(pth))
+		}()
+		fileName := filepath.Base(pth)
+		fileName = strings.TrimSuffix(fileName, filepath.Ext(fileName))
+
+		project, err := analyzeProject(pth)
+		require.NoError(t, err)
+
+		require.Equal(t, "BA48743D-06F3-4D2D-ACFD-EE2642CE155A", project.ID)
+		require.Equal(t, true, stringSliceContainsOnly(project.ReferredProjectIDs, "90F3C584-FD69-4926-9903-6B9771847782"))
+	}
+
 	t.Log("relative path test")
 	{
 		currentDir, err := pathutil.CurrentWorkingDirectoryAbsolutePath()
