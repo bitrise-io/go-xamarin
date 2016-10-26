@@ -23,6 +23,30 @@ func tmpSolutionWithContent(t *testing.T, content string) string {
 }
 
 func TestAnalyzeSolution(t *testing.T) {
+	t.Log("solution, project id test - all IDs should be upper case")
+	{
+		pth := tmpSolutionWithContent(t, macIDTestSolutionContent)
+		defer func() {
+			require.NoError(t, os.Remove(pth))
+		}()
+
+		solution, err := analyzeSolution(pth, false)
+		require.NoError(t, err)
+		require.Equal(t, "FAE04EC0-301F-11D3-BF4B-00C04F79EFBC", solution.ID)
+
+		// ProjectMap
+		desiredProjectIDs := []string{
+			"4DA5EAC6-6F80-4FEC-AF81-194210F10B51",
+		}
+		for i := 0; i < len(desiredProjectIDs); i++ {
+			_, ok := solution.ProjectMap[desiredProjectIDs[i]]
+			require.Equal(t, true, ok)
+		}
+
+		project := solution.ProjectMap["4DA5EAC6-6F80-4FEC-AF81-194210F10B51"]
+		require.Equal(t, "4DA5EAC6-6F80-4FEC-AF81-194210F10B51", project.ID)
+	}
+
 	t.Log("relative path test")
 	{
 		currentDir, err := pathutil.CurrentWorkingDirectoryAbsolutePath()
