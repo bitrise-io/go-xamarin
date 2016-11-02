@@ -72,20 +72,6 @@ func intSliceContainsOnly(slice []int, item ...int) bool {
 	return true
 }
 
-func frameworkSliceContainsOnly(slice []constants.TestFramework, item ...constants.TestFramework) bool {
-	intSlice := []int{}
-	for _, i := range slice {
-		intSlice = append(intSlice, int(i))
-	}
-
-	itemsIntSlice := []int{}
-	for _, i := range slice {
-		itemsIntSlice = append(itemsIntSlice, int(i))
-	}
-
-	return intSliceContainsOnly(intSlice, itemsIntSlice...)
-}
-
 func TestAnalyzeProject(t *testing.T) {
 	t.Log("xamarin uitest test ID test - all IDs should be upper case")
 	{
@@ -157,11 +143,11 @@ func TestAnalyzeProject(t *testing.T) {
 		require.Equal(t, fileName, project.Name)
 
 		require.Equal(t, "90F3C584-FD69-4926-9903-6B9771847782", project.ID)
-		require.Equal(t, constants.ProjectTypeIOS, project.ProjectType)
+		require.Equal(t, constants.SDKIOS, project.SDK)
 		require.Equal(t, "exe", project.OutputType)
 		require.Equal(t, "CreditCardValidator.iOS", project.AssemblyName)
 
-		require.Equal(t, 0, len(project.TestFrameworks))
+		require.Equal(t, constants.TestFrameworkUnknown, project.TestFramework)
 		require.Equal(t, true, stringSliceContainsOnly(project.ReferredProjectIDs, "99A825A6-6F99-4B94-9F65-E908A6347F1E"))
 
 		require.Equal(t, "", project.ManifestPth)
@@ -222,11 +208,11 @@ func TestAnalyzeProject(t *testing.T) {
 		require.Equal(t, fileName, project.Name)
 
 		require.Equal(t, "9D1D32A3-D13F-4F23-B7D4-EF9D52B06E60", project.ID)
-		require.Equal(t, constants.ProjectTypeAndroid, project.ProjectType)
+		require.Equal(t, constants.SDKAndroid, project.SDK)
 		require.Equal(t, "library", project.OutputType)
 		require.Equal(t, "CreditCardValidator.Droid", project.AssemblyName)
 
-		require.Equal(t, 0, len(project.TestFrameworks))
+		require.Equal(t, constants.TestFrameworkUnknown, project.TestFramework)
 		require.Equal(t, true, stringSliceContainsOnly(project.ReferredProjectIDs, "99A825A6-6F99-4B94-9F65-E908A6347F1E"))
 
 		require.Equal(t, filepath.Join(dir, "Properties/AndroidManifest.xml"), project.ManifestPth)
@@ -269,11 +255,11 @@ func TestAnalyzeProject(t *testing.T) {
 		require.Equal(t, fileName, project.Name)
 
 		require.Equal(t, "4DA5EAC6-6F80-4FEC-AF81-194210F10B51", project.ID)
-		require.Equal(t, constants.ProjectTypeMacOS, project.ProjectType)
+		require.Equal(t, constants.SDKMacOS, project.SDK)
 		require.Equal(t, "exe", project.OutputType)
 		require.Equal(t, "Hello_Mac", project.AssemblyName)
 
-		require.Equal(t, 0, len(project.TestFrameworks))
+		require.Equal(t, constants.TestFrameworkUnknown, project.TestFramework)
 		require.Equal(t, 0, len(project.ReferredProjectIDs))
 
 		require.Equal(t, "", project.ManifestPth)
@@ -316,11 +302,11 @@ func TestAnalyzeProject(t *testing.T) {
 		require.Equal(t, fileName, project.Name)
 
 		require.Equal(t, "51D9C362-2997-4029-B38F-06C36F17056E", project.ID)
-		require.Equal(t, constants.ProjectTypeTvOS, project.ProjectType)
+		require.Equal(t, constants.SDKTvOS, project.SDK)
 		require.Equal(t, "exe", project.OutputType)
 		require.Equal(t, "tvos", project.AssemblyName)
 
-		require.Equal(t, 0, len(project.TestFrameworks))
+		require.Equal(t, constants.TestFrameworkUnknown, project.TestFramework)
 		require.Equal(t, 0, len(project.ReferredProjectIDs))
 
 		require.Equal(t, "", project.ManifestPth)
@@ -381,11 +367,11 @@ func TestAnalyzeProject(t *testing.T) {
 		require.Equal(t, fileName, project.Name)
 
 		require.Equal(t, "BA48743D-06F3-4D2D-ACFD-EE2642CE155A", project.ID)
-		require.Equal(t, constants.ProjectTypeXamarinUITest, project.ProjectType)
+		require.Equal(t, constants.SDKUnknown, project.SDK)
 		require.Equal(t, "library", project.OutputType)
 		require.Equal(t, "CreditCardValidator.iOS.UITests", project.AssemblyName)
 
-		require.Equal(t, true, frameworkSliceContainsOnly(project.TestFrameworks, constants.TestFrameworkXamarinUITest, constants.TestFrameworkNunitTest))
+		require.Equal(t, constants.TestFrameworkNunitTest, constants.TestFrameworkNunitTest)
 		require.Equal(t, true, stringSliceContainsOnly(project.ReferredProjectIDs, "90F3C584-FD69-4926-9903-6B9771847782"))
 
 		require.Equal(t, "", project.ManifestPth)
@@ -428,11 +414,11 @@ func TestAnalyzeProject(t *testing.T) {
 		require.Equal(t, fileName, project.Name)
 
 		require.Equal(t, "ED150913-76EB-446F-8B78-DC77E5795703", project.ID)
-		require.Equal(t, constants.ProjectTypeNunitTest, project.ProjectType)
+		require.Equal(t, constants.SDKUnknown, project.SDK)
 		require.Equal(t, "library", project.OutputType)
 		require.Equal(t, "CreditCardValidator.iOS.NunitTests", project.AssemblyName)
 
-		require.Equal(t, true, frameworkSliceContainsOnly(project.TestFrameworks, constants.TestFrameworkNunitTest))
+		require.Equal(t, constants.TestFrameworkNunitTest, project.TestFramework)
 		require.Equal(t, 0, len(project.ReferredProjectIDs))
 
 		require.Equal(t, "", project.ManifestPth)
@@ -475,11 +461,11 @@ func TestAnalyzeProject(t *testing.T) {
 		require.Equal(t, fileName, project.Name)
 
 		require.Equal(t, "95615CA5-0D75-4389-A6E0-78309A686712", project.ID)
-		require.Equal(t, constants.ProjectTypeNunitLiteTest, project.ProjectType)
+		require.Equal(t, constants.SDKIOS, project.SDK)
 		require.Equal(t, "exe", project.OutputType)
 		require.Equal(t, "CreditCardValidator.iOS.NunitLiteTests", project.AssemblyName)
 
-		require.Equal(t, true, frameworkSliceContainsOnly(project.TestFrameworks, constants.TestFrameworkNunitLiteTest))
+		require.Equal(t, constants.TestFrameworkNunitLiteTest, project.TestFramework)
 		require.Equal(t, 0, len(project.ReferredProjectIDs))
 
 		require.Equal(t, "", project.ManifestPth)
