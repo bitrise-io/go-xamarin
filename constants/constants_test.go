@@ -6,61 +6,70 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestParseProjectType(t *testing.T) {
+func TestParseSDK(t *testing.T) {
 	t.Log("it parses android")
 	{
-		projectType, err := ParseProjectType("android")
+		projectType, err := ParseSDK("android")
 		require.NoError(t, err)
-		require.Equal(t, ProjectTypeAndroid, projectType)
+		require.Equal(t, SDKAndroid, projectType)
 	}
 
 	t.Log("it parses ios")
 	{
-		projectType, err := ParseProjectType("ios")
+		projectType, err := ParseSDK("ios")
 		require.NoError(t, err)
-		require.Equal(t, ProjectTypeIOS, projectType)
+		require.Equal(t, SDKIOS, projectType)
 	}
 
 	t.Log("it parses tvos")
 	{
-		projectType, err := ParseProjectType("tvos")
+		projectType, err := ParseSDK("tvos")
 		require.NoError(t, err)
-		require.Equal(t, ProjectTypeTvOS, projectType)
+		require.Equal(t, SDKTvOS, projectType)
 	}
 
 	t.Log("it parses macos")
 	{
-		projectType, err := ParseProjectType("macos")
+		projectType, err := ParseSDK("macos")
 		require.NoError(t, err)
-		require.Equal(t, ProjectTypeMacOS, projectType)
-	}
-
-	t.Log("it parses xamarin-uitest")
-	{
-		projectType, err := ParseProjectType("xamarin-uitest")
-		require.NoError(t, err)
-		require.Equal(t, ProjectTypeXamarinUITest, projectType)
-	}
-
-	t.Log("it parses nunit-test")
-	{
-		projectType, err := ParseProjectType("nunit-test")
-		require.NoError(t, err)
-		require.Equal(t, ProjectTypeNunitTest, projectType)
-	}
-
-	t.Log("it parses nunit-lite-test")
-	{
-		projectType, err := ParseProjectType("nunit-lite-test")
-		require.NoError(t, err)
-		require.Equal(t, ProjectTypeNunitLiteTest, projectType)
+		require.Equal(t, SDKMacOS, projectType)
 	}
 
 	t.Log("it failes for unknown type")
 	{
-		projectType, err := ParseProjectType("go")
+		projectType, err := ParseSDK("go")
 		require.Error(t, err)
-		require.Equal(t, ProjectTypeUnknown, projectType)
+		require.Equal(t, SDKUnknown, projectType)
+	}
+}
+
+func TestParseTestFramwork(t *testing.T) {
+	t.Log("it parses xamarin-uitest")
+	{
+		projectType, err := ParseTestFramwork("xamarin-uitest")
+		require.NoError(t, err)
+		require.Equal(t, TestFrameworkXamarinUITest, projectType)
+	}
+
+	t.Log("it parses nunit-test")
+	{
+		projectType, err := ParseTestFramwork("nunit-test")
+		require.NoError(t, err)
+		require.Equal(t, TestFrameworkNunitTest, projectType)
+	}
+
+	t.Log("it parses nunit-lite-test")
+	{
+		projectType, err := ParseTestFramwork("nunit-lite-test")
+		require.NoError(t, err)
+		require.Equal(t, TestFrameworkNunitLiteTest, projectType)
+	}
+
+	t.Log("it failes for unknown type")
+	{
+		projectType, err := ParseTestFramwork("go")
+		require.Error(t, err)
+		require.Equal(t, TestFrameworkUnknown, projectType)
 	}
 }
 
@@ -74,7 +83,7 @@ func TestParseProjectTypeGUID(t *testing.T) {
 		for _, guid := range xamarinAndroidGUIDs {
 			projectType, err := ParseProjectTypeGUID(guid)
 			require.NoError(t, err)
-			require.Equal(t, ProjectTypeAndroid, projectType)
+			require.Equal(t, SDKAndroid, projectType)
 		}
 	}
 
@@ -91,7 +100,7 @@ func TestParseProjectTypeGUID(t *testing.T) {
 		for _, guid := range xamarinIOSGUIDs {
 			projectType, err := ParseProjectTypeGUID(guid)
 			require.NoError(t, err)
-			require.Equal(t, ProjectTypeIOS, projectType)
+			require.Equal(t, SDKIOS, projectType)
 		}
 	}
 
@@ -103,7 +112,7 @@ func TestParseProjectTypeGUID(t *testing.T) {
 		for _, guid := range xamarinTvOSGUIDs {
 			projectType, err := ParseProjectTypeGUID(guid)
 			require.NoError(t, err)
-			require.Equal(t, ProjectTypeTvOS, projectType)
+			require.Equal(t, SDKTvOS, projectType)
 		}
 	}
 
@@ -121,7 +130,7 @@ func TestParseProjectTypeGUID(t *testing.T) {
 		for _, guid := range macOSGUIDs {
 			projectType, err := ParseProjectTypeGUID(guid)
 			require.NoError(t, err)
-			require.Equal(t, ProjectTypeMacOS, projectType)
+			require.Equal(t, SDKMacOS, projectType)
 		}
 	}
 
@@ -133,7 +142,7 @@ func TestParseProjectTypeGUID(t *testing.T) {
 		for _, guid := range xamarinTvOSGUIDs {
 			projectType, err := ParseProjectTypeGUID(guid)
 			require.Error(t, err)
-			require.Equal(t, ProjectTypeUnknown, projectType)
+			require.Equal(t, SDKUnknown, projectType)
 		}
 	}
 }

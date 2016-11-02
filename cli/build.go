@@ -40,7 +40,7 @@ func buildCmd(c *cli.Context) error {
 	fmt.Println()
 	log.Info("Building all projects in solution: %s", solutionPth)
 
-	callback := func(solutionName string, projectName string, projectType constants.ProjectType, commandStr string, alreadyPerformed bool) {
+	callback := func(solutionName string, projectName string, sdk constants.SDK, testFramwork constants.TestFramework, commandStr string, alreadyPerformed bool) {
 		if projectName != "" {
 			fmt.Println()
 			log.Info("Building project: %s", projectName)
