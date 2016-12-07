@@ -145,7 +145,7 @@ func TestAnalyzeSolution(t *testing.T) {
 			"Release|iPhone",
 			"Release|iPhoneSimulator",
 		}
-		for i := 0; i < len(desiredConfigs); i++ {
+		for i := 0; i < len(desiredProjectConfigs); i++ {
 			value, ok := project.ConfigMap[desiredProjectConfigs[i]]
 			require.Equal(t, true, ok)
 			require.Equal(t, desiredMappedProjectConfigs[i], value)
@@ -222,7 +222,7 @@ func TestAnalyzeSolution(t *testing.T) {
 			"Release|AnyCPU",
 		}
 
-		for i := 0; i < len(desiredConfigs); i++ {
+		for i := 0; i < len(desiredProjectConfigs); i++ {
 			value, ok := project.ConfigMap[desiredProjectConfigs[i]]
 			require.Equal(t, true, ok)
 			require.Equal(t, desiredMappedProjectConfigs[i], value)
@@ -295,7 +295,7 @@ func TestAnalyzeSolution(t *testing.T) {
 			"Debug|AnyCPU",
 			"Release|AnyCPU",
 		}
-		for i := 0; i < len(desiredConfigs); i++ {
+		for i := 0; i < len(desiredProjectConfigs); i++ {
 			value, ok := project.ConfigMap[desiredProjectConfigs[i]]
 			require.Equal(t, true, ok)
 			require.Equal(t, desiredMappedProjectConfigs[i], value)
@@ -362,7 +362,120 @@ func TestAnalyzeSolution(t *testing.T) {
 			"Release|iPhoneSimulator",
 			"Debug|iPhone",
 		}
+		for i := 0; i < len(desiredProjectConfigs); i++ {
+			value, ok := project.ConfigMap[desiredProjectConfigs[i]]
+			require.Equal(t, true, ok)
+			require.Equal(t, desiredMappedProjectConfigs[i], value)
+		}
+	}
+}
+
+func TestAnalyzePCLSolution(t *testing.T) {
+	t.Log("android test")
+	{
+		pth := tmpSolutionWithContent(t, pclSolutionTestContent)
+		defer func() {
+			require.NoError(t, os.Remove(pth))
+		}()
+		dir := filepath.Dir(pth)
+
+		solution, err := analyzeSolution(pth, false)
+		require.NoError(t, err)
+		require.Equal(t, pth, solution.Pth)
+		require.Equal(t, "D954291E-2A0B-460D-934E-DC6B0785DB48", solution.ID)
+
+		// ConfigMap
+		desiredConfigs := []string{
+			"Build|Any CPU",
+			"Build|iPhone",
+			"Build|iPhoneSimulator",
+			"Debug|Any CPU",
+			"Debug|iPhone",
+			"Debug|iPhoneSimulator",
+			"Prod|Any CPU",
+			"Prod|iPhone",
+			"Prod|iPhoneSimulator",
+			"QA|Any CPU",
+			"QA|iPhone",
+			"QA|iPhoneSimulator",
+			"Release|Any CPU",
+			"Release|iPhone",
+			"Release|iPhoneSimulator",
+		}
+		desiredMappedConfigs := []string{
+			"Build|Any CPU",
+			"Build|iPhone",
+			"Build|iPhoneSimulator",
+			"Debug|Any CPU",
+			"Debug|iPhone",
+			"Debug|iPhoneSimulator",
+			"Prod|Any CPU",
+			"Prod|iPhone",
+			"Prod|iPhoneSimulator",
+			"QA|Any CPU",
+			"QA|iPhone",
+			"QA|iPhoneSimulator",
+			"Release|Any CPU",
+			"Release|iPhone",
+			"Release|iPhoneSimulator",
+		}
 		for i := 0; i < len(desiredConfigs); i++ {
+			value, ok := solution.ConfigMap[desiredConfigs[i]]
+			require.Equal(t, true, ok)
+			require.Equal(t, desiredMappedConfigs[i], value)
+		}
+
+		// ProjectMap
+		desiredProjectIDs := []string{
+			"06B0A672-7CE5-4FBB-82A2-BA7D97775E90",
+			"555C8033-A53E-41D1-8AEA-AC6852BA126F",
+			"7F00A78E-EA83-485F-BA36-347EA1F2DC89",
+			"49BE6992-5570-4C8E-A718-CABB08125FA8",
+			"160BE79A-F8D8-4F2C-8525-B3FC22B63C0A",
+			"564F0AF1-50E3-4AB4-A3B1-9A73882C3F3B",
+			"DF64DBD3-2158-4633-9F04-223323E6B4F7",
+			"AB4C4B58-56AA-4268-95A6-F5929BC1BFC8",
+			"0B5699C1-CC40-4079-8FA4-CA5EDC18B9E7",
+		}
+		for i := 0; i < len(desiredProjectIDs); i++ {
+			_, ok := solution.ProjectMap[desiredProjectIDs[i]]
+			require.Equal(t, true, ok)
+		}
+
+		project := solution.ProjectMap["555C8033-A53E-41D1-8AEA-AC6852BA126F"]
+		require.Equal(t, "555C8033-A53E-41D1-8AEA-AC6852BA126F", project.ID)
+		require.Equal(t, "PCLTest.Droid", project.Name)
+		require.Equal(t, filepath.Join(dir, "Droid/PCLTest.Droid.csproj"), project.Pth)
+
+		// Project Config mapping
+		desiredProjectConfigs := []string{
+			"Build|Any CPU",
+			"Build|iPhoneSimulator",
+			"Debug|Any CPU",
+			"Prod|Any CPU",
+			"Prod|iPhone",
+			"QA|Any CPU",
+			"QA|iPhone",
+			"Release|Any CPU",
+			"Release|iPhone",
+			"Build|iPhone",
+			"Debug|iPhone",
+		}
+		desiredMappedProjectConfigs := []string{
+			"Build|AnyCPU",
+			"Build|AnyCPU",
+			"Debug|AnyCPU",
+			"Prod|AnyCPU",
+			"Prod|AnyCPU",
+			"QA|AnyCPU",
+			"QA|AnyCPU",
+			"Release|AnyCPU",
+			"Release|AnyCPU",
+			"Build|AnyCPU",
+			"Debug|AnyCPU",
+		}
+
+		for i := 0; i < len(desiredProjectConfigs); i++ {
 			value, ok := project.ConfigMap[desiredProjectConfigs[i]]
 			require.Equal(t, true, ok)
 			require.Equal(t, desiredMappedProjectConfigs[i], value)

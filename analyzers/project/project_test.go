@@ -371,7 +371,7 @@ func TestAnalyzeProject(t *testing.T) {
 		require.Equal(t, "library", project.OutputType)
 		require.Equal(t, "CreditCardValidator.iOS.UITests", project.AssemblyName)
 
-		require.Equal(t, constants.TestFrameworkNunitTest, constants.TestFrameworkNunitTest)
+		require.Equal(t, constants.TestFrameworkXamarinUITest, project.TestFramework)
 		require.Equal(t, true, stringSliceContainsOnly(project.ReferredProjectIDs, "90F3C584-FD69-4926-9903-6B9771847782"))
 
 		require.Equal(t, "", project.ManifestPth)
