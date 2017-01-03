@@ -33,14 +33,14 @@ func print(versionOutput VersionOutputModel, format string) {
 	case FormatJSON:
 		serBytes, err := json.Marshal(versionOutput)
 		if err != nil {
-			log.Error("failed to print output, error: %s", err)
+			log.Errorf("failed to print output, error: %s", err)
 			return
 		}
 		fmt.Printf("%s\n", serBytes)
 	case FormatYML:
 		serBytes, err := yaml.Marshal(versionOutput)
 		if err != nil {
-			log.Error("failed to print output, error: %s", err)
+			log.Errorf("failed to print output, error: %s", err)
 			return
 		}
 		fmt.Printf("%s\n", serBytes)

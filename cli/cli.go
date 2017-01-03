@@ -18,7 +18,7 @@ func Run() {
 	app.Commands = commands
 
 	if err := app.Run(os.Args); err != nil {
-		log.Error("Finished with error: %s", err)
+		log.Errorf("Finished with error: %s", err)
 		os.Exit(1)
 	}
 }
