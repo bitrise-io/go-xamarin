@@ -13,8 +13,8 @@ func cleanCmd(c *cli.Context) error {
 	solutionPth := c.String(solutionFilePathKey)
 
 	fmt.Println("")
-	log.Info("Config:")
-	log.Detail("- solution: %s", solutionPth)
+	log.Infof("Config:")
+	log.Printf("- solution: %s", solutionPth)
 	fmt.Println("")
 
 	if solutionPth == "" {
@@ -27,10 +27,10 @@ func cleanCmd(c *cli.Context) error {
 	}
 
 	callback := func(project project.Model, dir string) {
-		log.Detail("  cleaning project: %s (removing: %s)", project.Name, dir)
+		log.Printf("  cleaning project: %s (removing: %s)", project.Name, dir)
 	}
 
-	log.Info("Cleaning solution: %s", solutionPth)
+	log.Infof("Cleaning solution: %s", solutionPth)
 	if err := builder.CleanAll(callback); err != nil {
 		return err
 	}

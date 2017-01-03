@@ -16,11 +16,11 @@ func buildCmd(c *cli.Context) error {
 	forceMdtool := c.Bool(forceMDToolKey)
 
 	fmt.Println()
-	log.Info("Config:")
-	log.Detail("- solution: %s", solutionPth)
-	log.Detail("- configuration: %s", solutionConfiguration)
-	log.Detail("- platform: %s", solutionPlatform)
-	log.Detail("- force-mdtool: %v", forceMdtool)
+	log.Infof("Config:")
+	log.Printf("- solution: %s", solutionPth)
+	log.Printf("- configuration: %s", solutionConfiguration)
+	log.Printf("- platform: %s", solutionPlatform)
+	log.Printf("- force-mdtool: %v", forceMdtool)
 
 	if solutionPth == "" {
 		return fmt.Errorf("missing required input: %s", solutionFilePathKey)
@@ -38,15 +38,15 @@ func buildCmd(c *cli.Context) error {
 	}
 
 	fmt.Println()
-	log.Info("Building all projects in solution: %s", solutionPth)
+	log.Infof("Building all projects in solution: %s", solutionPth)
 
 	callback := func(solutionName string, projectName string, sdk constants.SDK, testFramwork constants.TestFramework, commandStr string, alreadyPerformed bool) {
 		if projectName != "" {
 			fmt.Println()
-			log.Info("Building project: %s", projectName)
-			log.Done("$ %s", commandStr)
+			log.Infof("Building project: %s", projectName)
+			log.Donef("$ %s", commandStr)
 			if alreadyPerformed {
-				log.Warn("build command already performed, skipping...")
+				log.Warnf("build command already performed, skipping...")
 			}
 			fmt.Println()
 		}
@@ -54,14 +54,14 @@ func buildCmd(c *cli.Context) error {
 
 	warnings, err := buildHandler.BuildAllProjects(solutionConfiguration, solutionPlatform, nil, callback)
 	for _, warning := range warnings {
-		log.Warn(warning)
+		log.Warnf(warning)
 	}
 	if err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
 	fmt.Println()
-	log.Info("Collecting generated outputs")
+	log.Infof("Collecting generated outputs")
 
 	outputMap, err := buildHandler.CollectProjectOutputs(solutionConfiguration, solutionPlatform)
 	if err != nil {
@@ -70,10 +70,10 @@ func buildCmd(c *cli.Context) error {
 
 	for projectName, projectOutput := range outputMap {
 		fmt.Println()
-		log.Info("%s outputs:", projectName)
+		log.Infof("%s outputs:", projectName)
 
 		for _, output := range projectOutput.Outputs {
-			log.Done("%s: %s", output.OutputType, output.Pth)
+			log.Donef("%s: %s", output.OutputType, output.Pth)
 		}
 	}
 
