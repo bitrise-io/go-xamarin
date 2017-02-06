@@ -5,14 +5,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bitrise-io/go-utils/cmdex"
+	"github.com/bitrise-io/go-utils/command"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRunCommandInDiagnosticMode(t *testing.T) {
 	t.Log("test without retry")
 	{
-		cmd := cmdex.NewCommand("/bin/bash", "-c", "echo pattern && sleep 100")
+		cmd := command.New("/bin/bash", "-c", "echo pattern && sleep 100")
 		now := time.Now()
 		err := runCommandInDiagnosticMode(*cmd, "pattern", 2*time.Second, 2*time.Second, false)
 		require.Equal(t, "timed out", err.Error())
@@ -22,7 +22,7 @@ func TestRunCommandInDiagnosticMode(t *testing.T) {
 
 	t.Log("test with retry")
 	{
-		cmd := cmdex.NewCommand("/bin/bash", "-c", "echo pattern && sleep 100")
+		cmd := command.New("/bin/bash", "-c", "echo pattern && sleep 100")
 		now := time.Now()
 		err := runCommandInDiagnosticMode(*cmd, "pattern", 2*time.Second, 2*time.Second, true)
 		require.Equal(t, "timed out", err.Error())
