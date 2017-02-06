@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 
-	"github.com/bitrise-io/go-utils/cmdex"
+	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-xamarin/constants"
 )
@@ -193,7 +193,7 @@ func (testCloud *Model) submitCommandSlice() []string {
 func (testCloud Model) PrintableCommand() string {
 	cmdSlice := testCloud.submitCommandSlice()
 
-	return cmdex.PrintableCommandArgs(true, cmdSlice)
+	return command.PrintableCommandArgs(true, cmdSlice)
 }
 
 // CaptureLineCallback ...
@@ -203,7 +203,7 @@ type CaptureLineCallback func(line string)
 func (testCloud Model) Submit(callback CaptureLineCallback) error {
 	cmdSlice := testCloud.submitCommandSlice()
 
-	command, err := cmdex.NewCommandFromSlice(cmdSlice)
+	command, err := command.NewFromSlice(cmdSlice...)
 	if err != nil {
 		return err
 	}
