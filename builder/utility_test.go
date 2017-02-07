@@ -475,27 +475,41 @@ func TestExportLatestIpa(t *testing.T) {
 		require.Equal(t, filepath.Join(tmpDir, "a 2016-10-06 11-45-25/Multiplatform.iOS.ipa"), output)
 	}
 
-	t.Log("it loads ipa from output dir if not found any in subdirs")
+	t.Log("it returns ipa path when have mixed paths detected")
 	{
-
-		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test_ipa_path")
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
 		require.NoError(t, err)
 
-		outputDir := tmpDir
-		assemblyName := "test"
-		//test 2017-02-06 16-42-55/test.ipa
+		archives := []string{
+			"a 2017-01-02 11-45-25/Multiplatform.iOS.ipa",
+			"Multiplatform.iOS.ipa",
+		}
 
-		ipaDir := outputDir
-		require.NoError(t, os.MkdirAll(ipaDir, 0777))
+		for _, archive := range archives {
+			createTestFile(t, tmpDir, archive)
+		}
 
-		ipaPth := filepath.Join(ipaDir, assemblyName+".ipa")
-		require.NoError(t, fileutil.WriteStringToFile(ipaPth, ""))
+		output, err := exportLatestIpa(tmpDir, "")
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "a 2017-01-02 11-45-25/Multiplatform.iOS.ipa"), output)
+	}
 
-		actualIpaPth, err := exportLatestIpa(outputDir, assemblyName)
+	t.Log("it returns ipa path when does not contain timestamp")
+	{
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
 		require.NoError(t, err)
 
-		require.Equal(t, ipaPth, actualIpaPth)
+		archives := []string{
+			"Multiplatform.iOS.ipa",
+		}
 
+		for _, archive := range archives {
+			createTestFile(t, tmpDir, archive)
+		}
+
+		output, err := exportLatestIpa(tmpDir, "")
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.iOS.ipa"), output)
 	}
 }
 
