@@ -2,7 +2,6 @@ package builder
 
 import (
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -365,7 +364,7 @@ func NewSortableIPAPth(pth string) (SortableIPAPth, error) {
 			ipaPth.dirNameIdx = 0
 		}
 	} else {
-		return SortableIPAPth{}, errors.New("Could not find sortable path string")
+		return SortableIPAPth{}, fmt.Errorf("Path is not sortable: %s", pth)
 	}
 
 	return ipaPth, nil
@@ -423,11 +422,11 @@ func exportLatestIpa(outputDir, assemblyName string) (string, error) {
 		return "", nil
 	}
 
-	rePattern := fmt.Sprintf("%s .*/%s.ipa", assemblyName, assemblyName)
-	re := regexp.MustCompile(rePattern)
+	rePatternInSubdirWithAssemblyName := fmt.Sprintf("%s .*/%s.ipa", assemblyName, assemblyName)
+	re := regexp.MustCompile(rePatternInSubdirWithAssemblyName)
 
-	rePatternInOutputDir := fmt.Sprintf("%s.ipa", assemblyName)
-	reInOutputDir := regexp.MustCompile(rePatternInOutputDir)
+	rePatternInOutputDirWithAssemblyName := fmt.Sprintf("%s.ipa", assemblyName)
+	reInOutputDir := regexp.MustCompile(rePatternInOutputDirWithAssemblyName)
 
 	filteredIpas := []string{}
 	for _, ipa := range ipas {
@@ -477,13 +476,12 @@ func exportLatestIpa(outputDir, assemblyName string) (string, error) {
 		}
 
 		return sortedIPAPths[0], nil
-	} else {
-		//paths are mixed, warn user
-		log.Warnf("Multiple path found: %v", filteredIpas)
-		log.Warnf("USED: %s", filteredIpas[0])
-		return filteredIpas[0], nil
 	}
 
+	//paths are mixed, warn user
+	log.Warnf("Multiple path found: %v", filteredIpas)
+	log.Warnf("USED: %s", filteredIpas[0])
+	return filteredIpas[0], nil
 }
 
 func exportAppDSYM(outputDir, assemblyName string) (string, error) {
