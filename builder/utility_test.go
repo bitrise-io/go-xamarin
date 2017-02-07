@@ -474,6 +474,43 @@ func TestExportLatestIpa(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "a 2016-10-06 11-45-25/Multiplatform.iOS.ipa"), output)
 	}
+
+	t.Log("it returns ipa path when have mixed paths detected")
+	{
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
+		require.NoError(t, err)
+
+		archives := []string{
+			"a 2017-01-02 11-45-25/Multiplatform.iOS.ipa",
+			"Multiplatform.iOS.ipa",
+		}
+
+		for _, archive := range archives {
+			createTestFile(t, tmpDir, archive)
+		}
+
+		output, err := exportLatestIpa(tmpDir, "")
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "a 2017-01-02 11-45-25/Multiplatform.iOS.ipa"), output)
+	}
+
+	t.Log("it returns ipa path when does not contain timestamp")
+	{
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
+		require.NoError(t, err)
+
+		archives := []string{
+			"Multiplatform.iOS.ipa",
+		}
+
+		for _, archive := range archives {
+			createTestFile(t, tmpDir, archive)
+		}
+
+		output, err := exportLatestIpa(tmpDir, "")
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.iOS.ipa"), output)
+	}
 }
 
 func TestExportAppDsym(t *testing.T) {
