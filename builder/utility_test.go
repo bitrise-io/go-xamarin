@@ -13,6 +13,51 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestExportLatestIpa(t *testing.T) {
+	t.Log("Check multiple paths")
+	{
+
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test_ipa_path")
+		require.NoError(t, err)
+
+
+		outputDir := tmpDir
+		assemblyName := "test"
+		//test 2017-02-06 16-42-55/test.ipa
+
+		//test case: only timestamped
+		ipaDir := filepath.Join(outputDir, "test 2017-02-06 16-42-55")
+		require.NoError(t, os.MkdirAll(ipaDir, 0777))
+
+		ipaPth := filepath.Join(ipaDir, assemblyName+".ipa")
+		require.NoError(t, fileutil.WriteStringToFile(ipaPth, ""))
+
+		actualIpaPth, err := exportLatestIpa(outputDir, assemblyName)
+		require.NoError(t, err)
+		
+		//test case: both timestamped and in outputdir
+		ipaDir = outputDir
+		require.NoError(t, os.MkdirAll(ipaDir, 0777))
+
+		ipaPth = filepath.Join(ipaDir, assemblyName+".ipa")
+		require.NoError(t, fileutil.WriteStringToFile(ipaPth, ""))
+
+		actualIpaPth, err = exportLatestIpa(outputDir, assemblyName)
+		require.NoError(t, err)
+		
+		//test case: only NOT timestamped
+		ipaDir = filepath.Join(outputDir, "test 2017-02-06 16-42-55")
+
+		require.NoError(t, os.RemoveAll(ipaDir))
+
+		actualIpaPth, err = exportLatestIpa(outputDir, assemblyName)
+		require.NoError(t, err)
+		ipaDir = outputDir
+		ipaPth = filepath.Join(ipaDir, assemblyName+".ipa")
+
+		require.NoError(t, os.RemoveAll(ipaPth))
+	}
+
 func TestValidateSolutionPth(t *testing.T) {
 	t.Log("it validates solution path")
 	{
