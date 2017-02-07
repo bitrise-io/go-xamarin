@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/bitrise-tools/go-xamarin",
+	"ImportPath": "github.com/bitrise-io/go-xamarin",
 	"GoVersion": "go1.7",
 	"GodepVersion": "v79",
 	"Packages": [
@@ -39,6 +39,61 @@
 			"Rev": "e9b911a4cdf5eda62401973d0c299e7e42637315"
 		},
 		{
+			"ImportPath": "github.com/bitrise-tools/go-xamarin/analyzers/project",
+			"Comment": "1.2.0-7-g09d4f1c",
+			"Rev": "09d4f1ce52f78b1c7576a3333365a953e1c9209b"
+		},
+		{
+			"ImportPath": "github.com/bitrise-tools/go-xamarin/analyzers/solution",
+			"Comment": "1.2.0-7-g09d4f1c",
+			"Rev": "09d4f1ce52f78b1c7576a3333365a953e1c9209b"
+		},
+		{
+			"ImportPath": "github.com/bitrise-tools/go-xamarin/builder",
+			"Comment": "1.2.0-7-g09d4f1c",
+			"Rev": "09d4f1ce52f78b1c7576a3333365a953e1c9209b"
+		},
+		{
+			"ImportPath": "github.com/bitrise-tools/go-xamarin/cli",
+			"Comment": "1.2.0-7-g09d4f1c",
+			"Rev": "09d4f1ce52f78b1c7576a3333365a953e1c9209b"
+		},
+		{
+			"ImportPath": "github.com/bitrise-tools/go-xamarin/constants",
+			"Comment": "1.2.0-7-g09d4f1c",
+			"Rev": "09d4f1ce52f78b1c7576a3333365a953e1c9209b"
+		},
+		{
+			"ImportPath": "github.com/bitrise-tools/go-xamarin/tools",
+			"Comment": "1.2.0-7-g09d4f1c",
+			"Rev": "09d4f1ce52f78b1c7576a3333365a953e1c9209b"
+		},
+		{
+			"ImportPath": "github.com/bitrise-tools/go-xamarin/tools/buildtools/mdtool",
+			"Comment": "1.2.0-7-g09d4f1c",
+			"Rev": "09d4f1ce52f78b1c7576a3333365a953e1c9209b"
+		},
+		{
+			"ImportPath": "github.com/bitrise-tools/go-xamarin/tools/buildtools/xbuild",
+			"Comment": "1.2.0-7-g09d4f1c",
+			"Rev": "09d4f1ce52f78b1c7576a3333365a953e1c9209b"
+		},
+		{
+			"ImportPath": "github.com/bitrise-tools/go-xamarin/tools/nunit",
+			"Comment": "1.2.0-7-g09d4f1c",
+			"Rev": "09d4f1ce52f78b1c7576a3333365a953e1c9209b"
+		},
+		{
+			"ImportPath": "github.com/bitrise-tools/go-xamarin/utility",
+			"Comment": "1.2.0-7-g09d4f1c",
+			"Rev": "09d4f1ce52f78b1c7576a3333365a953e1c9209b"
+		},
+		{
+			"ImportPath": "github.com/bitrise-tools/go-xamarin/version",
+			"Comment": "1.2.0-7-g09d4f1c",
+			"Rev": "09d4f1ce52f78b1c7576a3333365a953e1c9209b"
+		},
+		{
 			"ImportPath": "github.com/davecgh/go-spew/spew",
 			"Comment": "v1.1.0",
 			"Rev": "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -50,22 +105,22 @@
 		},
 		{
 			"ImportPath": "github.com/stretchr/testify/assert",
-			"Comment": "v1.1.4-25-g2402e8e",
-			"Rev": "2402e8e7a02fc811447d11f881aa9746cdc57983"
+			"Comment": "v1.1.4-27-g4d4bfba",
+			"Rev": "4d4bfba8f1d1027c4fdbe371823030df51419987"
 		},
 		{
 			"ImportPath": "github.com/stretchr/testify/require",
-			"Comment": "v1.1.4-25-g2402e8e",
-			"Rev": "2402e8e7a02fc811447d11f881aa9746cdc57983"
+			"Comment": "v1.1.4-27-g4d4bfba",
+			"Rev": "4d4bfba8f1d1027c4fdbe371823030df51419987"
 		},
 		{
 			"ImportPath": "github.com/urfave/cli",
-			"Comment": "v1.18.0-67-gd53eb99",
-			"Rev": "d53eb991652b1d438abdd34ce4bfa3ef1539108e"
+			"Comment": "v1.19.1-21-g347a988",
+			"Rev": "347a9884a87374d000eec7e6445a34487c1f4a2b"
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
-			"Rev": "31c299268d302dd0aa9a0dcf765a3d58971ac83f"
+			"Rev": "4c78c975fe7c825c6d1466c42be594d1d6f3aba6"
 		}
 	]
 }
