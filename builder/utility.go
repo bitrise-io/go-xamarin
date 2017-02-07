@@ -423,16 +423,16 @@ func exportLatestIpa(outputDir, assemblyName string) (string, error) {
 	}
 
 	rePatternInSubdirWithAssemblyName := fmt.Sprintf("%s .*/%s.ipa", assemblyName, assemblyName)
-	re := regexp.MustCompile(rePatternInSubdirWithAssemblyName)
+	reInSubdirWithAssemblyName := regexp.MustCompile(rePatternInSubdirWithAssemblyName)
 
 	rePatternInOutputDirWithAssemblyName := fmt.Sprintf("%s.ipa", assemblyName)
-	reInOutputDir := regexp.MustCompile(rePatternInOutputDirWithAssemblyName)
+	reInOutputDirWithAssemblyName := regexp.MustCompile(rePatternInOutputDirWithAssemblyName)
 
 	filteredIpas := []string{}
 	for _, ipa := range ipas {
-		if match := re.FindString(ipa); match != "" {
+		if match := InSubdirWithAssemblyName.FindString(ipa); match != "" {
 			filteredIpas = append(filteredIpas, ipa)
-		} else if match := reInOutputDir.FindString(ipa); match != "" {
+		} else if match := reInOutputDirWithAssemblyName.FindString(ipa); match != "" {
 			filteredIpas = append(filteredIpas, ipa)
 		}
 	}
