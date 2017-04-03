@@ -192,16 +192,16 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 	return warnings, nil
 }
 
-// BuildAllXamarinUITestAndReferredProjects ...
-func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, platform string, prepareCallback PrepareCommandCallback, callback BuildCommandCallback) ([]string, error) {
+// BuildAllXamarinProjects ...
+func (builder Model) BuildAllXamarinProjects(configuration, platform string, prepareCallback PrepareCommandCallback, callback BuildCommandCallback) ([]string, error) {
 	warnings := []string{}
 
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
 		return warnings, err
 	}
 
-	buildableTestProjects, buildableReferredProjects, warns := builder.buildableXamarinUITestProjectsAndReferredProjects(configuration, platform)
-	if len(buildableTestProjects) == 0 || len(buildableReferredProjects) == 0 {
+	_, buildableReferredProjects, warns := builder.buildableXamarinUITestProjectsAndReferredProjects(configuration, platform)
+	if len(buildableReferredProjects) == 0 {
 		return warns, fmt.Errorf("No project to build found")
 	}
 
@@ -244,6 +244,24 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 	}
 	// ---
 
+	return warnings, nil
+}
+
+// RunAllXamarinUITests ...
+func (builder Model) RunAllXamarinUITests(configuration, platform string, prepareCallback PrepareCommandCallback, callback BuildCommandCallback) ([]string, error) {
+	warnings := []string{}
+
+	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
+		return warnings, err
+	}
+
+	buildableTestProjects, _, warns := builder.buildableXamarinUITestProjectsAndReferredProjects(configuration, platform)
+	if len(buildableTestProjects) == 0 {
+		return warns, fmt.Errorf("No project to build found")
+	}
+
+	perfomedCommands := []tools.Printable{}
+
 	//
 	// Then build all test projects
 	for _, testProj := range buildableTestProjects {
@@ -278,6 +296,25 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 		}
 	}
 	//
+
+	return warnings, nil
+}
+
+// BuildAndRunAllXamarinUITestAndReferredProjects ...
+func (builder Model) BuildAndRunAllXamarinUITestAndReferredProjects(configuration, platform string, prepareCallback PrepareCommandCallback, callback BuildCommandCallback) ([]string, error) {
+	warnings := []string{}
+
+	buildWarnings, err := builder.BuildAllXamarinProjects(configuration, platform, prepareCallback, callback)
+	warnings = append(warnings, buildWarnings...)
+	if err != nil {
+		return warnings, err
+	}
+
+	runWarnings, err := builder.RunAllXamarinUITests(configuration, platform, prepareCallback, callback)
+	warnings = append(warnings, runWarnings...)
+	if err != nil {
+		return warnings, err
+	}
 
 	return warnings, nil
 }
@@ -340,10 +377,6 @@ func (builder Model) RunAllNunitTestProjects(configuration, platform string, cal
 
 // BuildAndRunAllNunitTestProjects ...
 func (builder Model) BuildAndRunAllNunitTestProjects(configuration, platform string, callback BuildCommandCallback, prepareCallback PrepareCommandCallback) ([]string, error) {
-	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
-		return nil, err
-	}
-
 	if err := builder.BuildSolution(configuration, platform, callback); err != nil {
 		return nil, err
 	}
