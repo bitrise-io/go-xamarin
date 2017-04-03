@@ -203,7 +203,7 @@ type CaptureLineCallback func(line string)
 func (testCloud Model) Submit(callback CaptureLineCallback) error {
 	cmdSlice := testCloud.submitCommandSlice()
 
-	command, err := command.NewFromSlice(cmdSlice...)
+	command, err := command.NewFromSlice(cmdSlice)
 	if err != nil {
 		return err
 	}
