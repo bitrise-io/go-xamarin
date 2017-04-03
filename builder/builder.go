@@ -342,7 +342,7 @@ func (builder Model) RunAllNunitTestProjects(configuration, platform string, cal
 		// Callback to let the caller to modify the command
 		if prepareCallback != nil {
 			editabeCommand := tools.Editable(buildCommand)
-			prepareCallback(builder.solution.Name, "", constants.SDKUnknown, constants.TestFrameworkUnknown, &editabeCommand)
+			prepareCallback(builder.solution.Name, testProj.Name, constants.SDKUnknown, constants.TestFrameworkNunitTest, &editabeCommand)
 		}
 
 		// Check if same command was already performed
@@ -353,7 +353,7 @@ func (builder Model) RunAllNunitTestProjects(configuration, platform string, cal
 
 		// Callback to notify the caller about next running command
 		if callback != nil {
-			callback(builder.solution.Name, "", constants.SDKUnknown, constants.TestFrameworkUnknown, buildCommand.PrintableCommand(), alreadyPerformed)
+			callback(builder.solution.Name, testProj.Name, constants.SDKUnknown, constants.TestFrameworkNunitTest, buildCommand.PrintableCommand(), alreadyPerformed)
 		}
 
 		if !alreadyPerformed {
