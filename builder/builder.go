@@ -123,6 +123,10 @@ func (builder Model) CleanAll(callback ClearCommandCallback) error {
 
 // BuildSolution ...
 func (builder Model) BuildSolution(configuration, platform string, callback BuildCommandCallback) error {
+	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
+		return err
+	}
+
 	buildCommand, err := builder.buildSolutionCommand(configuration, platform)
 	if err != nil {
 		return fmt.Errorf("Failed to create build command, error: %s", err)
@@ -130,7 +134,7 @@ func (builder Model) BuildSolution(configuration, platform string, callback Buil
 
 	// Callback to notify the caller about next running command
 	if callback != nil {
-		callback(builder.solution.Name, "", constants.SDKUnknown, constants.TestFrameworkUnknown, buildCommand.PrintableCommand(), true)
+		callback(builder.solution.Name, "", constants.SDKUnknown, constants.TestFrameworkUnknown, buildCommand.PrintableCommand(), false)
 	}
 
 	return buildCommand.Run()
@@ -278,12 +282,10 @@ func (builder Model) BuildAllXamarinUITestAndReferredProjects(configuration, pla
 	return warnings, nil
 }
 
-// BuildAllNunitTestProjects ...
-func (builder Model) BuildAllNunitTestProjects(configuration, platform string, prepareCallback PrepareCommandCallback, callback BuildCommandCallback) ([]string, error) {
-	warnings := []string{}
-
+// RunAllNunitTestProjects ...
+func (builder Model) RunAllNunitTestProjects(configuration, platform string, callback BuildCommandCallback, prepareCallback PrepareCommandCallback) ([]string, error) {
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
-		return warnings, err
+		return nil, err
 	}
 
 	buildableProjects, warns := builder.buildableNunitTestProjects(configuration, platform)
@@ -293,43 +295,11 @@ func (builder Model) BuildAllNunitTestProjects(configuration, platform string, p
 
 	nunitConsolePth, err := nunit.SystemNunit3ConsolePath()
 	if err != nil {
-		return warnings, err
+		return nil, err
 	}
 
+	warnings := []string{}
 	perfomedCommands := []tools.Printable{}
-
-	//
-	// First build solution
-	buildCommand, err := builder.buildSolutionCommand(configuration, platform)
-	if err != nil {
-		return warnings, fmt.Errorf("Failed to create build command, error: %s", err)
-	}
-
-	// Callback to let the caller to modify the command
-	if prepareCallback != nil {
-		editabeCommand := tools.Editable(buildCommand)
-		prepareCallback(builder.solution.Name, "", constants.SDKUnknown, constants.TestFrameworkUnknown, &editabeCommand)
-	}
-
-	// Check if same command was already performed
-	alreadyPerformed := false
-	if tools.PrintableSliceContains(perfomedCommands, buildCommand) {
-		alreadyPerformed = true
-	}
-
-	// Callback to notify the caller about next running command
-	if callback != nil {
-		callback(builder.solution.Name, "", constants.SDKUnknown, constants.TestFrameworkUnknown, buildCommand.PrintableCommand(), alreadyPerformed)
-	}
-
-	if !alreadyPerformed {
-		if err := buildCommand.Run(); err != nil {
-			return warnings, err
-		}
-		perfomedCommands = append(perfomedCommands, buildCommand)
-	}
-	// ---
-
 	//
 	// Then build all test projects
 	for _, testProj := range buildableProjects {
@@ -342,7 +312,7 @@ func (builder Model) BuildAllNunitTestProjects(configuration, platform string, p
 		// Callback to let the caller to modify the command
 		if prepareCallback != nil {
 			editabeCommand := tools.Editable(buildCommand)
-			prepareCallback(builder.solution.Name, testProj.Name, testProj.SDK, testProj.TestFramework, &editabeCommand)
+			prepareCallback(builder.solution.Name, "", constants.SDKUnknown, constants.TestFrameworkUnknown, &editabeCommand)
 		}
 
 		// Check if same command was already performed
@@ -353,7 +323,7 @@ func (builder Model) BuildAllNunitTestProjects(configuration, platform string, p
 
 		// Callback to notify the caller about next running command
 		if callback != nil {
-			callback(builder.solution.Name, testProj.Name, testProj.SDK, testProj.TestFramework, buildCommand.PrintableCommand(), alreadyPerformed)
+			callback(builder.solution.Name, "", constants.SDKUnknown, constants.TestFrameworkUnknown, buildCommand.PrintableCommand(), alreadyPerformed)
 		}
 
 		if !alreadyPerformed {
@@ -366,6 +336,19 @@ func (builder Model) BuildAllNunitTestProjects(configuration, platform string, p
 	// ---
 
 	return warnings, nil
+}
+
+// BuildAndRunAllNunitTestProjects ...
+func (builder Model) BuildAndRunAllNunitTestProjects(configuration, platform string, callback BuildCommandCallback, prepareCallback PrepareCommandCallback) ([]string, error) {
+	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
+		return nil, err
+	}
+
+	if err := builder.BuildSolution(configuration, platform, callback); err != nil {
+		return nil, err
+	}
+
+	return builder.RunAllNunitTestProjects(configuration, platform, callback, prepareCallback)
 }
 
 // CollectProjectOutputs ...
