@@ -192,8 +192,8 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 	return warnings, nil
 }
 
-// BuildAllXamarinProjects ...
-func (builder Model) BuildAllXamarinProjects(configuration, platform string, prepareCallback PrepareCommandCallback, callback BuildCommandCallback) ([]string, error) {
+// BuildAllUITestableXamarinProjects ...
+func (builder Model) BuildAllUITestableXamarinProjects(configuration, platform string, prepareCallback PrepareCommandCallback, callback BuildCommandCallback) ([]string, error) {
 	warnings := []string{}
 
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
@@ -207,8 +207,6 @@ func (builder Model) BuildAllXamarinProjects(configuration, platform string, pre
 
 	perfomedCommands := []tools.Printable{}
 
-	//
-	// First build all referred projects
 	for _, proj := range buildableReferredProjects {
 		buildCommands, warns, err := builder.buildProjectCommand(configuration, platform, proj)
 		warnings = append(warnings, warns...)
@@ -242,7 +240,6 @@ func (builder Model) BuildAllXamarinProjects(configuration, platform string, pre
 			}
 		}
 	}
-	// ---
 
 	return warnings, nil
 }
@@ -262,8 +259,6 @@ func (builder Model) RunAllXamarinUITests(configuration, platform string, prepar
 
 	perfomedCommands := []tools.Printable{}
 
-	//
-	// Then build all test projects
 	for _, testProj := range buildableTestProjects {
 		buildCommand, warns, err := builder.buildXamarinUITestProjectCommand(configuration, platform, testProj)
 		warnings = append(warnings, warns...)
@@ -295,7 +290,6 @@ func (builder Model) RunAllXamarinUITests(configuration, platform string, prepar
 			perfomedCommands = append(perfomedCommands, buildCommand)
 		}
 	}
-	//
 
 	return warnings, nil
 }
@@ -304,7 +298,7 @@ func (builder Model) RunAllXamarinUITests(configuration, platform string, prepar
 func (builder Model) BuildAndRunAllXamarinUITestAndReferredProjects(configuration, platform string, prepareCallback PrepareCommandCallback, callback BuildCommandCallback) ([]string, error) {
 	warnings := []string{}
 
-	buildWarnings, err := builder.BuildAllXamarinProjects(configuration, platform, prepareCallback, callback)
+	buildWarnings, err := builder.BuildAllUITestableXamarinProjects(configuration, platform, prepareCallback, callback)
 	warnings = append(warnings, buildWarnings...)
 	if err != nil {
 		return warnings, err
@@ -337,8 +331,7 @@ func (builder Model) RunAllNunitTestProjects(configuration, platform string, cal
 
 	warnings := []string{}
 	perfomedCommands := []tools.Printable{}
-	//
-	// Then build all test projects
+
 	for _, testProj := range buildableProjects {
 		buildCommand, warns, err := builder.buildNunitTestProjectCommand(configuration, platform, testProj, nunitConsolePth)
 		warnings = append(warnings, warns...)
@@ -370,7 +363,6 @@ func (builder Model) RunAllNunitTestProjects(configuration, platform string, cal
 			perfomedCommands = append(perfomedCommands, buildCommand)
 		}
 	}
-	// ---
 
 	return warnings, nil
 }
