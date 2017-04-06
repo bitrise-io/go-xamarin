@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/pathutil"
@@ -12,6 +13,44 @@ import (
 	"github.com/bitrise-tools/go-xamarin/utility"
 	"github.com/stretchr/testify/require"
 )
+
+func TestExportLatest(t *testing.T) {
+	tmpDir, err := pathutil.NormalizedOSTempDirPath("__exportLatestTest__")
+	require.NoError(t, err)
+	defer func() {
+		require.NoError(t, os.RemoveAll(tmpDir))
+	}()
+
+	t.Log("Test exportLatest")
+	{
+		require.NoError(t, fileutil.WriteStringToFile(filepath.Join(tmpDir, "5_test_file.txt"), "test"))
+		time.Sleep(1 * time.Second)
+		require.NoError(t, fileutil.WriteStringToFile(filepath.Join(tmpDir, "a_test_file.txt"), "test"))
+		time.Sleep(1 * time.Second)
+		require.NoError(t, fileutil.WriteStringToFile(filepath.Join(tmpDir, "0estfile.txt"), "test"))
+
+		startTime := time.Now()
+		time.Sleep(1 * time.Second)
+		require.NoError(t, fileutil.WriteStringToFile(filepath.Join(tmpDir, "2_test_file.txt"), "test"))
+		time.Sleep(1 * time.Second)
+		require.NoError(t, fileutil.WriteStringToFile(filepath.Join(tmpDir, "b_test_file.txt"), "test"))
+		time.Sleep(1 * time.Second)
+		require.NoError(t, fileutil.WriteStringToFile(filepath.Join(tmpDir, "findme.txt"), "test"))
+		endTime := time.Now()
+
+		time.Sleep(1 * time.Second)
+		require.NoError(t, fileutil.WriteStringToFile(filepath.Join(tmpDir, "6_test_file.txt"), "test"))
+		time.Sleep(1 * time.Second)
+		require.NoError(t, fileutil.WriteStringToFile(filepath.Join(tmpDir, "c_test_file.txt"), "test"))
+		time.Sleep(1 * time.Second)
+		require.NoError(t, fileutil.WriteStringToFile(filepath.Join(tmpDir, "7estfile.txt"), "test"))
+
+		fileFound, err := exportLatest(tmpDir, ".txt", startTime, endTime)
+		require.NoError(t, err)
+
+		require.Equal(t, filepath.Join(tmpDir, "findme.txt"), fileFound)
+	}
+}
 
 func TestValidateSolutionPth(t *testing.T) {
 	t.Log("it validates solution path")

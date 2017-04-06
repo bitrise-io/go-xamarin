@@ -401,9 +401,27 @@ func (d ByIpaDate) Less(i, j int) bool {
 	return false
 }
 
-func exportLatestIpa(outputDir, assemblyName string) (string, error) {
-	// Multiplatform/iOS/bin/iPhone/Release/Multiplatform.iOS 2016-10-06 11-45-23/Multiplatform.iOS.ipa
+func exportLatest(outputDir, extension string, startTime, endTime time.Time) (string, error) {
+	var lastModTime time.Time
+	var latestIpa string
 
+	return latestIpa, filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
+		log.Infof(path)
+		if filepath.Ext(path) == extension && info.ModTime().After(startTime) && info.ModTime().Before(endTime) {
+			if latestIpa == "" {
+				lastModTime = info.ModTime()
+			} else if lastModTime.After(info.ModTime()) {
+				return nil
+			}
+			lastModTime = info.ModTime()
+			latestIpa = path
+			log.Infof("L:" + latestIpa)
+		}
+		return nil
+	})
+}
+
+func exportLatestIpa(outputDir, assemblyName string) (string, error) {
 	patternInSubdir := filepath.Join(outputDir, "*", "*.ipa")
 	ipas, err := filepath.Glob(patternInSubdir)
 	if err != nil {

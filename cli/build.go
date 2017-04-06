@@ -3,6 +3,8 @@ package cli
 import (
 	"fmt"
 
+	"time"
+
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-tools/go-xamarin/builder"
 	"github.com/bitrise-tools/go-xamarin/constants"
@@ -52,6 +54,8 @@ func buildCmd(c *cli.Context) error {
 		}
 	}
 
+	startTime := time.Now()
+
 	warnings, err := buildHandler.BuildAllProjects(solutionConfiguration, solutionPlatform, nil, callback)
 	for _, warning := range warnings {
 		log.Warnf(warning)
@@ -60,10 +64,12 @@ func buildCmd(c *cli.Context) error {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
+	endTime := time.Now()
+
 	fmt.Println()
 	log.Infof("Collecting generated outputs")
 
-	outputMap, err := buildHandler.CollectProjectOutputs(solutionConfiguration, solutionPlatform)
+	outputMap, err := buildHandler.CollectProjectOutputs(solutionConfiguration, solutionPlatform, startTime, endTime)
 	if err != nil {
 		return err
 	}

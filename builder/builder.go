@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-tools/go-xamarin/analyzers/project"
@@ -377,7 +378,7 @@ func (builder Model) BuildAndRunAllNunitTestProjects(configuration, platform str
 }
 
 // CollectProjectOutputs ...
-func (builder Model) CollectProjectOutputs(configuration, platform string) (ProjectOutputMap, error) {
+func (builder Model) CollectProjectOutputs(configuration, platform string, startTime, endTime time.Time) (ProjectOutputMap, error) {
 	projectOutputMap := ProjectOutputMap{}
 
 	buildableProjects, _ := builder.buildableProjects(configuration, platform)
@@ -415,7 +416,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string) (Proj
 					})
 				}
 
-				if ipaPth, err := exportLatestIpa(projectConfig.OutputDir, proj.AssemblyName); err != nil {
+				if ipaPth, err := exportLatest(projectConfig.OutputDir, ".ipa", startTime, endTime); err != nil {
 					return ProjectOutputMap{}, err
 				} else if ipaPth != "" {
 					projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
