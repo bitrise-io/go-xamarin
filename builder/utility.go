@@ -124,7 +124,7 @@ func androidPackageNameFromManifestContent(manifestContent string) (string, erro
 }
 
 func exportApk(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
-	if apkToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, `(?i)signed\.apk$`, `(?i)\.apk$`); err == nil && apkToExport.path != "" {
+	if apkToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, fmt.Sprintf(`(?i)%s.*signed\.apk$`, assemblyName), fmt.Sprintf(`(?i)%s\.apk$`, assemblyName), `(?i)signed\.apk$`, `(?i)\.apk$`); err == nil && apkToExport.path != "" {
 		return apkToExport.path, err
 	} else if latestPath, err := apkToExport.exportLatest(); err == nil && latestPath != "" {
 		log.Warnf("No apk generated during build")
@@ -174,8 +174,8 @@ func exportApk(outputDir, assemblyName string, startTime, endTime time.Time) (st
 	return filteredApks[0], nil
 }
 
-func exportLatestIpa(outputDir string, startTime, endTime time.Time) (string, error) {
-	if ipaToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, `(?i)\.ipa$`); err == nil && ipaToExport.path != "" {
+func exportLatestIpa(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
+	if ipaToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, fmt.Sprintf(`(?i)%s\.ipa$`, assemblyName), `(?i)\.ipa$`); err == nil && ipaToExport.path != "" {
 		return ipaToExport.path, err
 	} else if latestPath, err := ipaToExport.exportLatest(); err == nil && latestPath != "" {
 		log.Warnf("No ipa generated during build")
@@ -185,7 +185,18 @@ func exportLatestIpa(outputDir string, startTime, endTime time.Time) (string, er
 	return "", nil
 }
 
-func exportLatestXCArchiveFromXcodeArchives(startTime, endTime time.Time) (string, error) {
+func exportLatestXCArchive(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
+	if archiveToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, fmt.Sprintf(`(?i)%s.*\.xcarchive$`, assemblyName), `(?i)\.xcarchive$`); err == nil && archiveToExport.path != "" {
+		return archiveToExport.path, err
+	} else if latestPath, err := archiveToExport.exportLatest(); err == nil && latestPath != "" {
+		log.Warnf("No xcarchive generated during build")
+		log.Printf("Exporting: %s", latestPath)
+		return latestPath, nil
+	}
+	return "", nil
+}
+
+func exportLatestXCArchiveFromXcodeArchives(assemblyName string, startTime, endTime time.Time) (string, error) {
 	userHomeDir := os.Getenv("HOME")
 	if userHomeDir == "" {
 		return "", fmt.Errorf("failed to get user home dir")
@@ -197,14 +208,7 @@ func exportLatestXCArchiveFromXcodeArchives(startTime, endTime time.Time) (strin
 		return "", fmt.Errorf("no default Xcode archive path found at: %s", xcodeArchivesDir)
 	}
 
-	if archiveToExport, err := exportLatestModifiedWithinTimeInterval(xcodeArchivesDir, startTime, endTime, `(?i)\.xcarchive$`); err == nil && archiveToExport.path != "" {
-		return archiveToExport.path, err
-	} else if latestPath, err := archiveToExport.exportLatest(); err == nil && latestPath != "" {
-		log.Warnf("No xcarchive generated during build")
-		log.Printf("Exporting: %s", latestPath)
-		return latestPath, nil
-	}
-	return "", nil
+	return exportLatestXCArchive(xcodeArchivesDir, assemblyName, startTime, endTime)
 }
 
 func (export *Export) exportLatest() (string, error) {
@@ -225,6 +229,7 @@ func (export *Export) exportLatest() (string, error) {
 				}
 				lastModTime = info.ModTime()
 				latestPth = path
+				log.Infof("%s - LATEST: %s", pattern, latestPth)
 			}
 			return nil
 		}); err != nil {
@@ -243,7 +248,6 @@ func exportLatestModifiedWithinTimeInterval(outputDir string, startTime, endTime
 		if latestPth != "" {
 			continue
 		}
-
 		re := regexp.MustCompile(pattern)
 		if err := filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
 			if re.FindString(path) != "" && info.ModTime().After(startTime) && info.ModTime().Before(endTime) {
@@ -254,6 +258,7 @@ func exportLatestModifiedWithinTimeInterval(outputDir string, startTime, endTime
 				}
 				lastModTime = info.ModTime()
 				latestPth = path
+				log.Infof("%s - LATEST: %s", pattern, latestPth)
 			}
 			return nil
 		}); err != nil {

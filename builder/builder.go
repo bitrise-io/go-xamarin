@@ -407,7 +407,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 		switch proj.SDK {
 		case constants.SDKIOS, constants.SDKTvOS:
 			if isArchitectureArchiveable(projectConfig.MtouchArchs...) {
-				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(startTime, endTime); err != nil {
+				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName, startTime, endTime); err != nil {
 					return ProjectOutputMap{}, err
 				} else if xcarchivePth != "" {
 					projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
@@ -416,7 +416,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 					})
 				}
 
-				if ipaPth, err := exportLatest(projectConfig.OutputDir, startTime, endTime, ".ipa"); err != nil {
+				if ipaPth, err := exportLatestIpa(projectConfig.OutputDir, proj.AssemblyName, startTime, endTime); err != nil {
 					return ProjectOutputMap{}, err
 				} else if ipaPth != "" {
 					projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
@@ -445,7 +445,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 			}
 		case constants.SDKMacOS:
 			if builder.forceMDTool {
-				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(startTime, endTime); err != nil {
+				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName, startTime, endTime); err != nil {
 					return ProjectOutputMap{}, err
 				} else if xcarchivePth != "" {
 					projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
