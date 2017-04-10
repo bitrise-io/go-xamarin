@@ -7,51 +7,120 @@ import (
 	"time"
 
 	"github.com/bitrise-io/go-utils/fileutil"
+	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
-	"github.com/bitrise-tools/go-xamarin/analyzers/solution"
-	"github.com/bitrise-tools/go-xamarin/constants"
-	"github.com/bitrise-tools/go-xamarin/utility"
 	"github.com/stretchr/testify/require"
 )
 
+func generateTestFiles(tmpDir string, pths ...string) error {
+	for _, pth := range pths {
+		time.Sleep(1 * time.Second)
+
+		if err := fileutil.WriteStringToFile(filepath.Join(tmpDir, pth), "test"); err != nil {
+			return err
+		}
+		log.Infof("WRITE: %s", filepath.Join(tmpDir, pth))
+	}
+	return nil
+}
+
 func TestExportLatest(t *testing.T) {
+	//testable patterns
+	//
+	//*.apk azon belul (?i)%s.*signed.apk  %s=assemblyName <- ha ez nincs, akkor ez -> %s.apk %s=assemblyName -- exportApk
+	// xamarin-sample-app/Droid/bin/Release/com.bitrise.xamarin.sampleapp.apk
+	// 1: (?i)%s.*signed.apk 2: %s.apk 3: *.apk?
+	//
+	//"*.xcarchive" azon belul ".*/%s .*.xcarchive" %s=assemblyName -- exportLatestXCArchive
+	// $HOME/Library/Developer/Xcode/Archives/2016-10-07/XamarinSampleApp.iOS 10-07-16 3.41 PM 2.xcarchive
+	//
+	//"*.ipa" azon belul "%s.ipa" %s=assemblyName -- exportLatestIpa
+	// Multiplatform/iOS/bin/iPhone/Release/Multiplatform.iOS 2016-10-06 11-45-23/Multiplatform.iOS.ipa
+	//
+	//"*.app.dSYM" azon belul "%s.app.dSYM" %s=assemblyName -- exportAppDSYM
+	// Multiplatform/iOS/bin/iPhone/Release/Multiplatform.iOS.app.dSYM
+	//
+	//exportFrameworkDSYMs -- uj function, multiple values return exportAll -- *.framework.dSYM
+	// Multiplatform/iOS/bin/iPhone/Release/TTTAttributedLabel.framework.dSYM
+	//
+	//*.pkg azon belul "%s.*.pkg" %s=assemblyName -- exportPKG
+	// Multiplatform/Mac/bin/Release/Multiplatform.Mac-1.0.pkg
+	//
+	//*.app azon belul "%s.app" %s=assemblyName -- exportApp
+	// Multiplatform/Mac/bin/Release/Multiplatform.Mac.app
+	// xamarin-sample-app/iOS/bin/iPhoneSimulator/Debug/XamarinSampleApp.iOS.app
+	//
+	//*.dll azon belul "%s.dll" %s=assemblyName -- exportDLL
+	// xamarin-sample-app/UITests/bin/Release/XamarinSampleApp.UITests.dll
+
 	tmpDir, err := pathutil.NormalizedOSTempDirPath("__exportLatestTest__")
 	require.NoError(t, err)
 	defer func() {
 		require.NoError(t, os.RemoveAll(tmpDir))
 	}()
 
-	t.Log("Test exportLatest")
+	t.Log("Test exportLatest - main functionality")
 	{
-		require.NoError(t, fileutil.WriteStringToFile(filepath.Join(tmpDir, "5_test_file.txt"), "test"))
-		time.Sleep(1 * time.Second)
-		require.NoError(t, fileutil.WriteStringToFile(filepath.Join(tmpDir, "a_test_file.txt"), "test"))
-		time.Sleep(1 * time.Second)
-		require.NoError(t, fileutil.WriteStringToFile(filepath.Join(tmpDir, "0estfile.txt"), "test"))
+
+		generateTestFiles(tmpDir, "5_test_file.txt", "a_test_file.txt", "0estfile.txt")
 
 		startTime := time.Now()
-		time.Sleep(1 * time.Second)
-		require.NoError(t, fileutil.WriteStringToFile(filepath.Join(tmpDir, "2_test_file.txt"), "test"))
-		time.Sleep(1 * time.Second)
-		require.NoError(t, fileutil.WriteStringToFile(filepath.Join(tmpDir, "b_test_file.txt"), "test"))
-		time.Sleep(1 * time.Second)
-		require.NoError(t, fileutil.WriteStringToFile(filepath.Join(tmpDir, "findme.txt"), "test"))
+		generateTestFiles(tmpDir, "2_test_file.txt", "b_test_file.txt", "findme.txt")
 		endTime := time.Now()
 
-		time.Sleep(1 * time.Second)
-		require.NoError(t, fileutil.WriteStringToFile(filepath.Join(tmpDir, "6_test_file.txt"), "test"))
-		time.Sleep(1 * time.Second)
-		require.NoError(t, fileutil.WriteStringToFile(filepath.Join(tmpDir, "c_test_file.txt"), "test"))
-		time.Sleep(1 * time.Second)
-		require.NoError(t, fileutil.WriteStringToFile(filepath.Join(tmpDir, "7estfile.txt"), "test"))
+		generateTestFiles(tmpDir, "6_test_file.txt", "c_test_file.txt", "7estfile.txt")
 
-		fileFound, err := exportLatest(tmpDir, ".txt", startTime, endTime)
+		fileFound, err := exportLatest(tmpDir, startTime, endTime, ".txt")
 		require.NoError(t, err)
 
 		require.Equal(t, filepath.Join(tmpDir, "findme.txt"), fileFound)
 	}
+
+	assemblyName := "com.bundle.id"
+
+	generateTestFiles(tmpDir, "prev."+assemblyName+".apk", "prev."+assemblyName+".signed.apk", "prev."+assemblyName+"-signed.apk")
+
+	startTime := time.Now()
+	generateTestFiles(tmpDir, "smtg.apk", assemblyName+".signed.apk", assemblyName+"-signed.apk")
+	endTime := time.Now()
+
+	generateTestFiles(tmpDir, "after."+assemblyName+".apk", "after."+assemblyName+".signed.apk", "after."+assemblyName+"-signed.apk")
+
+	t.Log("Test exportLatest - apk 1")
+	{
+		fileFound, err := exportLatest(tmpDir, startTime, endTime, assemblyName+".*signed.apk")
+		require.NoError(t, err)
+
+		require.Equal(t, filepath.Join(tmpDir, assemblyName+"-signed.apk"), fileFound)
+	}
+
+	t.Log("Test exportLatest - apk 2")
+	{
+		fileFound, err := exportLatest(tmpDir, startTime, endTime, assemblyName+"-signed.apk")
+		require.NoError(t, err)
+
+		require.Equal(t, filepath.Join(tmpDir, assemblyName+"-signed.apk"), fileFound)
+	}
+
+	t.Log("Test exportLatest - apk 3")
+	{
+		fileFound, err := exportLatest(tmpDir, startTime, endTime, assemblyName+`\.signed.apk`)
+		require.NoError(t, err)
+
+		require.Equal(t, filepath.Join(tmpDir, assemblyName+".signed.apk"), fileFound)
+	}
+
+	t.Log("Test exportLatest - apk 4")
+	{
+		fileFound, err := exportLatest(tmpDir, startTime, endTime, ".apk")
+		require.NoError(t, err)
+
+		require.Equal(t, filepath.Join(tmpDir, assemblyName+"-signed.apk"), fileFound)
+	}
+
 }
 
+/*
 func TestValidateSolutionPth(t *testing.T) {
 	t.Log("it validates solution path")
 	{
@@ -871,4 +940,4 @@ func TestExportDLL(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac.dll"), output)
 	}
-}
+}*/

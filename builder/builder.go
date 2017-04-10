@@ -407,7 +407,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 		switch proj.SDK {
 		case constants.SDKIOS, constants.SDKTvOS:
 			if isArchitectureArchiveable(projectConfig.MtouchArchs...) {
-				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
+				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(startTime, endTime); err != nil {
 					return ProjectOutputMap{}, err
 				} else if xcarchivePth != "" {
 					projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
@@ -416,7 +416,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 					})
 				}
 
-				if ipaPth, err := exportLatest(projectConfig.OutputDir, ".ipa", startTime, endTime); err != nil {
+				if ipaPth, err := exportLatest(projectConfig.OutputDir, startTime, endTime, ".ipa"); err != nil {
 					return ProjectOutputMap{}, err
 				} else if ipaPth != "" {
 					projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
@@ -425,7 +425,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 					})
 				}
 
-				if dsymPth, err := exportAppDSYM(projectConfig.OutputDir, proj.AssemblyName); err != nil {
+				if dsymPth, err := exportAppDSYM(projectConfig.OutputDir, proj.AssemblyName, startTime, endTime); err != nil {
 					return ProjectOutputMap{}, err
 				} else if dsymPth != "" {
 					projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
@@ -435,7 +435,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 				}
 			}
 
-			if appPth, err := exportApp(projectConfig.OutputDir, proj.AssemblyName); err != nil {
+			if appPth, err := exportApp(projectConfig.OutputDir, proj.AssemblyName, startTime, endTime); err != nil {
 				return ProjectOutputMap{}, err
 			} else if appPth != "" {
 				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
@@ -445,7 +445,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 			}
 		case constants.SDKMacOS:
 			if builder.forceMDTool {
-				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
+				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(startTime, endTime); err != nil {
 					return ProjectOutputMap{}, err
 				} else if xcarchivePth != "" {
 					projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
@@ -454,7 +454,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 					})
 				}
 			}
-			if appPth, err := exportApp(projectConfig.OutputDir, proj.AssemblyName); err != nil {
+			if appPth, err := exportApp(projectConfig.OutputDir, proj.AssemblyName, startTime, endTime); err != nil {
 				return ProjectOutputMap{}, err
 			} else if appPth != "" {
 				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
@@ -462,7 +462,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 					OutputType: constants.OutputTypeAPP,
 				})
 			}
-			if pkgPth, err := exportPKG(projectConfig.OutputDir, proj.AssemblyName); err != nil {
+			if pkgPth, err := exportPKG(projectConfig.OutputDir, proj.AssemblyName, startTime, endTime); err != nil {
 				return ProjectOutputMap{}, err
 			} else if pkgPth != "" {
 				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
@@ -476,7 +476,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 				return ProjectOutputMap{}, err
 			}
 
-			if apkPth, err := exportApk(projectConfig.OutputDir, packageName); err != nil {
+			if apkPth, err := exportApk(projectConfig.OutputDir, packageName, startTime, endTime); err != nil {
 				return ProjectOutputMap{}, err
 			} else if apkPth != "" {
 				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
@@ -495,7 +495,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 }
 
 // CollectXamarinUITestProjectOutputs ...
-func (builder Model) CollectXamarinUITestProjectOutputs(configuration, platform string) (TestProjectOutputMap, []string, error) {
+func (builder Model) CollectXamarinUITestProjectOutputs(configuration, platform string, startTime, endTime time.Time) (TestProjectOutputMap, []string, error) {
 	testProjectOutputMap := TestProjectOutputMap{}
 	warnings := []string{}
 
@@ -514,7 +514,7 @@ func (builder Model) CollectXamarinUITestProjectOutputs(configuration, platform 
 			continue
 		}
 
-		if dllPth, err := exportDLL(projectConfig.OutputDir, testProj.AssemblyName); err != nil {
+		if dllPth, err := exportDLL(projectConfig.OutputDir, testProj.AssemblyName, startTime, endTime); err != nil {
 			return TestProjectOutputMap{}, warnings, err
 		} else if dllPth != "" {
 			referredProjectNames := []string{}
