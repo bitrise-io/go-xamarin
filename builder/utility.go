@@ -17,6 +17,13 @@ import (
 	"github.com/bitrise-tools/go-xamarin/utility"
 )
 
+// Export ...
+type Export struct {
+	path      string
+	patterns  []string
+	outputDir string
+}
+
 func validateSolutionPth(pth string) error {
 	ext := filepath.Ext(pth)
 	if ext != constants.SolutionExt {
@@ -117,20 +124,37 @@ func androidPackageNameFromManifestContent(manifestContent string) (string, erro
 }
 
 func exportApk(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
-	// xamarin-sample-app/Droid/bin/Release/com.bitrise.xamarin.sampleapp.apk
+	if apkToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, `(?i)signed\.apk$`, `(?i)\.apk$`); err == nil && apkToExport.path != "" {
+		return apkToExport.path, err
+	} else if latestPath, err := apkToExport.exportLatest(); err == nil && latestPath != "" {
+		log.Warnf("No apk generated during build")
+		log.Printf("Exporting: %s", latestPath)
+		return latestPath, nil
+	}
 
-	return exportLatest(outputDir, startTime, endTime, fmt.Sprintf(`(?i)%s.*signed.apk`, assemblyName), ".apk")
+	log.Printf("")
+	log.Warnf("Switching to legacy exporter")
+	log.Printf("")
 
-	/*
-		apks, err := filepath.Glob(filepath.Join(outputDir, "*.apk"))
-		if err != nil {
-			return "", fmt.Errorf("failed to find apk, error: %s", err)
+	apks, err := filepath.Glob(filepath.Join(outputDir, "*.apk"))
+	if err != nil {
+		return "", fmt.Errorf("failed to find apk, error: %s", err)
+	}
+
+	rePattern := fmt.Sprintf(`(?i)%s.*signed.apk`, assemblyName)
+	re := regexp.MustCompile(rePattern)
+
+	filteredApks := []string{}
+	for _, apk := range apks {
+		if match := re.FindString(apk); match != "" {
+			filteredApks = append(filteredApks, apk)
 		}
+	}
 
-		rePattern := fmt.Sprintf(`(?i)%s.*signed.apk`, assemblyName)
+	if len(filteredApks) == 0 {
+		rePattern := fmt.Sprintf(`%s.apk`, assemblyName)
 		re := regexp.MustCompile(rePattern)
 
-		filteredApks := []string{}
 		for _, apk := range apks {
 			if match := re.FindString(apk); match != "" {
 				filteredApks = append(filteredApks, apk)
@@ -138,25 +162,27 @@ func exportApk(outputDir, assemblyName string, startTime, endTime time.Time) (st
 		}
 
 		if len(filteredApks) == 0 {
-			rePattern := fmt.Sprintf(`%s.apk`, assemblyName)
-			re := regexp.MustCompile(rePattern)
-
-			for _, apk := range apks {
-				if match := re.FindString(apk); match != "" {
-					filteredApks = append(filteredApks, apk)
-				}
-			}
-
-			if len(filteredApks) == 0 {
-				filteredApks = apks
-			}
+			filteredApks = apks
 		}
+	}
 
-		if len(filteredApks) == 0 {
-			return "", nil
-		}
+	if len(filteredApks) == 0 {
+		log.Errorf("Legacy exporter failed to find apk in (%s)", outputDir)
+		return "", nil
+	}
 
-		return filteredApks[0], nil*/
+	return filteredApks[0], nil
+}
+
+func exportLatestIpa(outputDir string, startTime, endTime time.Time) (string, error) {
+	if ipaToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, `(?i)\.ipa$`); err == nil && ipaToExport.path != "" {
+		return ipaToExport.path, err
+	} else if latestPath, err := ipaToExport.exportLatest(); err == nil && latestPath != "" {
+		log.Warnf("No ipa generated during build")
+		log.Printf("Exporting: %s", latestPath)
+		return latestPath, nil
+	}
+	return "", nil
 }
 
 func exportLatestXCArchiveFromXcodeArchives(startTime, endTime time.Time) (string, error) {
@@ -171,19 +197,27 @@ func exportLatestXCArchiveFromXcodeArchives(startTime, endTime time.Time) (strin
 		return "", fmt.Errorf("no default Xcode archive path found at: %s", xcodeArchivesDir)
 	}
 
-	return exportLatest(xcodeArchivesDir, startTime, endTime, ".*/%s .*.xcarchive", ".xcarchive")
+	if archiveToExport, err := exportLatestModifiedWithinTimeInterval(xcodeArchivesDir, startTime, endTime, `(?i)\.xcarchive$`); err == nil && archiveToExport.path != "" {
+		return archiveToExport.path, err
+	} else if latestPath, err := archiveToExport.exportLatest(); err == nil && latestPath != "" {
+		log.Warnf("No xcarchive generated during build")
+		log.Printf("Exporting: %s", latestPath)
+		return latestPath, nil
+	}
+	return "", nil
 }
 
-func exportLatest(outputDir string, startTime, endTime time.Time, patterns ...string) (string, error) {
+func (export *Export) exportLatest() (string, error) {
 	var lastModTime time.Time
 	var latestPth string
 
-	for _, pattern := range patterns {
-		log.Infof("PATTERN: %s", pattern)
+	for _, pattern := range export.patterns {
+		if latestPth != "" {
+			continue
+		}
 		re := regexp.MustCompile(pattern)
-		if err := filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
-			log.Infof("PTH: %s", path)
-			if re.FindString(path) != "" && info.ModTime().After(startTime) && info.ModTime().Before(endTime) {
+		if err := filepath.Walk(export.outputDir, func(path string, info os.FileInfo, err error) error {
+			if re.FindString(path) != "" {
 				if latestPth == "" {
 					lastModTime = info.ModTime()
 				} else if lastModTime.After(info.ModTime()) {
@@ -191,7 +225,6 @@ func exportLatest(outputDir string, startTime, endTime time.Time, patterns ...st
 				}
 				lastModTime = info.ModTime()
 				latestPth = path
-				log.Infof("LATESTSET: %s", latestPth)
 			}
 			return nil
 		}); err != nil {
@@ -201,41 +234,77 @@ func exportLatest(outputDir string, startTime, endTime time.Time, patterns ...st
 	return latestPth, nil
 }
 
-func exportAppDSYM(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
-	// Multiplatform/iOS/bin/iPhone/Release/Multiplatform.iOS.app.dSYM
+func exportLatestModifiedWithinTimeInterval(outputDir string, startTime, endTime time.Time, patterns ...string) (*Export, error) {
+	var lastModTime time.Time
+	var latestPth string
 
-	return exportLatest(outputDir, startTime, endTime, fmt.Sprintf("%s.app.dSYM", assemblyName), ".app.dSYM")
+	for _, pattern := range patterns {
 
-	/*
-
-		pattern := filepath.Join(outputDir, "*.app.dSYM")
-		dSYMs, err := filepath.Glob(pattern)
-		if err != nil {
-			return "", fmt.Errorf("failed to find dsym with pattern (%s), error: %s", pattern, err)
-		}
-		if len(dSYMs) == 0 {
-			return "", nil
+		if latestPth != "" {
+			continue
 		}
 
-		rePattern := fmt.Sprintf("%s.app.dSYM", assemblyName)
-		re := regexp.MustCompile(rePattern)
-
-		filteredDsyms := []string{}
-		for _, dSYM := range dSYMs {
-			if match := re.FindString(dSYM); match != "" {
-				filteredDsyms = append(filteredDsyms, dSYM)
+		re := regexp.MustCompile(pattern)
+		if err := filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
+			if re.FindString(path) != "" && info.ModTime().After(startTime) && info.ModTime().Before(endTime) {
+				if latestPth == "" {
+					lastModTime = info.ModTime()
+				} else if lastModTime.After(info.ModTime()) {
+					return nil
+				}
+				lastModTime = info.ModTime()
+				latestPth = path
 			}
+			return nil
+		}); err != nil {
+			return nil, err
 		}
+	}
+	return &Export{path: latestPth, patterns: patterns, outputDir: outputDir}, nil
+}
 
-		if len(filteredDsyms) == 0 {
-			filteredDsyms = dSYMs
+func exportAppDSYM(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
+	if appDSYMToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, fmt.Sprintf(`(?i)%s\.app\.dSYM$`, assemblyName), `(?i)\.app\.dSYM$`); err == nil && appDSYMToExport.path != "" {
+		return appDSYMToExport.path, err
+	} else if latestPath, err := appDSYMToExport.exportLatest(); err == nil && latestPath != "" {
+		log.Warnf("No app.dSYM generated during build")
+		log.Printf("Exporting: %s", latestPath)
+		return latestPath, nil
+	}
+
+	log.Printf("")
+	log.Warnf("Switching to legacy exporter")
+	log.Printf("")
+
+	pattern := filepath.Join(outputDir, "*.app.dSYM")
+	dSYMs, err := filepath.Glob(pattern)
+	if err != nil {
+		return "", fmt.Errorf("failed to find dsym with pattern (%s), error: %s", pattern, err)
+	}
+	if len(dSYMs) == 0 {
+		return "", nil
+	}
+
+	rePattern := fmt.Sprintf("%s.app.dSYM", assemblyName)
+	re := regexp.MustCompile(rePattern)
+
+	filteredDsyms := []string{}
+	for _, dSYM := range dSYMs {
+		if match := re.FindString(dSYM); match != "" {
+			filteredDsyms = append(filteredDsyms, dSYM)
 		}
+	}
 
-		if len(filteredDsyms) == 0 {
-			return "", nil
-		}
+	if len(filteredDsyms) == 0 {
+		filteredDsyms = dSYMs
+	}
 
-		return filteredDsyms[0], nil*/
+	if len(filteredDsyms) == 0 {
+		log.Errorf("Legacy exporter failed to find app.dSYM in (%s)", outputDir)
+		return "", nil
+	}
+
+	return filteredDsyms[0], nil
 }
 
 func exportFrameworkDSYMs(outputDir string) ([]string, error) {
@@ -249,108 +318,133 @@ func exportFrameworkDSYMs(outputDir string) ([]string, error) {
 }
 
 func exportPKG(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
-	// Multiplatform/Mac/bin/Release/Multiplatform.Mac-1.0.pkg
+	if pkgToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, fmt.Sprintf(`(?i)%s(.*)\.pkg$`, assemblyName), `(?i)\.pkg$`); err == nil && pkgToExport.path != "" {
+		return pkgToExport.path, err
+	} else if latestPath, err := pkgToExport.exportLatest(); err == nil && latestPath != "" {
+		log.Warnf("No pkg generated during build")
+		log.Printf("Exporting: %s", latestPath)
+		return latestPath, nil
+	}
 
-	return exportLatest(outputDir, startTime, endTime, fmt.Sprintf("%s.*.pkg", assemblyName), ".pkg")
-	/*
-		pattern := filepath.Join(outputDir, "*.pkg")
-		pkgs, err := filepath.Glob(pattern)
-		if err != nil {
-			return "", fmt.Errorf("failed to find pkg with pattern (%s), error: %s", pattern, err)
+	log.Printf("")
+	log.Warnf("Switching to legacy exporter")
+	log.Printf("")
+
+	pattern := filepath.Join(outputDir, "*.pkg")
+	pkgs, err := filepath.Glob(pattern)
+	if err != nil {
+		return "", fmt.Errorf("failed to find pkg with pattern (%s), error: %s", pattern, err)
+	}
+	if len(pkgs) == 0 {
+		return "", nil
+	}
+
+	rePattern := fmt.Sprintf("%s.*.pkg", assemblyName)
+	re := regexp.MustCompile(rePattern)
+
+	filteredPKGs := []string{}
+	for _, pkg := range pkgs {
+		if match := re.FindString(pkg); match != "" {
+			filteredPKGs = append(filteredPKGs, pkg)
 		}
-		if len(pkgs) == 0 {
-			return "", nil
-		}
+	}
 
-		rePattern := fmt.Sprintf("%s.*.pkg", assemblyName)
-		re := regexp.MustCompile(rePattern)
+	if len(filteredPKGs) == 0 {
+		filteredPKGs = pkgs
+	}
 
-		filteredPKGs := []string{}
-		for _, pkg := range pkgs {
-			if match := re.FindString(pkg); match != "" {
-				filteredPKGs = append(filteredPKGs, pkg)
-			}
-		}
+	if len(filteredPKGs) == 0 {
+		log.Errorf("Legacy exporter failed to find pkg in (%s)", outputDir)
+		return "", nil
+	}
 
-		if len(filteredPKGs) == 0 {
-			filteredPKGs = pkgs
-		}
-
-		if len(filteredPKGs) == 0 {
-			return "", nil
-		}
-
-		return filteredPKGs[0], nil*/
+	return filteredPKGs[0], nil
 }
 
 func exportApp(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
-	// Multiplatform/Mac/bin/Release/Multiplatform.Mac.app
-	// xamarin-sample-app/iOS/bin/iPhoneSimulator/Debug/XamarinSampleApp.iOS.app
+	if appToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, fmt.Sprintf(`(?i)%s\.app$`, assemblyName), `(?i)\.app$`); err == nil && appToExport.path != "" {
+		return appToExport.path, err
+	} else if latestPath, err := appToExport.exportLatest(); err == nil && latestPath != "" {
+		log.Warnf("No app generated during build")
+		log.Printf("Exporting: %s", latestPath)
+		return latestPath, nil
+	}
 
-	return exportLatest(outputDir, startTime, endTime, fmt.Sprintf("%s.app", assemblyName), ".app")
+	log.Printf("")
+	log.Warnf("Switching to legacy exporter")
+	log.Printf("")
 
-	/*
-		pattern := filepath.Join(outputDir, "*.app")
-		apps, err := filepath.Glob(pattern)
-		if err != nil {
-			return "", fmt.Errorf("failed to find app with pattern (%s), error: %s", pattern, err)
+	pattern := filepath.Join(outputDir, "*.app")
+	apps, err := filepath.Glob(pattern)
+	if err != nil {
+		return "", fmt.Errorf("failed to find app with pattern (%s), error: %s", pattern, err)
+	}
+	if len(apps) == 0 {
+		return "", nil
+	}
+
+	rePattern := fmt.Sprintf("%s.app", assemblyName)
+	re := regexp.MustCompile(rePattern)
+
+	filteredAPPs := []string{}
+	for _, app := range apps {
+		if match := re.FindString(app); match != "" {
+			filteredAPPs = append(filteredAPPs, app)
 		}
-		if len(apps) == 0 {
-			return "", nil
-		}
+	}
 
-		rePattern := fmt.Sprintf("%s.app", assemblyName)
-		re := regexp.MustCompile(rePattern)
+	if len(filteredAPPs) == 0 {
+		filteredAPPs = apps
+	}
 
-		filteredAPPs := []string{}
-		for _, app := range apps {
-			if match := re.FindString(app); match != "" {
-				filteredAPPs = append(filteredAPPs, app)
-			}
-		}
+	if len(filteredAPPs) == 0 {
+		log.Errorf("Legacy exporter failed to find app in (%s)", outputDir)
+		return "", nil
+	}
 
-		if len(filteredAPPs) == 0 {
-			filteredAPPs = apps
-		}
-
-		if len(filteredAPPs) == 0 {
-			return "", nil
-		}
-
-		return filteredAPPs[0], nil*/
+	return filteredAPPs[0], nil
 }
 
 func exportDLL(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
-	// xamarin-sample-app/UITests/bin/Release/XamarinSampleApp.UITests.dll
-	return exportLatest(outputDir, startTime, endTime, fmt.Sprintf("%s.dll", assemblyName), ".dll")
+	if dllToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, fmt.Sprintf(`(?i)%s\.dll$`, assemblyName), `(?i)\.dll$`); err == nil && dllToExport.path != "" {
+		return dllToExport.path, err
+	} else if latestPath, err := dllToExport.exportLatest(); err == nil && latestPath != "" {
+		log.Warnf("No dll generated during build")
+		log.Printf("Exporting: %s", latestPath)
+		return latestPath, nil
+	}
 
-	/*
-		pattern := filepath.Join(outputDir, "*.dll")
-		dlls, err := filepath.Glob(pattern)
-		if err != nil {
-			return "", fmt.Errorf("failed to find dll with pattern (%s), error: %s", pattern, err)
+	log.Printf("")
+	log.Warnf("Switching to legacy exporter")
+	log.Printf("")
+
+	pattern := filepath.Join(outputDir, "*.dll")
+	dlls, err := filepath.Glob(pattern)
+	if err != nil {
+		return "", fmt.Errorf("failed to find dll with pattern (%s), error: %s", pattern, err)
+	}
+	if len(dlls) == 0 {
+		return "", nil
+	}
+
+	rePattern := fmt.Sprintf("%s.dll", assemblyName)
+	re := regexp.MustCompile(rePattern)
+
+	filteredDLLs := []string{}
+	for _, dll := range dlls {
+		if match := re.FindString(dll); match != "" {
+			filteredDLLs = append(filteredDLLs, dll)
 		}
-		if len(dlls) == 0 {
-			return "", nil
-		}
+	}
 
-		rePattern := fmt.Sprintf("%s.dll", assemblyName)
-		re := regexp.MustCompile(rePattern)
+	if len(filteredDLLs) == 0 {
+		filteredDLLs = dlls
+	}
 
-		filteredDLLs := []string{}
-		for _, dll := range dlls {
-			if match := re.FindString(dll); match != "" {
-				filteredDLLs = append(filteredDLLs, dll)
-			}
-		}
+	if len(filteredDLLs) == 0 {
+		log.Errorf("Legacy exporter failed to find DLL in (%s)", outputDir)
+		return "", nil
+	}
 
-		if len(filteredDLLs) == 0 {
-			filteredDLLs = dlls
-		}
-
-		if len(filteredDLLs) == 0 {
-			return "", nil
-		}
-
-		return filteredDLLs[0], nil*/
+	return filteredDLLs[0], nil
 }
