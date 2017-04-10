@@ -323,7 +323,7 @@ func exportFrameworkDSYMs(outputDir string) ([]string, error) {
 }
 
 func exportPKG(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
-	if pkgToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, fmt.Sprintf(`(?i)%s(.*)\.pkg$`, assemblyName), `(?i)\.pkg$`); err == nil && pkgToExport.path != "" {
+	if pkgToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, fmt.Sprintf(`(?i)%s\.pkg$`, assemblyName), `(?i)\.pkg$`); err == nil && pkgToExport.path != "" {
 		return pkgToExport.path, err
 	} else if latestPath, err := pkgToExport.exportLatest(); err == nil && latestPath != "" {
 		log.Warnf("No pkg generated during build")
