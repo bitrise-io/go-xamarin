@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/bitrise-tools/go-xamarin",
-	"GoVersion": "go1.7",
+	"GoVersion": "go1.8",
 	"GodepVersion": "v79",
 	"Packages": [
 		"./..."
@@ -8,35 +8,35 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/builtinutil",
-			"Rev": "cbb1f9452a8f0ac0770abfa15709e627f167e1b7"
+			"Rev": "9c30a7825aa1064e423a0f1dba751fec990b07be"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/colorstring",
-			"Rev": "cbb1f9452a8f0ac0770abfa15709e627f167e1b7"
+			"Rev": "9c30a7825aa1064e423a0f1dba751fec990b07be"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/command",
-			"Rev": "cbb1f9452a8f0ac0770abfa15709e627f167e1b7"
+			"Rev": "9c30a7825aa1064e423a0f1dba751fec990b07be"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/errorutil",
-			"Rev": "cbb1f9452a8f0ac0770abfa15709e627f167e1b7"
+			"Rev": "9c30a7825aa1064e423a0f1dba751fec990b07be"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/fileutil",
-			"Rev": "cbb1f9452a8f0ac0770abfa15709e627f167e1b7"
+			"Rev": "9c30a7825aa1064e423a0f1dba751fec990b07be"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/log",
-			"Rev": "cbb1f9452a8f0ac0770abfa15709e627f167e1b7"
+			"Rev": "9c30a7825aa1064e423a0f1dba751fec990b07be"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/pathutil",
-			"Rev": "cbb1f9452a8f0ac0770abfa15709e627f167e1b7"
+			"Rev": "9c30a7825aa1064e423a0f1dba751fec990b07be"
 		},
 		{
 			"ImportPath": "github.com/bitrise-io/go-utils/testutil",
-			"Rev": "cbb1f9452a8f0ac0770abfa15709e627f167e1b7"
+			"Rev": "9c30a7825aa1064e423a0f1dba751fec990b07be"
 		},
 		{
 			"ImportPath": "github.com/davecgh/go-spew/spew",
@@ -60,12 +60,12 @@
 		},
 		{
 			"ImportPath": "github.com/urfave/cli",
-			"Comment": "v1.19.1-21-g347a988",
-			"Rev": "347a9884a87374d000eec7e6445a34487c1f4a2b"
+			"Comment": "v1.19.1-36-gd70f47e",
+			"Rev": "d70f47eeca3afd795160003bc6e28b001d60c67c"
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
-			"Rev": "4c78c975fe7c825c6d1466c42be594d1d6f3aba6"
+			"Rev": "cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b"
 		}
 	]
 }
