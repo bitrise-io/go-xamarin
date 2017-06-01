@@ -28,13 +28,13 @@ func (builder Model) buildSolutionCommand(configuration, platform string) (tools
 		command.SetPlatform(platform)
 		buildCommand = command
 	} else {
-		var command xbuild.Model
+		var command *xbuild.Model
 		var err error
 
 		if builder.buildTool == buildtools.Msbuild {
-			command, err := msbuild.New(builder.solution.Pth, "")
+			command, err = msbuild.New(builder.solution.Pth, "")
 		} else {
-			command, err := xbuild.New(builder.solution.Pth, "")
+			command, err = xbuild.New(builder.solution.Pth, "")
 		}
 
 		if err != nil {
@@ -97,17 +97,17 @@ func (builder Model) buildProjectCommand(configuration, platform string, proj pr
 				buildCommands = append(buildCommands, command)
 			}
 		} else {
-			var command xbuild.Model
+			var command *xbuild.Model
 			var err error
 
 			if builder.buildTool == buildtools.Msbuild {
-				command, err := msbuild.New(builder.solution.Pth, "")
+				command, err = msbuild.New(builder.solution.Pth, "")
 			} else {
-				command, err := xbuild.New(builder.solution.Pth, "")
+				command, err = xbuild.New(builder.solution.Pth, "")
 			}
 
 			if err != nil {
-				return nil, tools.EmptyCommand{}, err
+				return []tools.Runnable{}, warnings, err
 			}
 
 			command.SetTarget("Build")
@@ -147,17 +147,17 @@ func (builder Model) buildProjectCommand(configuration, platform string, proj pr
 
 			buildCommands = append(buildCommands, command)
 		} else {
-			var command xbuild.Model
+			var command *xbuild.Model
 			var err error
 
 			if builder.buildTool == buildtools.Msbuild {
-				command, err := msbuild.New(builder.solution.Pth, "")
+				command, err = msbuild.New(builder.solution.Pth, "")
 			} else {
-				command, err := xbuild.New(builder.solution.Pth, "")
+				command, err = xbuild.New(builder.solution.Pth, "")
 			}
 
 			if err != nil {
-				return nil, tools.EmptyCommand{}, err
+				return []tools.Runnable{}, warnings, err
 			}
 
 			command.SetTarget("Build")
@@ -168,17 +168,17 @@ func (builder Model) buildProjectCommand(configuration, platform string, proj pr
 			buildCommands = append(buildCommands, command)
 		}
 	case constants.SDKAndroid:
-		var command xbuild.Model
+		var command *xbuild.Model
 		var err error
 
 		if builder.buildTool == buildtools.Msbuild {
-			command, err := msbuild.New(builder.solution.Pth, proj.Pth)
+			command, err = msbuild.New(builder.solution.Pth, proj.Pth)
 		} else {
-			command, err := xbuild.New(builder.solution.Pth, proj.Pth)
+			command, err = xbuild.New(builder.solution.Pth, proj.Pth)
 		}
 
 		if err != nil {
-			return nil, tools.EmptyCommand{}, err
+			return []tools.Runnable{}, warnings, err
 		}
 
 		if projectConfig.SignAndroid {
@@ -214,16 +214,35 @@ func (builder Model) buildXamarinUITestProjectCommand(configuration, platform st
 		warnings = append(warnings, fmt.Sprintf("project (%s) contains mapping for solution config (%s), but does not have project configuration", proj.Name, solutionConfig))
 	}
 
-	command, err := mdtool.New(builder.solution.Pth)
-	if err != nil {
-		return tools.EmptyCommand{}, warnings, err
+	var runnable tools.Runnable
+
+	if builder.buildTool == buildtools.Mdtool {
+		command, err := mdtool.New(builder.solution.Pth)
+		if err != nil {
+			return nil, warnings, err
+		}
+
+		command.SetTarget("build")
+		command.SetConfiguration(projectConfig.Configuration)
+		command.SetProjectName(proj.Name)
+		runnable = command
+	} else {
+		var command *xbuild.Model
+		var err error
+
+		if builder.buildTool == buildtools.Msbuild {
+			command, err = msbuild.New(builder.solution.Pth, proj.Pth)
+		} else {
+			command, err = xbuild.New(builder.solution.Pth, proj.Pth)
+		}
+
+		if err != nil {
+			return nil, warnings, err
+		}
+		runnable = command
 	}
 
-	command.SetTarget("build")
-	command.SetConfiguration(projectConfig.Configuration)
-	command.SetProjectName(proj.Name)
-
-	return command, warnings, nil
+	return runnable, warnings, nil
 }
 
 func (builder Model) buildNunitTestProjectCommand(configuration, platform string, proj project.Model, nunitConsolePth string) (tools.Runnable, []string, error) {
@@ -243,7 +262,7 @@ func (builder Model) buildNunitTestProjectCommand(configuration, platform string
 
 	command, err := nunit.New(nunitConsolePth)
 	if err != nil {
-		return tools.EmptyCommand{}, warnings, err
+		return nil, warnings, err
 	}
 
 	command.SetProjectPth(proj.Pth)

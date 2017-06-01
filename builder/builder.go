@@ -446,7 +446,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 			}
 		case constants.SDKMacOS:
 			if builder.buildTool == buildtools.Mdtool {
-				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName); err != nil {
+				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName, startTime, endTime); err != nil {
 					return ProjectOutputMap{}, err
 				} else if xcarchivePth != "" {
 					projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{

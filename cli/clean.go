@@ -6,6 +6,7 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-tools/go-xamarin/analyzers/project"
 	"github.com/bitrise-tools/go-xamarin/builder"
+	"github.com/bitrise-tools/go-xamarin/tools/buildtools"
 	"github.com/urfave/cli"
 )
 
@@ -21,7 +22,9 @@ func cleanCmd(c *cli.Context) error {
 		return fmt.Errorf("missing required input: %s", solutionFilePathKey)
 	}
 
-	builder, err := builder.New(solutionPth, nil, false)
+	buildTool := buildtools.Xbuild
+
+	builder, err := builder.New(solutionPth, nil, buildTool)
 	if err != nil {
 		return err
 	}
