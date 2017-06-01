@@ -21,8 +21,8 @@ func TestNew(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, xbuild)
 
-		require.Equal(t, constants.XbuildPath, xbuild.buildTool)
-		require.Equal(t, filepath.Join(currentDir, "solution.sln"), xbuild.solutionPth)
+		require.Equal(t, constants.XbuildPath, xbuild.BuildTool)
+		require.Equal(t, filepath.Join(currentDir, "solution.sln"), xbuild.SolutionPth)
 		require.Equal(t, "", xbuild.configuration)
 		require.Equal(t, "", xbuild.platform)
 		require.Equal(t, "", xbuild.target)
@@ -42,9 +42,9 @@ func TestNew(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, xbuild)
 
-		require.Equal(t, constants.XbuildPath, xbuild.buildTool)
-		require.Equal(t, filepath.Join(currentDir, "solution.sln"), xbuild.solutionPth)
-		require.Equal(t, filepath.Join(currentDir, "project.csproj"), xbuild.projectPth)
+		require.Equal(t, constants.XbuildPath, xbuild.BuildTool)
+		require.Equal(t, filepath.Join(currentDir, "solution.sln"), xbuild.SolutionPth)
+		require.Equal(t, filepath.Join(currentDir, "project.csproj"), xbuild.ProjectPth)
 		require.Equal(t, "", xbuild.configuration)
 		require.Equal(t, "", xbuild.platform)
 		require.Equal(t, "", xbuild.target)
