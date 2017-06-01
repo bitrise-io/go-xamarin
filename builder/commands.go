@@ -20,7 +20,7 @@ func (builder Model) buildSolutionCommand(configuration, platform string) (tools
 	if builder.buildTool == buildtools.Mdtool {
 		command, err := mdtool.New(builder.solution.Pth)
 		if err != nil {
-			return &tools.EmptyCommand{}, err
+			return nil, err
 		}
 
 		command.SetTarget("build")
@@ -38,7 +38,7 @@ func (builder Model) buildSolutionCommand(configuration, platform string) (tools
 		}
 
 		if err != nil {
-			return &tools.EmptyCommand{}, err
+			return nil, err
 		}
 
 		command.SetTarget("Build")
