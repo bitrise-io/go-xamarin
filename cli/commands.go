@@ -7,7 +7,7 @@ const (
 	solutionConfigurationKey string = "configuration"
 	solutionPlatformKey      string = "platform"
 
-	forceMDToolKey string = "force-mdtool"
+	buildToolKey string = "build-tool"
 )
 
 var commands = []cli.Command{
@@ -28,9 +28,9 @@ var commands = []cli.Command{
 				Name:  solutionPlatformKey,
 				Usage: "Solution platform",
 			},
-			cli.BoolFlag{
-				Name:  forceMDToolKey,
-				Usage: "Force use mdtool",
+			cli.StringFlag{
+				Name:  buildToolKey,
+				Usage: "Build Tool to use, available: msbuild, xbuild",
 			},
 		},
 	},
