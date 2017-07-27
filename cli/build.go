@@ -16,14 +16,14 @@ func buildCmd(c *cli.Context) error {
 	solutionPth := c.String(solutionFilePathKey)
 	solutionConfiguration := c.String(solutionConfigurationKey)
 	solutionPlatform := c.String(solutionPlatformKey)
-	forceMdtool := c.Bool(forceMDToolKey)
+	buildToolName := c.String(buildToolKey)
 
 	fmt.Println()
 	log.Infof("Config:")
 	log.Printf("- solution: %s", solutionPth)
 	log.Printf("- configuration: %s", solutionConfiguration)
 	log.Printf("- platform: %s", solutionPlatform)
-	log.Printf("- force-mdtool: %v", forceMdtool)
+	log.Printf("- build-tool: %s", buildToolName)
 
 	if solutionPth == "" {
 		return fmt.Errorf("missing required input: %s", solutionFilePathKey)
@@ -35,9 +35,9 @@ func buildCmd(c *cli.Context) error {
 		return fmt.Errorf("missing required input: %s", solutionPlatformKey)
 	}
 
-	buildTool := buildtools.Xbuild
-	if forceMdtool {
-		buildTool = buildtools.Mdtool
+	buildTool := buildtools.Msbuild
+	if buildToolName == "xbuild" {
+		buildTool = buildtools.Xbuild
 	}
 
 	buildHandler, err := builder.New(solutionPth, nil, buildTool)
