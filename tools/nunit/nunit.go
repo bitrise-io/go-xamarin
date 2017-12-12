@@ -2,6 +2,7 @@ package nunit
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -91,7 +92,7 @@ func (nunitConsole *Model) SetCustomOptions(options ...string) {
 	nunitConsole.customOptions = options
 }
 
-func (nunitConsole *Model) commandSlice() []string {
+func (nunitConsole Model) commandSlice() []string {
 	cmdSlice := []string{constants.MonoPath}
 	cmdSlice = append(cmdSlice, nunitConsole.nunitConsolePth)
 
@@ -125,7 +126,14 @@ func (nunitConsole Model) PrintableCommand() string {
 }
 
 // Run ...
-func (nunitConsole Model) Run() error {
+func (nunitConsole Model) Run(outWriter, errWriter io.Writer) error {
+	if outWriter == nil {
+		outWriter = os.Stdout
+	}
+	if errWriter == nil {
+		errWriter = os.Stderr
+	}
+
 	cmdSlice := nunitConsole.commandSlice()
 
 	command, err := command.NewFromSlice(cmdSlice)
@@ -133,8 +141,8 @@ func (nunitConsole Model) Run() error {
 		return err
 	}
 
-	command.SetStdout(os.Stdout)
-	command.SetStderr(os.Stderr)
+	command.SetStdout(outWriter)
+	command.SetStderr(errWriter)
 
 	return command.Run()
 }

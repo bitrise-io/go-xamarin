@@ -2,6 +2,7 @@ package xbuild
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -81,7 +82,7 @@ func (xbuild *Model) SetCustomOptions(options ...string) {
 	xbuild.customOptions = options
 }
 
-func (xbuild *Model) buildCommandSlice() []string {
+func (xbuild Model) buildCommandSlice() []string {
 	cmdSlice := []string{xbuild.BuildTool}
 
 	if xbuild.ProjectPth != "" {
@@ -120,14 +121,21 @@ func (xbuild *Model) buildCommandSlice() []string {
 }
 
 // PrintableCommand ...
-func (xbuild *Model) PrintableCommand() string {
+func (xbuild Model) PrintableCommand() string {
 	cmdSlice := xbuild.buildCommandSlice()
 
 	return command.PrintableCommandArgs(true, cmdSlice)
 }
 
 // Run ...
-func (xbuild *Model) Run() error {
+func (xbuild Model) Run(outWriter, errWriter io.Writer) error {
+	if outWriter == nil {
+		outWriter = os.Stdout
+	}
+	if errWriter == nil {
+		errWriter = os.Stderr
+	}
+
 	cmdSlice := xbuild.buildCommandSlice()
 
 	command, err := command.NewFromSlice(cmdSlice)
@@ -135,8 +143,8 @@ func (xbuild *Model) Run() error {
 		return err
 	}
 
-	command.SetStdout(os.Stdout)
-	command.SetStderr(os.Stderr)
+	command.SetStdout(outWriter)
+	command.SetStderr(errWriter)
 
 	return command.Run()
 }

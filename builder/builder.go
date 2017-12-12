@@ -2,6 +2,7 @@ package builder
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -22,6 +23,15 @@ type Model struct {
 
 	projectTypeWhitelist []constants.SDK
 	buildTool            buildtools.BuildTool
+
+	outWriter io.Writer
+	errWriter io.Writer
+}
+
+// SetOutputs ...
+func (builder *Model) SetOutputs(outWriter, errWriter io.Writer) {
+	builder.outWriter = outWriter
+	builder.errWriter = errWriter
 }
 
 // OutputModel ...
@@ -139,7 +149,7 @@ func (builder Model) BuildSolution(configuration, platform string, callback Buil
 		callback(builder.solution.Name, "", constants.SDKUnknown, constants.TestFrameworkUnknown, buildCommand.PrintableCommand(), false)
 	}
 
-	return buildCommand.Run()
+	return buildCommand.Run(builder.outWriter, builder.errWriter)
 }
 
 // BuildAllProjects ...
@@ -183,7 +193,7 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 			}
 
 			if !alreadyPerformed {
-				if err := buildCommand.Run(); err != nil {
+				if err := buildCommand.Run(builder.outWriter, builder.errWriter); err != nil {
 					return warnings, err
 				}
 				perfomedCommands = append(perfomedCommands, buildCommand)
@@ -239,7 +249,7 @@ func (builder Model) BuildAllUITestableXamarinProjects(configuration, platform s
 			}
 
 			if !alreadyPerformed {
-				if err := buildCommand.Run(); err != nil {
+				if err := buildCommand.Run(builder.outWriter, builder.errWriter); err != nil {
 					return warnings, err
 				}
 				perfomedCommands = append(perfomedCommands, buildCommand)
@@ -290,7 +300,7 @@ func (builder Model) RunAllXamarinUITests(configuration, platform string, prepar
 		}
 
 		if !alreadyPerformed {
-			if err := buildCommand.Run(); err != nil {
+			if err := buildCommand.Run(builder.outWriter, builder.errWriter); err != nil {
 				return warnings, err
 			}
 			perfomedCommands = append(perfomedCommands, buildCommand)
@@ -363,7 +373,7 @@ func (builder Model) RunAllNunitTestProjects(configuration, platform string, cal
 		}
 
 		if !alreadyPerformed {
-			if err := buildCommand.Run(); err != nil {
+			if err := buildCommand.Run(builder.outWriter, builder.errWriter); err != nil {
 				return warnings, err
 			}
 			perfomedCommands = append(perfomedCommands, buildCommand)

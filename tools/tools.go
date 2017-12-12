@@ -1,10 +1,12 @@
 package tools
 
+import "io"
+
 // Runnable ...
 type Runnable interface {
 	PrintableCommand() string
 	SetCustomOptions(options ...string)
-	Run() error
+	Run(outWriter, errWriter io.Writer) error
 }
 
 // Printable ...
