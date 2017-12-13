@@ -169,7 +169,7 @@ func TestExportApk(t *testing.T) {
 		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
 		require.NoError(t, err)
 
-		output, err := exportApk(tmpDir, "com.bitrise.xamarin.sampleapp", time.Now(), time.Now())
+		output, err := exportApk(tmpDir, "com.bitrise.xamarin.sampleapp", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, "", output)
 	}
@@ -218,9 +218,10 @@ func TestExportApk(t *testing.T) {
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportApk(tmpDir, "com.bitrise.xamarin.sampleapp", time.Now(), time.Now())
+		output, err := exportApk(tmpDir, "com.bitrise.xamarin.sampleapp", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "com.bitrise.xamarin.sampleapp.apk"), output)
 	}
@@ -238,9 +239,10 @@ func TestExportApk(t *testing.T) {
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportApk(tmpDir, "", time.Now(), time.Now())
+		output, err := exportApk(tmpDir, "", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "com.bitrise.xamarin.sampleapp.apk"), output)
 	}
@@ -260,7 +262,7 @@ func TestExportApk(t *testing.T) {
 			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportApk(tmpDir, "", time.Now(), time.Now())
+		output, err := exportApk(tmpDir, "", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "com.bitrise.xamarin.sampleapp-Signed.apk"), output)
 	}
@@ -272,79 +274,19 @@ func TestExportLatestXCArchiveFromXcodeArchives(t *testing.T) {
 		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
 		require.NoError(t, err)
 
-		output, err := exportLatestXCArchive(tmpDir, "XamarinSampleApp.iOS", time.Now(), time.Now())
+		output, err := exportLatestXCArchive(tmpDir, "XamarinSampleApp.iOS", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, "", output)
 	}
 
-	t.Log("it sorts by filename - assembly name test")
+	t.Log("assembly name test")
 	{
 		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
 		require.NoError(t, err)
 
 		archives := []string{
+			"2016-07-10/XamarinSampleApp.iOS 10-07-16 3.41 AM.xcarchive",
 			"2016-07-10/XamarinSampleApp.Mac 10-07-16 4.41 PM.xcarchive", // latest
-			"2016-07-10/XamarinSampleApp.iOS 10-07-16 3.41 AM.xcarchive",
-		}
-
-		for _, archive := range archives {
-			createTestFile(t, tmpDir, archive)
-		}
-
-		output, err := exportLatestXCArchive(tmpDir, "XamarinSampleApp.iOS", time.Now(), time.Now())
-		require.NoError(t, err)
-		require.Equal(t, filepath.Join(tmpDir, "2016-07-10/XamarinSampleApp.iOS 10-07-16 3.41 AM.xcarchive"), output)
-	}
-
-	t.Log("it sorts by filename - am/pm test")
-	{
-		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
-		require.NoError(t, err)
-
-		archives := []string{
-			"2016-07-10/XamarinSampleApp.iOS 10-07-16 4.41 PM.xcarchive", // latest
-			"2016-07-10/XamarinSampleApp.iOS 10-07-16 3.41 AM.xcarchive",
-		}
-
-		for _, archive := range archives {
-			createTestFile(t, tmpDir, archive)
-		}
-
-		output, err := exportLatestXCArchive(tmpDir, "XamarinSampleApp.iOS", time.Now(), time.Now())
-		require.NoError(t, err)
-		require.Equal(t, filepath.Join(tmpDir, "2016-07-10/XamarinSampleApp.iOS 10-07-16 4.41 PM.xcarchive"), output)
-	}
-
-	t.Log("it sorts by filename")
-	{
-		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
-		require.NoError(t, err)
-
-		archives := []string{
-			"2016-07-10/XamarinSampleApp.iOS 10-07-16 4.41 PM.xcarchive", // latest
-			"2016-07-10/XamarinSampleApp.iOS 10-07-16 3.41 PM 2.xcarchive",
-			"2016-07-10/XamarinSampleApp.iOS 10-07-16 2.41 PM.xcarchive",
-			"2016-07-10/XamarinSampleApp.iOS 10-07-16 1.41 PM.xcarchive",
-		}
-
-		for _, archive := range archives {
-			createTestFile(t, tmpDir, archive)
-		}
-
-		output, err := exportLatestXCArchive(tmpDir, "XamarinSampleApp.iOS", time.Now(), time.Now())
-		require.NoError(t, err)
-		require.Equal(t, filepath.Join(tmpDir, "2016-07-10/XamarinSampleApp.iOS 10-07-16 4.41 PM.xcarchive"), output)
-	}
-
-	t.Log("it sorts by filename - even if count number in pth")
-	{
-		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
-		require.NoError(t, err)
-
-		archives := []string{
-			"2016-07-10/XamarinSampleApp.iOS 10-07-16 4.41 PM 4.xcarchive",
-			"2016-07-10/XamarinSampleApp.iOS 10-07-16 4.41 PM.xcarchive",
-			"2016-07-10/XamarinSampleApp.iOS 10-07-16 4.41 PM 2.xcarchive",
 		}
 
 		for _, archive := range archives {
@@ -352,30 +294,9 @@ func TestExportLatestXCArchiveFromXcodeArchives(t *testing.T) {
 			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportLatestXCArchive(tmpDir, "XamarinSampleApp.iOS", time.Now(), time.Now())
+		output, err := exportLatestXCArchive(tmpDir, "XamarinSampleApp.iOS", time.Time{}, time.Time{})
 		require.NoError(t, err)
-		require.Equal(t, filepath.Join(tmpDir, "2016-07-10/XamarinSampleApp.iOS 10-07-16 4.41 PM 2.xcarchive"), output)
-	}
-
-	t.Log("it sorts by dirname")
-	{
-		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
-		require.NoError(t, err)
-
-		archives := []string{
-			"2016-07-10/XamarinSampleApp.iOS 10-07-16 4.41 PM.xcarchive", // latest
-			"2016-06-10/XamarinSampleApp.iOS 10-07-16 4.41 PM.xcarchive",
-			"2016-05-10/XamarinSampleApp.iOS 10-07-16 4.41 PM.xcarchive",
-			"2016-04-10/XamarinSampleApp.iOS 10-07-16 4.41 PM.xcarchive",
-		}
-
-		for _, archive := range archives {
-			createTestFile(t, tmpDir, archive)
-		}
-
-		output, err := exportLatestXCArchive(tmpDir, "XamarinSampleApp.iOS", time.Now(), time.Now())
-		require.NoError(t, err)
-		require.Equal(t, filepath.Join(tmpDir, "2016-07-10/XamarinSampleApp.iOS 10-07-16 4.41 PM.xcarchive"), output)
+		require.Equal(t, filepath.Join(tmpDir, "2016-07-10/XamarinSampleApp.iOS 10-07-16 3.41 AM.xcarchive"), output)
 	}
 
 	t.Log("it retruns latest xcarchive if assembly name empty")
@@ -395,7 +316,7 @@ func TestExportLatestXCArchiveFromXcodeArchives(t *testing.T) {
 			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportLatestXCArchive(tmpDir, "", time.Now(), time.Now())
+		output, err := exportLatestXCArchive(tmpDir, "", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "2016-07-10/a 10-07-16 3.45 PM.xcarchive"), output)
 	}
@@ -407,7 +328,7 @@ func TestExportLatestIpa(t *testing.T) {
 		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
 		require.NoError(t, err)
 
-		output, err := exportLatestIpa(tmpDir, "XamarinSampleApp.iOS", time.Now(), time.Now())
+		output, err := exportLatestIpa(tmpDir, "XamarinSampleApp.iOS", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, "", output)
 	}
@@ -427,7 +348,7 @@ func TestExportLatestIpa(t *testing.T) {
 			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportLatestIpa(tmpDir, "Multiplatform.iOS", time.Now(), time.Now())
+		output, err := exportLatestIpa(tmpDir, "Multiplatform.iOS", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.iOS 2016-09-06 11-45-23 2/Multiplatform.iOS.ipa"), output)
 	}
@@ -438,17 +359,18 @@ func TestExportLatestIpa(t *testing.T) {
 		require.NoError(t, err)
 
 		archives := []string{
-			"Multiplatform.iOS 2016-10-06 11-45-23/Multiplatform.iOS.ipa", // latest
 			"Multiplatform.iOS 2016-09-06 11-45-23 2/Multiplatform.iOS.ipa",
 			"Multiplatform.iOS 2016-08-06 11-45-23/Multiplatform.iOS.ipa",
 			"Multiplatform.iOS 2016-07-06 17-45-23/Multiplatform.iOS.ipa",
+			"Multiplatform.iOS 2016-10-06 11-45-23/Multiplatform.iOS.ipa", // latest
 		}
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportLatestIpa(tmpDir, "Multiplatform.iOS", time.Now(), time.Now())
+		output, err := exportLatestIpa(tmpDir, "Multiplatform.iOS", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.iOS 2016-10-06 11-45-23/Multiplatform.iOS.ipa"), output)
 	}
@@ -459,15 +381,16 @@ func TestExportLatestIpa(t *testing.T) {
 		require.NoError(t, err)
 
 		archives := []string{
-			"Multiplatform.iOS 2016-10-06 11-45-23 2/Multiplatform.iOS.ipa", // latest
 			"Multiplatform.iOS 2016-10-06 11-45-23/Multiplatform.iOS.ipa",
+			"Multiplatform.iOS 2016-10-06 11-45-23 2/Multiplatform.iOS.ipa", // latest
 		}
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportLatestIpa(tmpDir, "Multiplatform.iOS", time.Now(), time.Now())
+		output, err := exportLatestIpa(tmpDir, "Multiplatform.iOS", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.iOS 2016-10-06 11-45-23 2/Multiplatform.iOS.ipa"), output)
 	}
@@ -485,12 +408,12 @@ func TestExportLatestIpa(t *testing.T) {
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
-		time.Sleep(1 * time.Second)
 		createTestFile(t, tmpDir, "a 2016-10-06 11-45-25/Multiplatform.iOS.ipa")
 
-		output, err := exportLatestIpa(tmpDir, "", time.Now(), time.Now())
+		output, err := exportLatestIpa(tmpDir, "", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "a 2016-10-06 11-45-25/Multiplatform.iOS.ipa"), output)
 	}
@@ -501,15 +424,16 @@ func TestExportLatestIpa(t *testing.T) {
 		require.NoError(t, err)
 
 		archives := []string{
-			"a 2017-01-02 11-45-25/Multiplatform.iOS.ipa",
 			"Multiplatform.iOS.ipa",
+			"a 2017-01-02 11-45-25/Multiplatform.iOS.ipa",
 		}
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportLatestIpa(tmpDir, "", time.Now(), time.Now())
+		output, err := exportLatestIpa(tmpDir, "", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "a 2017-01-02 11-45-25/Multiplatform.iOS.ipa"), output)
 	}
@@ -525,9 +449,10 @@ func TestExportLatestIpa(t *testing.T) {
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportLatestIpa(tmpDir, "", time.Now(), time.Now())
+		output, err := exportLatestIpa(tmpDir, "", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.iOS.ipa"), output)
 	}
@@ -539,7 +464,7 @@ func TestExportAppDsym(t *testing.T) {
 		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
 		require.NoError(t, err)
 
-		output, err := exportAppDSYM(tmpDir, "Multiplatform.iOS", time.Now(), time.Now())
+		output, err := exportAppDSYM(tmpDir, "Multiplatform.iOS", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, "", output)
 	}
@@ -556,9 +481,10 @@ func TestExportAppDsym(t *testing.T) {
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportAppDSYM(tmpDir, "Multiplatform.iOS", time.Now(), time.Now())
+		output, err := exportAppDSYM(tmpDir, "Multiplatform.iOS", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.iOS.app.dSYM"), output)
 	}
@@ -578,9 +504,10 @@ func TestExportAppDsym(t *testing.T) {
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportAppDSYM(tmpDir, "Multiplatform.iOS", time.Now(), time.Now())
+		output, err := exportAppDSYM(tmpDir, "Multiplatform.iOS", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.iOS.app.dSYM"), output)
 	}
@@ -599,9 +526,10 @@ func TestExportAppDsym(t *testing.T) {
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportAppDSYM(tmpDir, "", time.Now(), time.Now())
+		output, err := exportAppDSYM(tmpDir, "", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.iOS.app.dSYM"), output)
 	}
@@ -633,6 +561,7 @@ func TestExportFrameworkDsyms(t *testing.T) {
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
 		output, err := exportFrameworkDSYMs(tmpDir)
@@ -647,7 +576,7 @@ func TestExportPKG(t *testing.T) {
 		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
 		require.NoError(t, err)
 
-		output, err := exportPKG(tmpDir, "Multiplatform.Mac", time.Now(), time.Now())
+		output, err := exportPKG(tmpDir, "Multiplatform.Mac", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, "", output)
 	}
@@ -664,9 +593,10 @@ func TestExportPKG(t *testing.T) {
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportPKG(tmpDir, "Multiplatform.Mac", time.Now(), time.Now())
+		output, err := exportPKG(tmpDir, "Multiplatform.Mac", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac-1.0.pkg"), output)
 	}
@@ -684,9 +614,10 @@ func TestExportPKG(t *testing.T) {
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportPKG(tmpDir, "Multiplatform.Mac", time.Now(), time.Now())
+		output, err := exportPKG(tmpDir, "Multiplatform.Mac", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac-1.0.pkg"), output)
 	}
@@ -704,9 +635,10 @@ func TestExportPKG(t *testing.T) {
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportPKG(tmpDir, "Multiplatform.Mac", time.Now(), time.Now())
+		output, err := exportPKG(tmpDir, "Multiplatform.Mac", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac-1.0.pkg"), output)
 	}
@@ -718,7 +650,7 @@ func TestExportApp(t *testing.T) {
 		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
 		require.NoError(t, err)
 
-		output, err := exportApp(tmpDir, "Multiplatform.Mac", time.Now(), time.Now())
+		output, err := exportApp(tmpDir, "Multiplatform.Mac", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, "", output)
 	}
@@ -735,9 +667,10 @@ func TestExportApp(t *testing.T) {
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportApp(tmpDir, "Multiplatform.Mac", time.Now(), time.Now())
+		output, err := exportApp(tmpDir, "Multiplatform.Mac", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac.app"), output)
 	}
@@ -755,9 +688,10 @@ func TestExportApp(t *testing.T) {
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportApp(tmpDir, "Multiplatform.Mac", time.Now(), time.Now())
+		output, err := exportApp(tmpDir, "Multiplatform.Mac", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac.app"), output)
 	}
@@ -775,9 +709,10 @@ func TestExportApp(t *testing.T) {
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportApp(tmpDir, "Multiplatform.Mac", time.Now(), time.Now())
+		output, err := exportApp(tmpDir, "Multiplatform.Mac", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac.app"), output)
 	}
@@ -789,7 +724,7 @@ func TestExportDLL(t *testing.T) {
 		tmpDir, err := pathutil.NormalizedOSTempDirPath("utility_test")
 		require.NoError(t, err)
 
-		output, err := exportDLL(tmpDir, "Multiplatform.Mac", time.Now(), time.Now())
+		output, err := exportDLL(tmpDir, "Multiplatform.Mac", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, "", output)
 	}
@@ -806,9 +741,10 @@ func TestExportDLL(t *testing.T) {
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportDLL(tmpDir, "Multiplatform.Mac", time.Now(), time.Now())
+		output, err := exportDLL(tmpDir, "Multiplatform.Mac", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac.dll"), output)
 	}
@@ -826,9 +762,10 @@ func TestExportDLL(t *testing.T) {
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportDLL(tmpDir, "Multiplatform.Mac", time.Now(), time.Now())
+		output, err := exportDLL(tmpDir, "Multiplatform.Mac", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac.dll"), output)
 	}
@@ -846,9 +783,10 @@ func TestExportDLL(t *testing.T) {
 
 		for _, archive := range archives {
 			createTestFile(t, tmpDir, archive)
+			time.Sleep(1 * time.Second)
 		}
 
-		output, err := exportDLL(tmpDir, "Multiplatform.Mac", time.Now(), time.Now())
+		output, err := exportDLL(tmpDir, "Multiplatform.Mac", time.Time{}, time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "Multiplatform.Mac.dll"), output)
 	}

@@ -17,11 +17,67 @@ import (
 	"github.com/bitrise-tools/go-xamarin/utility"
 )
 
-// Export ...
-type Export struct {
-	path      string
-	patterns  []string
-	outputDir string
+// FileInfoWithPath ...
+type FileInfoWithPath struct {
+	modTime time.Time
+	path    string
+}
+
+func fileInfos(dir string) ([]FileInfoWithPath, error) {
+	fileInfos := []FileInfoWithPath{}
+
+	if err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		fileInfos = append(fileInfos, FileInfoWithPath{info.ModTime(), path})
+
+		return nil
+	}); err != nil {
+		return []FileInfoWithPath{}, err
+	}
+
+	return fileInfos, nil
+}
+
+func isInTimeInterval(modTime, startTime, endTime time.Time) bool {
+	return (modTime.After(startTime) || modTime.Equal(startTime)) && (modTime.Before(endTime) || modTime.Equal(endTime))
+}
+
+func filterFilesInfosForTimeWindow(fileInfos []FileInfoWithPath, startTime, endTime time.Time) []FileInfoWithPath {
+	if startTime.IsZero() || endTime.IsZero() || startTime.Equal(endTime) {
+		return []FileInfoWithPath{}
+	}
+
+	filteredFileInfos := []FileInfoWithPath{}
+
+	for _, fileInfo := range fileInfos {
+		if isInTimeInterval(fileInfo.modTime, startTime, endTime) {
+			filteredFileInfos = append(filteredFileInfos, fileInfo)
+		}
+	}
+
+	return filteredFileInfos
+}
+
+func findLastModifiedWithRegexps(fileInfos []FileInfoWithPath, regexps ...*regexp.Regexp) *FileInfoWithPath {
+	var lastModTime time.Time
+	latestFileInfo := new(FileInfoWithPath)
+
+	for _, re := range regexps {
+		for _, fileInfo := range fileInfos {
+			fileName := filepath.Base(fileInfo.path)
+			if match := re.FindString(fileName); match == fileName {
+				if lastModTime.IsZero() || fileInfo.modTime.After(lastModTime) {
+					lastModTime = fileInfo.modTime
+					*latestFileInfo = fileInfo
+				}
+			}
+		}
+	}
+
+	return latestFileInfo
 }
 
 func validateSolutionPth(pth string) error {
@@ -123,13 +179,46 @@ func androidPackageNameFromManifestContent(manifestContent string) (string, erro
 	return result.Manifest.Package, nil
 }
 
+func exportLastModifiedArtifact(dir string, startTime, endTime time.Time, patterns ...string) (string, error) {
+	regexps := make([]*regexp.Regexp, len(patterns))
+	for i, pattern := range patterns {
+		regexps[i] = regexp.MustCompile(pattern)
+	}
+
+	fileInfos, err := fileInfos(dir)
+	if err != nil {
+		return "", err
+	}
+
+	var fileInfo *FileInfoWithPath
+
+	if fileInfosInTimeWindow := filterFilesInfosForTimeWindow(fileInfos, startTime, endTime); len(fileInfosInTimeWindow) > 0 {
+		fileInfo = findLastModifiedWithRegexps(fileInfosInTimeWindow, regexps...)
+	}
+
+	if fileInfo == nil {
+		fileInfo = findLastModifiedWithRegexps(fileInfos, regexps...)
+	}
+
+	if fileInfo != nil {
+		return fileInfo.path, nil
+	}
+	return "", nil
+}
+
 func exportApk(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
-	if apkToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, fmt.Sprintf(`(?i)%s.*signed\.apk$`, assemblyName), fmt.Sprintf(`(?i)%s\.apk$`, assemblyName), `(?i)signed\.apk$`, `(?i)\.apk$`); err == nil && apkToExport.path != "" {
-		return apkToExport.path, err
-	} else if latestPath, err := apkToExport.exportLatest(); err == nil && latestPath != "" {
-		log.Warnf("No apk generated during build")
-		log.Printf("Exporting latest generated apk: %s", latestPath)
-		return latestPath, nil
+	artificatPth, err := exportLastModifiedArtifact(outputDir, startTime, endTime,
+		fmt.Sprintf(`(?i)%s.*signed\.apk$`, assemblyName),
+		fmt.Sprintf(`(?i)%s\.apk$`, assemblyName),
+	)
+	if err != nil {
+		return "", err
+	}
+
+	fmt.Printf("artificatPth: %s\n", artificatPth)
+
+	if len(artificatPth) > 0 {
+		return artificatPth, nil
 	}
 
 	log.Printf("")
@@ -175,24 +264,34 @@ func exportApk(outputDir, assemblyName string, startTime, endTime time.Time) (st
 }
 
 func exportLatestIpa(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
-	if ipaToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, fmt.Sprintf(`(?i)%s\.ipa$`, assemblyName), `(?i)\.ipa$`); err == nil && ipaToExport.path != "" {
-		return ipaToExport.path, err
-	} else if latestPath, err := ipaToExport.exportLatest(); err == nil && latestPath != "" {
-		log.Warnf("No ipa generated during build")
-		log.Printf("Exporting latest generated ipa: %s", latestPath)
-		return latestPath, nil
+	artificatPth, err := exportLastModifiedArtifact(outputDir, startTime, endTime,
+		fmt.Sprintf(`(?i).*%s.*\.ipa$`, assemblyName),
+		`(?i)\.ipa$`,
+	)
+	if err != nil {
+		return "", err
 	}
+
+	if len(artificatPth) > 0 {
+		return artificatPth, nil
+	}
+
 	return "", nil
 }
 
 func exportLatestXCArchive(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
-	if archiveToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, fmt.Sprintf(`(?i)%s.*\.xcarchive$`, assemblyName), `(?i)\.xcarchive$`); err == nil && archiveToExport.path != "" {
-		return archiveToExport.path, err
-	} else if latestPath, err := archiveToExport.exportLatest(); err == nil && latestPath != "" {
-		log.Warnf("No xcarchive generated during build")
-		log.Printf("Exporting latest generated xcarchive: %s", latestPath)
-		return latestPath, nil
+	artificatPth, err := exportLastModifiedArtifact(outputDir, startTime, endTime,
+		fmt.Sprintf(`(?i).*%s.*\.xcarchive$`, assemblyName),
+		fmt.Sprintf(`(?i)\.xcarchive$`),
+	)
+	if err != nil {
+		return "", err
 	}
+
+	if len(artificatPth) > 0 {
+		return artificatPth, nil
+	}
+
 	return "", nil
 }
 
@@ -211,72 +310,17 @@ func exportLatestXCArchiveFromXcodeArchives(assemblyName string, startTime, endT
 	return exportLatestXCArchive(xcodeArchivesDir, assemblyName, startTime, endTime)
 }
 
-func (export *Export) exportLatest() (string, error) {
-	var lastModTime time.Time
-	var latestPth string
-
-	for _, pattern := range export.patterns {
-		if latestPth != "" {
-			break
-		}
-		re := regexp.MustCompile(pattern)
-		if err := filepath.Walk(export.outputDir, func(path string, info os.FileInfo, err error) error {
-			if re.FindString(path) != "" {
-				if latestPth == "" {
-					lastModTime = info.ModTime()
-				} else if lastModTime.After(info.ModTime()) {
-					return nil
-				}
-				lastModTime = info.ModTime()
-				latestPth = path
-			}
-			return nil
-		}); err != nil {
-			return "", err
-		}
-	}
-	return latestPth, nil
-}
-
-func exportLatestModifiedWithinTimeInterval(outputDir string, startTime, endTime time.Time, patterns ...string) (*Export, error) {
-	var lastModTime time.Time
-	var latestPth string
-
-	for _, pattern := range patterns {
-
-		if latestPth != "" {
-			break
-		}
-		re := regexp.MustCompile(pattern)
-		if err := filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
-			if re.FindString(path) != "" && isInTimeInterval(info.ModTime(), startTime, endTime) {
-				if latestPth == "" {
-					lastModTime = info.ModTime()
-				} else if lastModTime.After(info.ModTime()) {
-					return nil
-				}
-				lastModTime = info.ModTime()
-				latestPth = path
-			}
-			return nil
-		}); err != nil {
-			return nil, err
-		}
-	}
-	return &Export{path: latestPth, patterns: patterns, outputDir: outputDir}, nil
-}
-
-func isInTimeInterval(modTime, startTime, endTime time.Time) bool {
-	return (modTime.After(startTime) || modTime.Equal(startTime)) && (modTime.Before(endTime) || modTime.Equal(endTime))
-}
-
 func exportAppDSYM(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
-	if appDSYMToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, fmt.Sprintf(`(?i)%s\.app\.dSYM$`, assemblyName), `(?i)\.app\.dSYM$`); err == nil && appDSYMToExport.path != "" {
-		return appDSYMToExport.path, err
-	} else if latestPath, err := appDSYMToExport.exportLatest(); err == nil && latestPath != "" {
-		log.Warnf("No app.dSYM generated during build")
-		log.Printf("Exporting latest generated app.dSYM: %s", latestPath)
-		return latestPath, nil
+	artificatPth, err := exportLastModifiedArtifact(outputDir, startTime, endTime,
+		fmt.Sprintf(`(?i)%s\.app\.dSYM$`, assemblyName),
+		`(?i)\.app\.dSYM$`,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	if len(artificatPth) > 0 {
+		return artificatPth, nil
 	}
 
 	log.Printf("")
@@ -325,12 +369,16 @@ func exportFrameworkDSYMs(outputDir string) ([]string, error) {
 }
 
 func exportPKG(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
-	if pkgToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, fmt.Sprintf(`(?i)%s\.pkg$`, assemblyName), `(?i)\.pkg$`); err == nil && pkgToExport.path != "" {
-		return pkgToExport.path, err
-	} else if latestPath, err := pkgToExport.exportLatest(); err == nil && latestPath != "" {
-		log.Warnf("No pkg generated during build")
-		log.Printf("Exporting latest generated pkg: %s", latestPath)
-		return latestPath, nil
+	artificatPth, err := exportLastModifiedArtifact(outputDir, startTime, endTime,
+		fmt.Sprintf(`(?i)%s\.pkg$`, assemblyName),
+		`(?i)\.pkg$`,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	if len(artificatPth) > 0 {
+		return artificatPth, nil
 	}
 
 	log.Printf("")
@@ -369,12 +417,16 @@ func exportPKG(outputDir, assemblyName string, startTime, endTime time.Time) (st
 }
 
 func exportApp(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
-	if appToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, fmt.Sprintf(`(?i)%s\.app$`, assemblyName), `(?i)\.app$`); err == nil && appToExport.path != "" {
-		return appToExport.path, err
-	} else if latestPath, err := appToExport.exportLatest(); err == nil && latestPath != "" {
-		log.Warnf("No app generated during build")
-		log.Printf("Exporting latest generated app: %s", latestPath)
-		return latestPath, nil
+	artificatPth, err := exportLastModifiedArtifact(outputDir, startTime, endTime,
+		fmt.Sprintf(`(?i)%s\.app$`, assemblyName),
+		`(?i)\.app$`,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	if len(artificatPth) > 0 {
+		return artificatPth, nil
 	}
 
 	log.Printf("")
@@ -413,12 +465,16 @@ func exportApp(outputDir, assemblyName string, startTime, endTime time.Time) (st
 }
 
 func exportDLL(outputDir, assemblyName string, startTime, endTime time.Time) (string, error) {
-	if dllToExport, err := exportLatestModifiedWithinTimeInterval(outputDir, startTime, endTime, fmt.Sprintf(`(?i)%s\.dll$`, assemblyName), `(?i)\.dll$`); err == nil && dllToExport.path != "" {
-		return dllToExport.path, err
-	} else if latestPath, err := dllToExport.exportLatest(); err == nil && latestPath != "" {
-		log.Warnf("No dll generated during build")
-		log.Printf("Exporting latest generated dll: %s", latestPath)
-		return latestPath, nil
+	artificatPth, err := exportLastModifiedArtifact(outputDir, startTime, endTime,
+		fmt.Sprintf(`(?i)%s\.dll$`, assemblyName),
+		`(?i)\.dll$`,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	if len(artificatPth) > 0 {
+		return artificatPth, nil
 	}
 
 	log.Printf("")
