@@ -175,6 +175,7 @@ func Test_findLastModifiedWithFileNameRegexpsInTimeWindow(t *testing.T) {
 	require.NoError(t, err)
 
 	startTime := time.Now()
+	time.Sleep(3 * time.Second)
 
 	for _, pth := range []string{
 		"file1",
@@ -183,9 +184,10 @@ func Test_findLastModifiedWithFileNameRegexpsInTimeWindow(t *testing.T) {
 		time.Sleep(3 * time.Second)
 	}
 
-	endTime := time.Now()
-
 	time.Sleep(3 * time.Second)
+	endTime := time.Now()
+	time.Sleep(3 * time.Second)
+
 	createTestFile(t, tmpDir, "subdir/file2")
 
 	pth, err := findLastModifiedWithFileNameRegexpsInTimeWindow(tmpDir, startTime, endTime, "file.*")
@@ -198,6 +200,7 @@ func Test_exportApk(t *testing.T) {
 	require.NoError(t, err)
 
 	startTime := time.Now()
+	time.Sleep(3 * time.Second)
 
 	for _, pth := range []string{
 		"file-signed.apk",
@@ -208,9 +211,10 @@ func Test_exportApk(t *testing.T) {
 		time.Sleep(3 * time.Second)
 	}
 
-	endTime := time.Now()
-
 	time.Sleep(3 * time.Second)
+	endTime := time.Now()
+	time.Sleep(3 * time.Second)
+
 	createTestFile(t, tmpDir, "artifact-signed.apk")
 
 	t.Log("time window test")
@@ -240,6 +244,7 @@ func Test_exportIpa(t *testing.T) {
 	require.NoError(t, err)
 
 	startTime := time.Now()
+	time.Sleep(3 * time.Second)
 
 	for _, pth := range []string{
 		"subdir/file.ipa",
@@ -250,9 +255,10 @@ func Test_exportIpa(t *testing.T) {
 		time.Sleep(3 * time.Second)
 	}
 
-	endTime := time.Now()
-
 	time.Sleep(3 * time.Second)
+	endTime := time.Now()
+	time.Sleep(3 * time.Second)
+
 	createTestFile(t, tmpDir, "file1.ipa")
 
 	t.Log("time window test")
@@ -275,6 +281,7 @@ func Test_exportXCArchive(t *testing.T) {
 	require.NoError(t, err)
 
 	startTime := time.Now()
+	time.Sleep(3 * time.Second)
 
 	for _, pth := range []string{
 		"subdir/file.xcarchive",
@@ -285,9 +292,10 @@ func Test_exportXCArchive(t *testing.T) {
 		time.Sleep(3 * time.Second)
 	}
 
-	endTime := time.Now()
-
 	time.Sleep(3 * time.Second)
+	endTime := time.Now()
+	time.Sleep(3 * time.Second)
+
 	createTestFile(t, tmpDir, "file1.xcarchive")
 
 	t.Log("time window test")
@@ -310,6 +318,7 @@ func Test_exportAppDSYM(t *testing.T) {
 	require.NoError(t, err)
 
 	startTime := time.Now()
+	time.Sleep(3 * time.Second)
 
 	for _, pth := range []string{
 		"subdir/file.app.dSYM",
@@ -320,9 +329,10 @@ func Test_exportAppDSYM(t *testing.T) {
 		time.Sleep(3 * time.Second)
 	}
 
-	endTime := time.Now()
-
 	time.Sleep(3 * time.Second)
+	endTime := time.Now()
+	time.Sleep(3 * time.Second)
+
 	createTestFile(t, tmpDir, "file1.app.dSYM")
 
 	t.Log("time window test")
@@ -349,10 +359,8 @@ func Test_exportFrameworkDSYMs(t *testing.T) {
 		"file.framework.dSYM",
 	} {
 		createTestFile(t, tmpDir, pth)
-		time.Sleep(3 * time.Second)
 	}
 
-	time.Sleep(3 * time.Second)
 	createTestFile(t, tmpDir, "file1.app.dSYM")
 
 	pths, err := exportFrameworkDSYMs(tmpDir)
@@ -375,6 +383,7 @@ func Test_exportPKG(t *testing.T) {
 	require.NoError(t, err)
 
 	startTime := time.Now()
+	time.Sleep(3 * time.Second)
 
 	for _, pth := range []string{
 		"subdir/file.pkg",
@@ -385,9 +394,10 @@ func Test_exportPKG(t *testing.T) {
 		time.Sleep(3 * time.Second)
 	}
 
-	endTime := time.Now()
-
 	time.Sleep(3 * time.Second)
+	endTime := time.Now()
+	time.Sleep(3 * time.Second)
+
 	createTestFile(t, tmpDir, "file1.pkg")
 
 	t.Log("time window test")
@@ -410,6 +420,7 @@ func Test_exportApp(t *testing.T) {
 	require.NoError(t, err)
 
 	startTime := time.Now()
+	time.Sleep(3 * time.Second)
 
 	for _, pth := range []string{
 		"subdir/file.app",
@@ -420,9 +431,10 @@ func Test_exportApp(t *testing.T) {
 		time.Sleep(3 * time.Second)
 	}
 
-	endTime := time.Now()
-
 	time.Sleep(3 * time.Second)
+	endTime := time.Now()
+	time.Sleep(3 * time.Second)
+
 	createTestFile(t, tmpDir, "file1.app")
 
 	t.Log("time window test")
@@ -445,6 +457,7 @@ func Test_exportDLL(t *testing.T) {
 	require.NoError(t, err)
 
 	startTime := time.Now()
+	time.Sleep(3 * time.Second)
 
 	for _, pth := range []string{
 		"subdir/file.dll",
@@ -455,9 +468,10 @@ func Test_exportDLL(t *testing.T) {
 		time.Sleep(3 * time.Second)
 	}
 
-	endTime := time.Now()
-
 	time.Sleep(3 * time.Second)
+	endTime := time.Now()
+	time.Sleep(3 * time.Second)
+
 	createTestFile(t, tmpDir, "file1.dll")
 
 	t.Log("time window test")
