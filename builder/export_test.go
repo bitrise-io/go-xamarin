@@ -67,10 +67,11 @@ func Test_filterFilesInfosForTimeWindow(t *testing.T) {
 		"subdir/file",
 	} {
 		createTestFile(t, tmpDir, pth)
-		time.Sleep(1 * time.Second)
+		time.Sleep(3 * time.Second)
 	}
 
 	endTime := time.Now()
+	time.Sleep(3 * time.Second)
 
 	createTestFile(t, tmpDir, "not_in_time_window")
 
@@ -125,7 +126,7 @@ func Test_findLastModifiedWithFileNameRegexps(t *testing.T) {
 		"subdir/file2",
 	} {
 		createTestFile(t, tmpDir, pth)
-		time.Sleep(1 * time.Second)
+		time.Sleep(3 * time.Second)
 	}
 
 	infos, err := fileInfos(tmpDir)
@@ -177,12 +178,12 @@ func Test_findLastModifiedWithFileNameRegexpsInTimeWindow(t *testing.T) {
 		"file1",
 	} {
 		createTestFile(t, tmpDir, pth)
-		time.Sleep(1 * time.Second)
+		time.Sleep(3 * time.Second)
 	}
 
 	endTime := time.Now()
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(3 * time.Second)
 	createTestFile(t, tmpDir, "subdir/file2")
 
 	pth, err := findLastModifiedWithFileNameRegexpsInTimeWindow(tmpDir, startTime, endTime, "file.*")
@@ -202,12 +203,12 @@ func Test_exportApk(t *testing.T) {
 		"artifact.apk",
 	} {
 		createTestFile(t, tmpDir, pth)
-		time.Sleep(1 * time.Second)
+		time.Sleep(3 * time.Second)
 	}
 
 	endTime := time.Now()
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(3 * time.Second)
 	createTestFile(t, tmpDir, "artifact-signed.apk")
 
 	t.Log("time window test")
@@ -244,12 +245,12 @@ func Test_exportIpa(t *testing.T) {
 		"file.apk",
 	} {
 		createTestFile(t, tmpDir, pth)
-		time.Sleep(1 * time.Second)
+		time.Sleep(3 * time.Second)
 	}
 
 	endTime := time.Now()
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(3 * time.Second)
 	createTestFile(t, tmpDir, "file1.ipa")
 
 	t.Log("time window test")
@@ -279,12 +280,12 @@ func Test_exportXCArchive(t *testing.T) {
 		"file.apk",
 	} {
 		createTestFile(t, tmpDir, pth)
-		time.Sleep(1 * time.Second)
+		time.Sleep(3 * time.Second)
 	}
 
 	endTime := time.Now()
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(3 * time.Second)
 	createTestFile(t, tmpDir, "file1.xcarchive")
 
 	t.Log("time window test")
@@ -314,12 +315,12 @@ func Test_exportAppDSYM(t *testing.T) {
 		"file.apk",
 	} {
 		createTestFile(t, tmpDir, pth)
-		time.Sleep(1 * time.Second)
+		time.Sleep(3 * time.Second)
 	}
 
 	endTime := time.Now()
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(3 * time.Second)
 	createTestFile(t, tmpDir, "file1.app.dSYM")
 
 	t.Log("time window test")
@@ -346,10 +347,10 @@ func Test_exportFrameworkDSYMs(t *testing.T) {
 		"file.framework.dSYM",
 	} {
 		createTestFile(t, tmpDir, pth)
-		time.Sleep(1 * time.Second)
+		time.Sleep(3 * time.Second)
 	}
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(3 * time.Second)
 	createTestFile(t, tmpDir, "file1.app.dSYM")
 
 	pths, err := exportFrameworkDSYMs(tmpDir)
@@ -379,12 +380,12 @@ func Test_exportPKG(t *testing.T) {
 		"file.apk",
 	} {
 		createTestFile(t, tmpDir, pth)
-		time.Sleep(1 * time.Second)
+		time.Sleep(3 * time.Second)
 	}
 
 	endTime := time.Now()
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(3 * time.Second)
 	createTestFile(t, tmpDir, "file1.pkg")
 
 	t.Log("time window test")
@@ -414,12 +415,12 @@ func Test_exportApp(t *testing.T) {
 		"file.apk",
 	} {
 		createTestFile(t, tmpDir, pth)
-		time.Sleep(1 * time.Second)
+		time.Sleep(3 * time.Second)
 	}
 
 	endTime := time.Now()
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(3 * time.Second)
 	createTestFile(t, tmpDir, "file1.app")
 
 	t.Log("time window test")
@@ -449,12 +450,12 @@ func Test_exportDLL(t *testing.T) {
 		"file.apk",
 	} {
 		createTestFile(t, tmpDir, pth)
-		time.Sleep(1 * time.Second)
+		time.Sleep(3 * time.Second)
 	}
 
 	endTime := time.Now()
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(3 * time.Second)
 	createTestFile(t, tmpDir, "file1.dll")
 
 	t.Log("time window test")
