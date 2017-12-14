@@ -61,6 +61,7 @@ func Test_filterFilesInfosForTimeWindow(t *testing.T) {
 	require.NoError(t, err)
 
 	startTime := time.Now()
+	time.Sleep(3 * time.Second)
 
 	for _, pth := range []string{
 		"file",
@@ -70,6 +71,7 @@ func Test_filterFilesInfosForTimeWindow(t *testing.T) {
 		time.Sleep(3 * time.Second)
 	}
 
+	time.Sleep(3 * time.Second)
 	endTime := time.Now()
 	time.Sleep(3 * time.Second)
 
