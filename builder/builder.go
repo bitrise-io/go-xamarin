@@ -431,7 +431,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 					})
 				}
 
-				if ipaPth, err := exportLatestIpa(projectConfig.OutputDir, proj.AssemblyName, startTime, endTime); err != nil {
+				if ipaPth, err := exportIpa(projectConfig.OutputDir, proj.AssemblyName, startTime, endTime); err != nil {
 					return ProjectOutputMap{}, err
 				} else if ipaPth != "" {
 					projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
