@@ -82,7 +82,7 @@ func (xbuild *Model) SetCustomOptions(options ...string) {
 	xbuild.customOptions = options
 }
 
-func (xbuild Model) buildCommandSlice() []string {
+func (xbuild Model) buildCommands() []string {
 	cmdSlice := []string{xbuild.BuildTool}
 
 	if xbuild.ProjectPth != "" {
@@ -120,11 +120,11 @@ func (xbuild Model) buildCommandSlice() []string {
 	return cmdSlice
 }
 
-// PrintableCommand ...
-func (xbuild Model) PrintableCommand() string {
-	cmdSlice := xbuild.buildCommandSlice()
+// String ...
+func (xbuild Model) String() string {
+	cmdSlice := xbuild.buildCommands()
 
-	return command.PrintableCommandArgs(true, cmdSlice)
+	return command.StringArgs(true, cmdSlice)
 }
 
 // Run ...
@@ -136,7 +136,7 @@ func (xbuild Model) Run(outWriter, errWriter io.Writer) error {
 		errWriter = os.Stderr
 	}
 
-	cmdSlice := xbuild.buildCommandSlice()
+	cmdSlice := xbuild.buildCommands()
 
 	command, err := command.NewFromSlice(cmdSlice)
 	if err != nil {

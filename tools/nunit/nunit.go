@@ -118,11 +118,11 @@ func (nunitConsole Model) commandSlice() []string {
 	return cmdSlice
 }
 
-// PrintableCommand ...
-func (nunitConsole Model) PrintableCommand() string {
+// String ...
+func (nunitConsole Model) String() string {
 	cmdSlice := nunitConsole.commandSlice()
 
-	return command.PrintableCommandArgs(true, cmdSlice)
+	return command.StringArgs(true, cmdSlice)
 }
 
 // Run ...

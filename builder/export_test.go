@@ -20,7 +20,7 @@ func createTestFile(t *testing.T, tmpDir, relPth string) {
 	require.NoError(t, fileutil.WriteStringToFile(pth, "test"))
 }
 
-func Test_fileInfos(t *testing.T) {
+func Test_findModTimesByPath(t *testing.T) {
 	tmpDir, err := pathutil.NormalizedOSTempDirPath("file_infos_test")
 	require.NoError(t, err)
 
@@ -31,17 +31,17 @@ func Test_fileInfos(t *testing.T) {
 		createTestFile(t, tmpDir, pth)
 	}
 
-	infos, err := fileInfos(tmpDir)
+	modTimesByPath, err := findModTimesByPath(tmpDir)
 	require.NoError(t, err)
 
 	desiredPthMap := map[string]bool{
 		filepath.Join(tmpDir, "file"):        false,
 		filepath.Join(tmpDir, "subdir/file"): false,
 	}
-	require.Equal(t, len(desiredPthMap), len(infos))
-	for _, info := range infos {
-		_, ok := desiredPthMap[info.path]
-		require.True(t, ok, fmt.Sprintf("%s - %#v", info.path, desiredPthMap))
+	require.Equal(t, len(desiredPthMap), len(modTimesByPath))
+	for pth := range modTimesByPath {
+		_, ok := desiredPthMap[pth]
+		require.True(t, ok, fmt.Sprintf("%s - %#v", pth, desiredPthMap))
 	}
 }
 
@@ -56,7 +56,7 @@ func Test_isInTimeInterval(t *testing.T) {
 	require.False(t, isInTimeInterval(endTime, startTime, testTime))
 }
 
-func Test_filterFilesInfosForTimeWindow(t *testing.T) {
+func Test_filterModTimesByPathByTimeWindow(t *testing.T) {
 	tmpDir, err := pathutil.NormalizedOSTempDirPath("file_infos_test")
 	require.NoError(t, err)
 
@@ -77,7 +77,7 @@ func Test_filterFilesInfosForTimeWindow(t *testing.T) {
 
 	createTestFile(t, tmpDir, "not_in_time_window")
 
-	infos, err := fileInfos(tmpDir)
+	modTimesByPath, err := findModTimesByPath(tmpDir)
 	require.NoError(t, err)
 
 	desiredPthMap := map[string]bool{
@@ -85,40 +85,40 @@ func Test_filterFilesInfosForTimeWindow(t *testing.T) {
 		filepath.Join(tmpDir, "subdir/file"):        false,
 		filepath.Join(tmpDir, "not_in_time_window"): false,
 	}
-	require.Equal(t, len(desiredPthMap), len(infos))
-	for _, info := range infos {
-		_, ok := desiredPthMap[info.path]
-		require.True(t, ok, fmt.Sprintf("%s - %#v", info.path, desiredPthMap))
+	require.Equal(t, len(desiredPthMap), len(modTimesByPath))
+	for pth := range modTimesByPath {
+		_, ok := desiredPthMap[pth]
+		require.True(t, ok, fmt.Sprintf("%s - %#v", pth, desiredPthMap))
 	}
 
 	t.Log("returns file infos of files modified within start and end time")
 	{
-		filteredInfos := filterFilesInfosForTimeWindow(infos, startTime, endTime)
+		filteredModTimesByPath := filterModTimesByPathByTimeWindow(modTimesByPath, startTime, endTime)
 		desiredPthMap := map[string]bool{
 			filepath.Join(tmpDir, "file"):        false,
 			filepath.Join(tmpDir, "subdir/file"): false,
 		}
-		require.Equal(t, len(desiredPthMap), len(filteredInfos))
-		for _, info := range filteredInfos {
-			_, ok := desiredPthMap[info.path]
-			require.True(t, ok, fmt.Sprintf("%s - %#v", info.path, desiredPthMap))
+		require.Equal(t, len(desiredPthMap), len(filteredModTimesByPath))
+		for pth := range filteredModTimesByPath {
+			_, ok := desiredPthMap[pth]
+			require.True(t, ok, fmt.Sprintf("%s - %#v", pth, desiredPthMap))
 		}
 	}
 
 	t.Log("returns empty list if zero time window")
 	{
-		filteredInfos := filterFilesInfosForTimeWindow(infos, time.Time{}, time.Time{})
+		filteredInfos := filterModTimesByPathByTimeWindow(modTimesByPath, time.Time{}, time.Time{})
 		require.Equal(t, 0, len(filteredInfos))
 	}
 
 	t.Log("returns empty list if invalid time window")
 	{
-		filteredInfos := filterFilesInfosForTimeWindow(infos, endTime, startTime)
+		filteredInfos := filterModTimesByPathByTimeWindow(modTimesByPath, endTime, startTime)
 		require.Equal(t, 0, len(filteredInfos))
 	}
 }
 
-func Test_findLastModifiedWithFileNameRegexps(t *testing.T) {
+func Test_findLastModifiedPathWithFileNameRegexps(t *testing.T) {
 	tmpDir, err := pathutil.NormalizedOSTempDirPath("file_infos_test")
 	require.NoError(t, err)
 
@@ -131,7 +131,7 @@ func Test_findLastModifiedWithFileNameRegexps(t *testing.T) {
 		time.Sleep(3 * time.Second)
 	}
 
-	infos, err := fileInfos(tmpDir)
+	modTimesByPath, err := findModTimesByPath(tmpDir)
 	require.NoError(t, err)
 
 	desiredPthMap := map[string]bool{
@@ -139,38 +139,38 @@ func Test_findLastModifiedWithFileNameRegexps(t *testing.T) {
 		filepath.Join(tmpDir, "file1"):        false,
 		filepath.Join(tmpDir, "subdir/file2"): false,
 	}
-	require.Equal(t, len(desiredPthMap), len(infos))
-	for _, info := range infos {
-		_, ok := desiredPthMap[info.path]
-		require.True(t, ok, fmt.Sprintf("%s - %#v", info.path, desiredPthMap))
+	require.Equal(t, len(desiredPthMap), len(modTimesByPath))
+	for pth := range modTimesByPath {
+		_, ok := desiredPthMap[pth]
+		require.True(t, ok, fmt.Sprintf("%s - %#v", pth, desiredPthMap))
 	}
 
 	t.Log("filename regexp")
 	{
-		info := findLastModifiedWithFileNameRegexps(infos, regexp.MustCompile("apk"))
-		require.Equal(t, filepath.Join(tmpDir, "subdir/apk"), info.path)
+		pth := findLastModifiedPathWithFileNameRegexps(modTimesByPath, regexp.MustCompile("apk"))
+		require.Equal(t, filepath.Join(tmpDir, "subdir/apk"), pth)
 	}
 
 	t.Log("it finds the last modified")
 	{
-		info := findLastModifiedWithFileNameRegexps(infos, regexp.MustCompile("file.*"))
-		require.Equal(t, filepath.Join(tmpDir, "subdir/file2"), info.path)
+		pth := findLastModifiedPathWithFileNameRegexps(modTimesByPath, regexp.MustCompile("file.*"))
+		require.Equal(t, filepath.Join(tmpDir, "subdir/file2"), pth)
 	}
 
 	t.Log("returns the last modified file without regex")
 	{
-		info := findLastModifiedWithFileNameRegexps(infos)
-		require.Equal(t, filepath.Join(tmpDir, "subdir/file2"), info.path)
+		pth := findLastModifiedPathWithFileNameRegexps(modTimesByPath)
+		require.Equal(t, filepath.Join(tmpDir, "subdir/file2"), pth)
 	}
 
 	t.Log("returns the most strict match")
 	{
-		info := findLastModifiedWithFileNameRegexps(infos, regexp.MustCompile("file1"), regexp.MustCompile("file.*"))
-		require.Equal(t, filepath.Join(tmpDir, "file1"), info.path)
+		pth := findLastModifiedPathWithFileNameRegexps(modTimesByPath, regexp.MustCompile("file1"), regexp.MustCompile("file.*"))
+		require.Equal(t, filepath.Join(tmpDir, "file1"), pth)
 	}
 }
 
-func Test_findLastModifiedWithFileNameRegexpsInTimeWindow(t *testing.T) {
+func Test_findArtifact(t *testing.T) {
 	tmpDir, err := pathutil.NormalizedOSTempDirPath("file_infos_test")
 	require.NoError(t, err)
 
@@ -190,7 +190,7 @@ func Test_findLastModifiedWithFileNameRegexpsInTimeWindow(t *testing.T) {
 
 	createTestFile(t, tmpDir, "subdir/file2")
 
-	pth, err := findLastModifiedWithFileNameRegexpsInTimeWindow(tmpDir, startTime, endTime, "file.*")
+	pth, err := findArtifact(tmpDir, startTime, endTime, "file.*")
 	require.NoError(t, err)
 	require.Equal(t, filepath.Join(tmpDir, "file1"), pth)
 }

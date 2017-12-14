@@ -146,7 +146,7 @@ func (builder Model) BuildSolution(configuration, platform string, callback Buil
 
 	// Callback to notify the caller about next running command
 	if callback != nil {
-		callback(builder.solution.Name, "", constants.SDKUnknown, constants.TestFrameworkUnknown, buildCommand.PrintableCommand(), false)
+		callback(builder.solution.Name, "", constants.SDKUnknown, constants.TestFrameworkUnknown, buildCommand.String(), false)
 	}
 
 	return buildCommand.Run(builder.outWriter, builder.errWriter)
@@ -189,7 +189,7 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 
 			// Callback to notify the caller about next running command
 			if callback != nil {
-				callback(builder.solution.Name, proj.Name, proj.SDK, proj.TestFramework, buildCommand.PrintableCommand(), alreadyPerformed)
+				callback(builder.solution.Name, proj.Name, proj.SDK, proj.TestFramework, buildCommand.String(), alreadyPerformed)
 			}
 
 			if !alreadyPerformed {
@@ -245,7 +245,7 @@ func (builder Model) BuildAllUITestableXamarinProjects(configuration, platform s
 
 			// Callback to notify the caller about next running command
 			if callback != nil {
-				callback(builder.solution.Name, proj.Name, proj.SDK, proj.TestFramework, buildCommand.PrintableCommand(), alreadyPerformed)
+				callback(builder.solution.Name, proj.Name, proj.SDK, proj.TestFramework, buildCommand.String(), alreadyPerformed)
 			}
 
 			if !alreadyPerformed {
@@ -296,7 +296,7 @@ func (builder Model) RunAllXamarinUITests(configuration, platform string, prepar
 
 		// Callback to notify the caller about next running command
 		if callback != nil {
-			callback(builder.solution.Name, testProj.Name, testProj.SDK, testProj.TestFramework, buildCommand.PrintableCommand(), alreadyPerformed)
+			callback(builder.solution.Name, testProj.Name, testProj.SDK, testProj.TestFramework, buildCommand.String(), alreadyPerformed)
 		}
 
 		if !alreadyPerformed {
@@ -369,7 +369,7 @@ func (builder Model) RunAllNunitTestProjects(configuration, platform string, cal
 
 		// Callback to notify the caller about next running command
 		if callback != nil {
-			callback(builder.solution.Name, testProj.Name, constants.SDKUnknown, constants.TestFrameworkNunitTest, buildCommand.PrintableCommand(), alreadyPerformed)
+			callback(builder.solution.Name, testProj.Name, constants.SDKUnknown, constants.TestFrameworkNunitTest, buildCommand.String(), alreadyPerformed)
 		}
 
 		if !alreadyPerformed {
