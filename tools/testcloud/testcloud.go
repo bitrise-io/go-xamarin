@@ -192,8 +192,7 @@ func (testCloud *Model) submitCommandSlice() []string {
 // String ...
 func (testCloud Model) String() string {
 	cmdSlice := testCloud.submitCommandSlice()
-
-	return command.StringArgs(true, cmdSlice)
+	return command.PrintableCommandArgs(true, cmdSlice)
 }
 
 // CaptureLineCallback ...

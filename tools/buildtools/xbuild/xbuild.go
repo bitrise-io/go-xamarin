@@ -123,8 +123,7 @@ func (xbuild Model) buildCommands() []string {
 // String ...
 func (xbuild Model) String() string {
 	cmdSlice := xbuild.buildCommands()
-
-	return command.StringArgs(true, cmdSlice)
+	return command.PrintableCommandArgs(true, cmdSlice)
 }
 
 // Run ...

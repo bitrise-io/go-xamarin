@@ -125,7 +125,7 @@ func TestSetProperties(t *testing.T) {
 	}
 }
 
-func TestbuildCommands(t *testing.T) {
+func Test_buildCommands(t *testing.T) {
 	t.Log("solution-dir test")
 	{
 		currentDir, err := pathutil.CurrentWorkingDirectoryAbsolutePath()

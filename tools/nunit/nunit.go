@@ -121,8 +121,7 @@ func (nunitConsole Model) commandSlice() []string {
 // String ...
 func (nunitConsole Model) String() string {
 	cmdSlice := nunitConsole.commandSlice()
-
-	return command.StringArgs(true, cmdSlice)
+	return command.PrintableCommandArgs(true, cmdSlice)
 }
 
 // Run ...
