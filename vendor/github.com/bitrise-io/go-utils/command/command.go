@@ -117,15 +117,15 @@ func (m Model) RunAndReturnTrimmedCombinedOutput() (string, error) {
 	return RunCmdAndReturnTrimmedCombinedOutput(m.cmd)
 }
 
-// PrintableCommandArgs ...
-func (m Model) PrintableCommandArgs() string {
-	return PrintableCommandArgs(false, m.cmd.Args)
+// StringArgs ...
+func (m Model) StringArgs() string {
+	return StringArgs(false, m.cmd.Args)
 }
 
 // ----------
 
-// PrintableCommandArgs ...
-func PrintableCommandArgs(isQuoteFirst bool, fullCommandArgs []string) string {
+// StringArgs ...
+func StringArgs(isQuoteFirst bool, fullCommandArgs []string) string {
 	cmdArgsDecorated := []string{}
 	for idx, anArg := range fullCommandArgs {
 		quotedArg := strconv.Quote(anArg)
