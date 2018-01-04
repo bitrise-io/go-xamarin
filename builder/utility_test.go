@@ -109,22 +109,22 @@ func TestWhitelistAllows(t *testing.T) {
 func TestIsArchitectureArchiveablet(t *testing.T) {
 	t.Log("default architectures is armv7")
 	{
-		require.Equal(t, true, isArchitectureArchiveable())
+		require.Equal(t, true, isDeviceArch())
 	}
 
 	t.Log("arm architectures are archivables")
 	{
-		require.Equal(t, true, isArchitectureArchiveable("armv7"))
+		require.Equal(t, true, isDeviceArch("armv7"))
 	}
 
 	t.Log("it is case insensitive")
 	{
-		require.Equal(t, true, isArchitectureArchiveable("ARM7"))
+		require.Equal(t, true, isDeviceArch("ARM7"))
 	}
 
 	t.Log("x86 architectures are not archivables")
 	{
-		require.Equal(t, false, isArchitectureArchiveable("x86"))
+		require.Equal(t, false, isDeviceArch("x86"))
 	}
 }
 

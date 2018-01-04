@@ -421,7 +421,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 
 		switch proj.SDK {
 		case constants.SDKIOS, constants.SDKTvOS:
-			if isDeviceArchitecture(projectConfig.MtouchArchs...) {
+			if isDeviceArch(projectConfig.MtouchArchs...) {
 				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName, startTime, endTime); err != nil {
 					return ProjectOutputMap{}, err
 				} else if xcarchivePth != "" {

@@ -75,7 +75,7 @@ func (builder Model) buildProjectCommand(configuration, platform string, proj pr
 		command.SetPlatform(platform)
 		command.SetArchiveOnBuild(true)
 
-		if isDeviceArchitecture(projectConfig.MtouchArchs...) && buildIpa {
+		if isDeviceArch(projectConfig.MtouchArchs...) && buildIpa {
 			command.SetBuildIpa(true)
 		}
 
