@@ -63,20 +63,12 @@ func whitelistAllows(projectType constants.SDK, projectTypeWhiteList ...constant
 	return false
 }
 
-func isArchitectureArchiveable(architectures ...string) bool {
-	// default is armv7
-	if len(architectures) == 0 {
-		return true
-	}
-
-	for _, arch := range architectures {
-		arch = strings.ToLower(arch)
-		if !strings.HasPrefix(arch, "arm") {
-			return false
-		}
-	}
-
-	return true
+// isDeviceArch based on:
+// default architecture: ARMv7
+// iPhone architecture: <MtouchArch>ARMv7,ARMv7s,ARM64</MtouchArch>
+// iPhoneSimulator architecture: <MtouchArch>i386, x86_64</MtouchArch>
+func isDeviceArch(architectures ...string) bool {
+	return len(architectures) == 0 || strings.HasPrefix(strings.ToLower(architectures[0]), "arm")
 }
 
 func isPlatformAnyCPU(platform string) bool {
