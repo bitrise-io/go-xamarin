@@ -63,11 +63,11 @@ func whitelistAllows(projectType constants.SDK, projectTypeWhiteList ...constant
 	return false
 }
 
-// isDeviceArch based on:
+// IsDeviceArch based on:
 // default architecture: ARMv7
 // iPhone architecture: <MtouchArch>ARMv7,ARMv7s,ARM64</MtouchArch>
 // iPhoneSimulator architecture: <MtouchArch>i386, x86_64</MtouchArch>
-func isDeviceArch(architectures ...string) bool {
+func IsDeviceArch(architectures ...string) bool {
 	return len(architectures) == 0 || strings.HasPrefix(strings.ToLower(architectures[0]), "arm")
 }
 
