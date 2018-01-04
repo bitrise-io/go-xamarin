@@ -153,7 +153,7 @@ func (builder Model) BuildSolution(configuration, platform string, callback Buil
 }
 
 // BuildAllProjects ...
-func (builder Model) BuildAllProjects(configuration, platform string, prepareCallback PrepareCommandCallback, callback BuildCommandCallback) ([]string, error) {
+func (builder Model) BuildAllProjects(configuration, platform string, buildIpa bool, prepareCallback PrepareCommandCallback, callback BuildCommandCallback) ([]string, error) {
 	warnings := []string{}
 
 	if err := validateSolutionConfig(builder.solution, configuration, platform); err != nil {
@@ -168,7 +168,7 @@ func (builder Model) BuildAllProjects(configuration, platform string, prepareCal
 	perfomedCommands := []tools.Printable{}
 
 	for _, proj := range buildableProjects {
-		buildCommands, warns, err := builder.buildProjectCommand(configuration, platform, proj)
+		buildCommands, warns, err := builder.buildProjectCommand(configuration, platform, proj, buildIpa)
 		warnings = append(warnings, warns...)
 		if err != nil {
 			return warnings, fmt.Errorf("Failed to create build command, error: %s", err)
@@ -224,7 +224,7 @@ func (builder Model) BuildAllUITestableXamarinProjects(configuration, platform s
 	perfomedCommands := []tools.Printable{}
 
 	for _, proj := range buildableReferredProjects {
-		buildCommands, warns, err := builder.buildProjectCommand(configuration, platform, proj)
+		buildCommands, warns, err := builder.buildProjectCommand(configuration, platform, proj, true)
 		warnings = append(warnings, warns...)
 		if err != nil {
 			return warnings, fmt.Errorf("Failed to create build command, error: %s", err)
@@ -421,7 +421,7 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 
 		switch proj.SDK {
 		case constants.SDKIOS, constants.SDKTvOS:
-			if isArchitectureArchiveable(projectConfig.MtouchArchs...) {
+			if isDeviceArchitecture(projectConfig.MtouchArchs...) {
 				if xcarchivePth, err := exportLatestXCArchiveFromXcodeArchives(proj.AssemblyName, startTime, endTime); err != nil {
 					return ProjectOutputMap{}, err
 				} else if xcarchivePth != "" {
