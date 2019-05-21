@@ -115,7 +115,7 @@ workflows:
             DEPLOY_PATH="_bin/$BIN_NAME-$OS-$ARCH"
             echo "  Create final Darwin binary at: $DEPLOY_PATH"
 
-            version_package="github.com/bitrise-tools/go-xamarin/version"
+            version_package="github.com/bitrise-io/go-xamarin/version"
 
             go build \
               -ldflags "-X $version_package.BuildNumber=$BITRISE_BUILD_NUMBER -X $version_package.Commit=$GIT_CLONE_COMMIT_HASH" \

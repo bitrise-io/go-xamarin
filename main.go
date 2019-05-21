@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/bitrise-tools/go-xamarin/cli"
+	"github.com/bitrise-io/go-xamarin/cli"
 )
 
 func main() {

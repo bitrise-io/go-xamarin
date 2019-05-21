@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-tools/go-xamarin/version"
+	"github.com/bitrise-io/go-xamarin/version"
 	"github.com/urfave/cli"
 )
 
