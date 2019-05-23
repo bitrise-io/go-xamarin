@@ -3,9 +3,9 @@ package builder
 import (
 	"fmt"
 
-	"github.com/bitrise-tools/go-xamarin/analyzers/project"
-	"github.com/bitrise-tools/go-xamarin/constants"
-	"github.com/bitrise-tools/go-xamarin/utility"
+	"github.com/bitrise-io/go-xamarin/analyzers/project"
+	"github.com/bitrise-io/go-xamarin/constants"
+	"github.com/bitrise-io/go-xamarin/utility"
 )
 
 func (builder Model) whitelistedProjects() []project.Model {

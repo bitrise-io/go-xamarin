@@ -8,7 +8,7 @@ import (
 
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/pathutil"
-	"github.com/bitrise-tools/go-xamarin/constants"
+	"github.com/bitrise-io/go-xamarin/constants"
 	"github.com/stretchr/testify/require"
 )
 
