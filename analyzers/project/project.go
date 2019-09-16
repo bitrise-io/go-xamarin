@@ -102,12 +102,7 @@ func analyzeTargetDefinition(projectModel Model, pth string) (Model, error) {
 		debugLog(err, pth)
 	}
 
-	projectModel.ManifestPth, err = GetResolvedAndroidManifestPath(parsedProject, projectDir)
-	if err != nil {
-		debugLog(err, pth)
-	}
-
-	projectModel.AndroidApplication, err = GetIsAndroidApplication(parsedProject)
+	projectModel.TestFramework, err = GetTestFramework(parsedProject)
 	if err != nil {
 		debugLog(err, pth)
 	}
@@ -117,14 +112,21 @@ func analyzeTargetDefinition(projectModel Model, pth string) (Model, error) {
 		debugLog(err, pth)
 	}
 
-	projectModel.TestFramework, err = GetTestFramework(parsedProject)
-	if err != nil {
-		debugLog(err, pth)
+	if projectModel.SDK == constants.SDKAndroid {
+		projectModel.ManifestPth, err = GetResolvedAndroidManifestPath(parsedProject, projectDir)
+		if err != nil {
+			debugLog(err, pth)
+		}
+
+		projectModel.AndroidApplication, err = GetIsAndroidApplication(parsedProject)
+		if err != nil {
+			debugLog(err, pth)
+		}
 	}
 
 	projectModel.ReferredProjectIDs = GetReferencedProjectIds(parsedProject)
 
-	configPlatforms, err := GetPropertyGroupsConfiguration(parsedProject, projectDir)
+	configPlatforms, err := GetPropertyGroupsConfiguration(parsedProject, projectDir, projectModel.SDK)
 	if err != nil {
 		debugLog(err, pth)
 	}

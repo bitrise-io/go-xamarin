@@ -409,7 +409,7 @@ func GetImportedProjects(project Project) []string {
 }
 
 // GetPropertyGroupsConfiguration gets the configuration for each property group
-func GetPropertyGroupsConfiguration(project Project, projectDir string) ([]ConfigurationPlatformModel, error) {
+func GetPropertyGroupsConfiguration(project Project, projectDir string, sdk constants.SDK) ([]ConfigurationPlatformModel, error) {
 	var configModels []ConfigurationPlatformModel
 	for _, propertyGroup := range project.PropertyGroups {
 		var configModel ConfigurationPlatformModel
@@ -429,20 +429,23 @@ func GetPropertyGroupsConfiguration(project Project, projectDir string) ([]Confi
 		if err != nil {
 			debugParseLog(err)
 		}
+		if sdk == constants.SDKIOS || sdk == constants.SDKMacOS || sdk == constants.SDKTvOS {
+			configModel.MtouchArchs, err = GetResolvedMtouchArch(propertyGroup)
+			if err != nil {
+				debugParseLog(err)
+			}
 
-		configModel.MtouchArchs, err = GetResolvedMtouchArch(propertyGroup)
-		if err != nil {
-			debugParseLog(err)
+			configModel.BuildIpa, err = GetBuildIpa(propertyGroup)
+			if err != nil {
+				debugParseLog(err)
+			}
 		}
 
-		configModel.BuildIpa, err = GetBuildIpa(propertyGroup)
-		if err != nil {
-			debugParseLog(err)
-		}
-
-		configModel.SignAndroid, err = GetAndroidKeyStore(propertyGroup)
-		if err != nil {
-			debugParseLog(err)
+		if sdk == constants.SDKAndroid {
+			configModel.SignAndroid, err = GetAndroidKeyStore(propertyGroup)
+			if err != nil {
+				debugParseLog(err)
+			}
 		}
 
 		configModels = append(configModels, configModel)
