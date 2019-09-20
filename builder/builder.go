@@ -478,11 +478,11 @@ func (builder Model) CollectProjectOutputs(configuration, platform string, start
 		case constants.SDKAndroid:
 			packageName, err := androidPackageName(proj.ManifestPth)
 			if err != nil {
-				return ProjectOutputMap{}, err
+				return ProjectOutputMap{}, fmt.Errorf("could get package name from manifest file at %v. Error: %v", proj.ManifestPth, err)
 			}
 
 			if apkPth, err := exportApk(projectConfig.OutputDir, packageName, startTime, endTime); err != nil {
-				return ProjectOutputMap{}, err
+				return ProjectOutputMap{}, fmt.Errorf("could not export apk. Error: %v", err)
 			} else if apkPth != "" {
 				projectOutputs.Outputs = append(projectOutputs.Outputs, OutputModel{
 					Pth:        apkPth,

@@ -124,6 +124,7 @@ func TestAnalyzeProject(t *testing.T) {
 		require.Equal(t, true, stringSliceContainsOnly(config.MtouchArchs, "i386"))
 		require.Equal(t, false, config.BuildIpa)
 		require.Equal(t, false, config.SignAndroid)
+		require.Equal(t, "", project.ManifestPth)
 	}
 
 	t.Log("ios test")
@@ -193,49 +194,9 @@ func TestAnalyzeProject(t *testing.T) {
 
 	t.Log("android test")
 	{
-		pth := tmpProjectWithContent(t, androidTestProjectContent)
-		defer func() {
-			require.NoError(t, os.Remove(pth))
-		}()
-		dir := filepath.Dir(pth)
-		fileName := filepath.Base(pth)
-		fileName = strings.TrimSuffix(fileName, filepath.Ext(fileName))
-
-		project, err := analyzeProject(pth)
-		require.NoError(t, err)
-
-		require.Equal(t, pth, project.Pth)
-		require.Equal(t, fileName, project.Name)
-
-		require.Equal(t, "9D1D32A3-D13F-4F23-B7D4-EF9D52B06E60", project.ID)
-		require.Equal(t, constants.SDKAndroid, project.SDK)
-		require.Equal(t, "library", project.OutputType)
-		require.Equal(t, "CreditCardValidator.Droid", project.AssemblyName)
-
-		require.Equal(t, constants.TestFrameworkUnknown, project.TestFramework)
-		require.Equal(t, true, stringSliceContainsOnly(project.ReferredProjectIDs, "99A825A6-6F99-4B94-9F65-E908A6347F1E"))
-
-		require.Equal(t, filepath.Join(dir, "Properties/AndroidManifest.xml"), project.ManifestPth)
-		require.Equal(t, true, project.AndroidApplication)
-
-		// Configs
-		config, ok := project.Configs["Debug|AnyCPU"]
-		require.Equal(t, true, ok)
-		require.Equal(t, "Debug", config.Configuration)
-		require.Equal(t, "AnyCPU", config.Platform)
-		require.Equal(t, filepath.Join(dir, "bin/Debug"), config.OutputDir)
-		require.Equal(t, 0, len(config.MtouchArchs))
-		require.Equal(t, false, config.BuildIpa)
-		require.Equal(t, false, config.SignAndroid)
-
-		config, ok = project.Configs["Release|AnyCPU"]
-		require.Equal(t, true, ok)
-		require.Equal(t, "Release", config.Configuration)
-		require.Equal(t, "AnyCPU", config.Platform)
-		require.Equal(t, filepath.Join(dir, "bin/Release"), config.OutputDir)
-		require.Equal(t, 0, len(config.MtouchArchs))
-		require.Equal(t, false, config.BuildIpa)
-		require.Equal(t, true, config.SignAndroid)
+		androidTest(t, androidTestProjectContent)
+		androidTest(t, androidTestProjectUnformattedContent)
+		androidTest(t, androidTestProjectContentWithRedefine)
 	}
 
 	t.Log("mac test")
@@ -499,4 +460,50 @@ func TestAnalyzeProject(t *testing.T) {
 		require.Equal(t, false, config.BuildIpa)
 		require.Equal(t, false, config.SignAndroid)
 	}
+}
+
+func androidTest(t *testing.T, contentPth string) {
+	pth := tmpProjectWithContent(t, contentPth)
+	defer func() {
+		require.NoError(t, os.Remove(pth))
+	}()
+	dir := filepath.Dir(pth)
+	fileName := filepath.Base(pth)
+	fileName = strings.TrimSuffix(fileName, filepath.Ext(fileName))
+
+	project, err := analyzeProject(pth)
+	require.NoError(t, err)
+
+	require.Equal(t, pth, project.Pth)
+	require.Equal(t, fileName, project.Name)
+
+	require.Equal(t, "9D1D32A3-D13F-4F23-B7D4-EF9D52B06E60", project.ID)
+	require.Equal(t, constants.SDKAndroid, project.SDK)
+	require.Equal(t, "library", project.OutputType)
+	require.Equal(t, "CreditCardValidator.Droid", project.AssemblyName)
+
+	require.Equal(t, constants.TestFrameworkUnknown, project.TestFramework)
+	require.Equal(t, true, stringSliceContainsOnly(project.ReferredProjectIDs, "99A825A6-6F99-4B94-9F65-E908A6347F1E"))
+
+	require.Equal(t, filepath.Join(dir, "Properties/AndroidManifest.xml"), project.ManifestPth)
+	require.Equal(t, true, project.AndroidApplication)
+
+	// Configs
+	config, ok := project.Configs["Debug|AnyCPU"]
+	require.Equal(t, true, ok)
+	require.Equal(t, "Debug", config.Configuration)
+	require.Equal(t, "AnyCPU", config.Platform)
+	require.Equal(t, filepath.Join(dir, "bin/Debug"), config.OutputDir)
+	require.Equal(t, 0, len(config.MtouchArchs))
+	require.Equal(t, false, config.BuildIpa)
+	require.Equal(t, false, config.SignAndroid)
+
+	config, ok = project.Configs["Release|AnyCPU"]
+	require.Equal(t, true, ok)
+	require.Equal(t, "Release", config.Configuration)
+	require.Equal(t, "AnyCPU", config.Platform)
+	require.Equal(t, filepath.Join(dir, "bin/Release"), config.OutputDir)
+	require.Equal(t, 0, len(config.MtouchArchs))
+	require.Equal(t, false, config.BuildIpa)
+	require.Equal(t, true, config.SignAndroid)
 }
