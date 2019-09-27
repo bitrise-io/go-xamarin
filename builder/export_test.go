@@ -31,7 +31,7 @@ func Test_findModTimesByPath(t *testing.T) {
 		createTestFile(t, tmpDir, pth)
 	}
 
-	modTimesByPath, err := findModTimesByPath(tmpDir)
+	modTimesByPath, err := findModTimesByPath(tmpDir, true)
 	require.NoError(t, err)
 
 	desiredPthMap := map[string]bool{
@@ -77,7 +77,7 @@ func Test_filterModTimesByPathByTimeWindow(t *testing.T) {
 
 	createTestFile(t, tmpDir, "not_in_time_window")
 
-	modTimesByPath, err := findModTimesByPath(tmpDir)
+	modTimesByPath, err := findModTimesByPath(tmpDir, true)
 	require.NoError(t, err)
 
 	desiredPthMap := map[string]bool{
@@ -131,7 +131,7 @@ func Test_findLastModifiedPathWithFileNameRegexps(t *testing.T) {
 		time.Sleep(3 * time.Second)
 	}
 
-	modTimesByPath, err := findModTimesByPath(tmpDir)
+	modTimesByPath, err := findModTimesByPath(tmpDir, true)
 	require.NoError(t, err)
 
 	desiredPthMap := map[string]bool{
@@ -190,7 +190,7 @@ func Test_findArtifact(t *testing.T) {
 
 	createTestFile(t, tmpDir, "subdir/file2")
 
-	pth, err := findArtifact(tmpDir, startTime, endTime, "file.*")
+	pth, err := findArtifact(tmpDir, startTime, endTime, true, "file.*")
 	require.NoError(t, err)
 	require.Equal(t, filepath.Join(tmpDir, "file1"), pth)
 }
