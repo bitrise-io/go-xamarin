@@ -128,6 +128,8 @@ const (
 	OutputTypeAPP OutputType = "app"
 	// OutputTypeDLL ...
 	OutputTypeDLL OutputType = "dll"
+	// OutputTypeAAB ...
+	OutputTypeAAB OutputType = "aab"
 )
 
 // ParseOutputType ...
@@ -147,6 +149,8 @@ func ParseOutputType(outputType string) (OutputType, error) {
 		return OutputTypeAPP, nil
 	case "dll":
 		return OutputTypeDLL, nil
+	case "aab":
+		return OutputTypeAAB, nil
 	default:
 		return OutputTypeUnknown, fmt.Errorf("invalid output type: %s", outputType)
 	}
