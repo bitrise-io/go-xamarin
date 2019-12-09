@@ -55,8 +55,6 @@ func TestAnalyzeProject(t *testing.T) {
 		defer func() {
 			require.NoError(t, os.Remove(pth))
 		}()
-		fileName := filepath.Base(pth)
-		fileName = strings.TrimSuffix(fileName, filepath.Ext(fileName))
 
 		project, err := analyzeProject(pth)
 		require.NoError(t, err)
