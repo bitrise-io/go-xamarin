@@ -96,6 +96,8 @@ func (xbuild Model) buildCommands() []string {
 		cmdSlice = append(cmdSlice, fmt.Sprintf("/target:%s", xbuild.target))
 	}
 
+	// According to official docs this value should include the trailing backslash:
+	// https://docs.microsoft.com/en-us/cpp/build/reference/common-macros-for-build-commands-and-properties?view=vs-2019
 	solutionDirParam := strings.TrimSuffix(filepath.Dir(xbuild.SolutionPth), string(filepath.Separator)) + string(filepath.Separator)
 	cmdSlice = append(cmdSlice, fmt.Sprintf("/p:SolutionDir=%s", solutionDirParam))
 
