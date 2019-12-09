@@ -2,6 +2,7 @@ package xbuild
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -186,7 +187,11 @@ func TestString(t *testing.T) {
 
 		xbuild, err := New("./test/solution.sln", "./test/ios/project.csproj")
 		require.NoError(t, err)
-		desired := fmt.Sprintf(`"%s" "%s" "%s"`, constants.XbuildPath, filepath.Join(currentDir, "test/ios/project.csproj"), fmt.Sprintf("/p:SolutionDir=%s", filepath.Join(currentDir, "test")))
+		desired := fmt.Sprintf(`"%s" "%s" "%s"`,
+			constants.XbuildPath,
+			filepath.Join(currentDir, "test/ios/project.csproj"),
+			fmt.Sprintf("/p:SolutionDir=%s", filepath.Join(currentDir, "test")+string(os.PathSeparator)),
+		)
 		require.Equal(t, desired, xbuild.String())
 	}
 
@@ -194,7 +199,7 @@ func TestString(t *testing.T) {
 	{
 		xbuild, err := New("/Users/Develop/test/solution.sln", "/Users/Develop/test/test/ios/project.csproj")
 		require.NoError(t, err)
-		desired := fmt.Sprintf(`"%s" "/Users/Develop/test/test/ios/project.csproj" "/p:SolutionDir=/Users/Develop/test"`, constants.XbuildPath)
+		desired := fmt.Sprintf(`"%s" "/Users/Develop/test/test/ios/project.csproj" "/p:SolutionDir=/Users/Develop/test/"`, constants.XbuildPath)
 		require.Equal(t, desired, xbuild.String())
 	}
 
