@@ -134,7 +134,11 @@ func Test_buildCommands(t *testing.T) {
 
 		xbuild, err := New("./test/solution.sln", "./test/ios/project.csproj")
 		require.NoError(t, err)
-		desired := []string{constants.XbuildPath, filepath.Join(currentDir, "test/ios/project.csproj"), fmt.Sprintf("/p:SolutionDir=%s", filepath.Join(currentDir, "test"))}
+		desired := []string{
+			constants.XbuildPath,
+			filepath.Join(currentDir, "test/ios/project.csproj"),
+			fmt.Sprintf("/p:SolutionDir=%s", filepath.Join(currentDir, "test")+string(filepath.Separator)),
+		}
 		require.Equal(t, desired, xbuild.buildCommands())
 	}
 
@@ -142,7 +146,7 @@ func Test_buildCommands(t *testing.T) {
 	{
 		xbuild, err := New("/Users/Develop/test/solution.sln", "/Users/Develop/test/test/ios/project.csproj")
 		require.NoError(t, err)
-		desired := []string{constants.XbuildPath, "/Users/Develop/test/test/ios/project.csproj", "/p:SolutionDir=/Users/Develop/test"}
+		desired := []string{constants.XbuildPath, "/Users/Develop/test/test/ios/project.csproj", "/p:SolutionDir=/Users/Develop/test/"}
 		require.Equal(t, desired, xbuild.buildCommands())
 	}
 
