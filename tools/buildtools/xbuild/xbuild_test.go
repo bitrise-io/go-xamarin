@@ -2,6 +2,7 @@ package xbuild
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -133,7 +134,11 @@ func Test_buildCommands(t *testing.T) {
 
 		xbuild, err := New("./test/solution.sln", "./test/ios/project.csproj")
 		require.NoError(t, err)
-		desired := []string{constants.XbuildPath, filepath.Join(currentDir, "test/ios/project.csproj"), fmt.Sprintf("/p:SolutionDir=%s", filepath.Join(currentDir, "test"))}
+		desired := []string{
+			constants.XbuildPath,
+			filepath.Join(currentDir, "test/ios/project.csproj"),
+			fmt.Sprintf("/p:SolutionDir=%s", filepath.Join(currentDir, "test")+string(filepath.Separator)),
+		}
 		require.Equal(t, desired, xbuild.buildCommands())
 	}
 
@@ -141,7 +146,7 @@ func Test_buildCommands(t *testing.T) {
 	{
 		xbuild, err := New("/Users/Develop/test/solution.sln", "/Users/Develop/test/test/ios/project.csproj")
 		require.NoError(t, err)
-		desired := []string{constants.XbuildPath, "/Users/Develop/test/test/ios/project.csproj", "/p:SolutionDir=/Users/Develop/test"}
+		desired := []string{constants.XbuildPath, "/Users/Develop/test/test/ios/project.csproj", "/p:SolutionDir=/Users/Develop/test/"}
 		require.Equal(t, desired, xbuild.buildCommands())
 	}
 
@@ -186,7 +191,11 @@ func TestString(t *testing.T) {
 
 		xbuild, err := New("./test/solution.sln", "./test/ios/project.csproj")
 		require.NoError(t, err)
-		desired := fmt.Sprintf(`"%s" "%s" "%s"`, constants.XbuildPath, filepath.Join(currentDir, "test/ios/project.csproj"), fmt.Sprintf("/p:SolutionDir=%s", filepath.Join(currentDir, "test")))
+		desired := fmt.Sprintf(`"%s" "%s" "%s"`,
+			constants.XbuildPath,
+			filepath.Join(currentDir, "test/ios/project.csproj"),
+			fmt.Sprintf("/p:SolutionDir=%s", filepath.Join(currentDir, "test")+string(os.PathSeparator)),
+		)
 		require.Equal(t, desired, xbuild.String())
 	}
 
@@ -194,7 +203,7 @@ func TestString(t *testing.T) {
 	{
 		xbuild, err := New("/Users/Develop/test/solution.sln", "/Users/Develop/test/test/ios/project.csproj")
 		require.NoError(t, err)
-		desired := fmt.Sprintf(`"%s" "/Users/Develop/test/test/ios/project.csproj" "/p:SolutionDir=/Users/Develop/test"`, constants.XbuildPath)
+		desired := fmt.Sprintf(`"%s" "/Users/Develop/test/test/ios/project.csproj" "/p:SolutionDir=/Users/Develop/test/"`, constants.XbuildPath)
 		require.Equal(t, desired, xbuild.String())
 	}
 
@@ -228,5 +237,31 @@ func TestString(t *testing.T) {
 		xbuild.SetCustomOptions("/nologo")
 		desired = fmt.Sprintf(`"%s" "/solution.sln" "/target:Build" "/p:SolutionDir=/" "/p:Configuration=Release" "/p:Platform=iPhone" "/p:ArchiveOnBuild=true" "/p:BuildIpa=true" "/nologo"`, constants.XbuildPath)
 		require.Equal(t, desired, xbuild.String())
+	}
+}
+
+func Test_ensureTrailingPathSeparator(t *testing.T) {
+	tests := []struct {
+		name string
+		path string
+		want string
+	}{
+		{
+			name: "no trailing slash",
+			path: filepath.Join("a", "b"),
+			want: filepath.Join("a", "b") + string(filepath.Separator),
+		},
+		{
+			name: "trailing slash",
+			path: filepath.Join("a", "b") + string(filepath.Separator),
+			want: filepath.Join("a", "b") + string(filepath.Separator),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ensureTrailingPathSeparator(tt.path); got != tt.want {
+				t.Errorf("ensureTrailingPathSeparator() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
