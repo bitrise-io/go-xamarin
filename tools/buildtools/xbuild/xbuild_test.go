@@ -239,3 +239,29 @@ func TestString(t *testing.T) {
 		require.Equal(t, desired, xbuild.String())
 	}
 }
+
+func Test_ensureTrailingPathSeparator(t *testing.T) {
+	tests := []struct {
+		name string
+		path string
+		want string
+	}{
+		{
+			name: "no trailing slash",
+			path: filepath.Join("a", "b"),
+			want: filepath.Join("a", "b") + string(filepath.Separator),
+		},
+		{
+			name: "trailing slash",
+			path: filepath.Join("a", "b") + string(filepath.Separator),
+			want: filepath.Join("a", "b") + string(filepath.Separator),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ensureTrailingPathSeparator(tt.path); got != tt.want {
+				t.Errorf("ensureTrailingPathSeparator() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
