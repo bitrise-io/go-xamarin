@@ -98,8 +98,8 @@ func (xbuild Model) buildCommands() []string {
 
 	// According to official docs this value should include the trailing backslash:
 	// https://docs.microsoft.com/en-us/cpp/build/reference/common-macros-for-build-commands-and-properties?view=vs-2019
-	solutionDirParam := ensureTrailingPathSeparator(filepath.Dir(xbuild.SolutionPth))
-	cmdSlice = append(cmdSlice, fmt.Sprintf("/p:SolutionDir=%s", solutionDirParam))
+	solutionDirPth := ensureTrailingPathSeparator(filepath.Dir(xbuild.SolutionPth))
+	cmdSlice = append(cmdSlice, fmt.Sprintf("/p:SolutionDir=%s", solutionDirPth))
 
 	if xbuild.configuration != "" {
 		cmdSlice = append(cmdSlice, fmt.Sprintf("/p:Configuration=%s", xbuild.configuration))
