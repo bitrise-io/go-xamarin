@@ -159,11 +159,7 @@ func (testCloud *Model) submitCommandSlice() []string {
 	}
 
 	cmdSlice = append(cmdSlice, testCloud.apiKey)
-
-	for _, option := range testCloud.signOptions {
-		cmdSlice = append(cmdSlice, option)
-	}
-
+	cmdSlice = append(cmdSlice, testCloud.signOptions...)
 	cmdSlice = append(cmdSlice, "--user", testCloud.user)
 	cmdSlice = append(cmdSlice, "--assembly-dir", testCloud.assemblyDir)
 	cmdSlice = append(cmdSlice, "--devices", testCloud.devices)

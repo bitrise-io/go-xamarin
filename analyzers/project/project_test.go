@@ -48,30 +48,6 @@ func stringSliceContainsOnly(slice []string, item ...string) bool {
 	return true
 }
 
-func intSliceContainsOnly(slice []int, item ...int) bool {
-	if len(slice) != len(item) {
-		return false
-	}
-
-	testMap := map[int]bool{}
-	for _, i := range slice {
-		testMap[i] = false
-	}
-	for _, e := range item {
-		_, ok := testMap[e]
-		if !ok {
-			return false
-		}
-		testMap[e] = true
-	}
-	for _, ok := range testMap {
-		if !ok {
-			return false
-		}
-	}
-	return true
-}
-
 func TestAnalyzeProject(t *testing.T) {
 	t.Log("xamarin uitest test ID test - all IDs should be upper case")
 	{
@@ -79,8 +55,6 @@ func TestAnalyzeProject(t *testing.T) {
 		defer func() {
 			require.NoError(t, os.Remove(pth))
 		}()
-		fileName := filepath.Base(pth)
-		fileName = strings.TrimSuffix(fileName, filepath.Ext(fileName))
 
 		project, err := analyzeProject(pth)
 		require.NoError(t, err)
