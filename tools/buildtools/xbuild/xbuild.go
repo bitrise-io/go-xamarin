@@ -106,7 +106,7 @@ func (xbuild Model) buildCommands() []string {
 	}
 
 	if xbuild.platform != "" {
-		cmdSlice = append(cmdSlice, "/p:Platform=%s"+xbuild.platform)
+		cmdSlice = append(cmdSlice, "/p:Platform="+xbuild.platform)
 	}
 
 	if xbuild.archiveOnBuild {
