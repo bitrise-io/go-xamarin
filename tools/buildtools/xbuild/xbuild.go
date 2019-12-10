@@ -98,7 +98,7 @@ func (xbuild Model) buildCommands() []string {
 
 	// According to official docs this value should include the trailing backslash:
 	// https://docs.microsoft.com/en-us/cpp/build/reference/common-macros-for-build-commands-and-properties?view=vs-2019
-	solutionDirParam := strings.TrimSuffix(filepath.Dir(xbuild.SolutionPth), string(filepath.Separator)) + string(filepath.Separator)
+	solutionDirParam := ensureTrailingPathSeparator(filepath.Dir(xbuild.SolutionPth))
 	cmdSlice = append(cmdSlice, fmt.Sprintf("/p:SolutionDir=%s", solutionDirParam))
 
 	if xbuild.configuration != "" {
@@ -118,8 +118,6 @@ func (xbuild Model) buildCommands() []string {
 	}
 
 	cmdSlice = append(cmdSlice, xbuild.customOptions...)
-
-	//cmdSlice = append(cmdSlice, "/verbosity:minimal", "/nologo")
 
 	return cmdSlice
 }
@@ -150,4 +148,9 @@ func (xbuild Model) Run(outWriter, errWriter io.Writer) error {
 	command.SetStderr(errWriter)
 
 	return command.Run()
+}
+
+func ensureTrailingPathSeparator(path string) string {
+	slash := string(filepath.Separator)
+	return strings.TrimSuffix(path, slash) + slash
 }
