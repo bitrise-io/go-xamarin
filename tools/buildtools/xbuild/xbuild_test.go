@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/bitrise-io/go-utils/pathutil"
-	"github.com/bitrise-io/go-utils/testutil"
 	"github.com/bitrise-io/go-xamarin/constants"
 	"github.com/stretchr/testify/require"
 )
@@ -122,7 +121,7 @@ func TestSetProperties(t *testing.T) {
 
 		customOptions := []string{"/verbosity:minimal", "/nologo"}
 		xbuild.SetCustomOptions(customOptions...)
-		testutil.EqualSlicesWithoutOrder(t, customOptions, xbuild.customOptions)
+		require.ElementsMatch(t, customOptions, xbuild.customOptions)
 	}
 }
 
