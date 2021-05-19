@@ -1,12 +1,10 @@
 # github.com/bitrise-io/go-utils v0.0.0-20210323091856-00429d8e1e87
 ## explicit
-github.com/bitrise-io/go-utils/builtinutil
 github.com/bitrise-io/go-utils/colorstring
 github.com/bitrise-io/go-utils/command
 github.com/bitrise-io/go-utils/fileutil
 github.com/bitrise-io/go-utils/log
 github.com/bitrise-io/go-utils/pathutil
-github.com/bitrise-io/go-utils/testutil
 # github.com/cpuguy83/go-md2man/v2 v2.0.0
 ## explicit
 github.com/cpuguy83/go-md2man/v2/md2man
