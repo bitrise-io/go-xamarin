@@ -202,11 +202,7 @@ func Test_exportApk(t *testing.T) {
 	startTime := time.Now()
 	time.Sleep(3 * time.Second)
 
-	for _, pth := range []string{
-		"file-signed.apk",
-		"file.apk",
-		"artifact.apk",
-	} {
+	for _, pth := range []string{"file-signed.apk", "file.apk", "artifact.apk"} {
 		createTestFile(t, tmpDir, pth)
 		time.Sleep(3 * time.Second)
 	}
@@ -224,18 +220,58 @@ func Test_exportApk(t *testing.T) {
 		require.Equal(t, filepath.Join(tmpDir, "artifact.apk"), pth)
 	}
 
-	t.Log("it prefres signed apk")
+	t.Log("it prefers signed apk")
 	{
 		pth, err := exportApk(tmpDir, "file", startTime, endTime)
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "file-signed.apk"), pth)
 	}
 
-	t.Log("it returns latest signed apk if artificat name does not match")
+	t.Log("it returns latest signed apk if artifact name does not match")
 	{
 		pth, err := exportApk(tmpDir, "does not match", startTime, endTime)
 		require.NoError(t, err)
 		require.Equal(t, filepath.Join(tmpDir, "file-signed.apk"), pth)
+	}
+}
+
+func Test_exportAab(t *testing.T) {
+	tmpDir, err := pathutil.NormalizedOSTempDirPath("file_infos_test")
+	require.NoError(t, err)
+
+	startTime := time.Now()
+	time.Sleep(3 * time.Second)
+
+	for _, pth := range []string{"file-signed.aab", "file.aab", "artifact.aab"} {
+		createTestFile(t, tmpDir, pth)
+		time.Sleep(3 * time.Second)
+	}
+
+	time.Sleep(3 * time.Second)
+	endTime := time.Now()
+	time.Sleep(3 * time.Second)
+
+	createTestFile(t, tmpDir, "artifact-signed.aab")
+
+	t.Log("time window test")
+	{
+		pth, err := exportAab(tmpDir, "artifact", startTime, endTime)
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "artifact.aab"), pth)
+	}
+
+	t.Log("it prefers signed aab")
+	{
+		pth, err := exportAab(tmpDir, "file", startTime, endTime)
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "file-signed.aab"), pth)
+	}
+
+	t.Log("it returns latest signed aab if artifact name does not match")
+	{
+		pth, err := exportAab(tmpDir, "does not match", startTime, endTime)
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(tmpDir, "file-signed.aab"), pth)
 	}
 }
 

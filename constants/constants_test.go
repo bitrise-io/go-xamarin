@@ -155,6 +155,13 @@ func TestParseOutputType(t *testing.T) {
 		require.Equal(t, OutputTypeAPK, outputType)
 	}
 
+	t.Log("it parses aab")
+	{
+		outputType, err := ParseOutputType("aab")
+		require.NoError(t, err)
+		require.Equal(t, OutputTypeAAB, outputType)
+	}
+
 	t.Log("it parses xcarchive")
 	{
 		outputType, err := ParseOutputType("xcarchive")
